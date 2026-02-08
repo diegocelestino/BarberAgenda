@@ -6,6 +6,11 @@ on:
     paths:
     - 'backend/**'
     - '.github/workflows/deploy-backend.yml'
+    paths-ignore:
+    - 'mock-server/**'
+    - 'frontend/**'
+    - '*.md'
+    - 'README.md'
 
 jobs:
   deploy:
