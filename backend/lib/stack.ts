@@ -2,6 +2,9 @@ import * as cdk from 'aws-cdk-lib';
 import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
 import * as apigateway from 'aws-cdk-lib/aws-apigateway';
+import * as s3 from 'aws-cdk-lib/aws-s3';
+import * as cloudfront from 'aws-cdk-lib/aws-cloudfront';
+import * as origins from 'aws-cdk-lib/aws-cloudfront-origins';
 import { Construct } from 'constructs';
 import * as path from 'path';
 
@@ -111,6 +114,63 @@ export class BackendStack extends cdk.Stack {
     new cdk.CfnOutput(this, 'BarbersTableName', {
       value: barbersTable.tableName,
       description: 'Barbers DynamoDB Table',
+    });
+
+    // ========================================
+    // Frontend - S3 + CloudFront
+    // ========================================
+
+    // S3 Bucket for hosting static website
+    const websiteBucket = new s3.Bucket(this, 'WebsiteBucket', {
+      websiteIndexDocument: 'index.html',
+      websiteErrorDocument: 'index.html',
+      publicReadAccess: true,
+      blockPublicAccess: new s3.BlockPublicAccess({
+        blockPublicAcls: false,
+        blockPublicPolicy: false,
+        ignorePublicAcls: false,
+        restrictPublicBuckets: false,
+      }),
+      removalPolicy: cdk.RemovalPolicy.DESTROY,
+      autoDeleteObjects: true,
+    });
+
+    // CloudFront Distribution using S3 website endpoint
+    const distribution = new cloudfront.Distribution(this, 'Distribution', {
+      defaultBehavior: {
+        origin: new origins.HttpOrigin(websiteBucket.bucketWebsiteDomainName, {
+          protocolPolicy: cloudfront.OriginProtocolPolicy.HTTP_ONLY,
+        }),
+        viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+        cachePolicy: cloudfront.CachePolicy.CACHING_OPTIMIZED,
+      },
+      defaultRootObject: 'index.html',
+    });
+
+    // Frontend Outputs
+    new cdk.CfnOutput(this, 'BucketName', {
+      value: websiteBucket.bucketName,
+      description: 'S3 Bucket Name',
+    });
+
+    new cdk.CfnOutput(this, 'BucketWebsiteURL', {
+      value: websiteBucket.bucketWebsiteUrl,
+      description: 'S3 Website URL',
+    });
+
+    new cdk.CfnOutput(this, 'DistributionId', {
+      value: distribution.distributionId,
+      description: 'CloudFront Distribution ID',
+    });
+
+    new cdk.CfnOutput(this, 'DistributionDomainName', {
+      value: distribution.distributionDomainName,
+      description: 'CloudFront Distribution Domain',
+    });
+
+    new cdk.CfnOutput(this, 'DistributionURL', {
+      value: `https://${distribution.distributionDomainName}`,
+      description: 'CloudFront URL',
     });
   }
 }

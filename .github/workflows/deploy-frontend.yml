@@ -1,0 +1,66 @@
+name: Deploy Frontend
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+    - 'frontend/**'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18'
+        cache: 'npm'
+        cache-dependency-path: frontend/package-lock.json
+
+    - name: Configure AWS Credentials
+      uses: aws-actions/configure-aws-credentials@v2
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: sa-east-1
+
+    - name: Install frontend dependencies
+      run: |
+        cd frontend
+        npm ci
+
+    - name: Get API URL from CloudFormation
+      id: get-api-url
+      run: |
+        API_URL=$(aws cloudformation describe-stacks --stack-name BackendStack --query 'Stacks[0].Outputs[?OutputKey==`ApiUrl`].OutputValue' --output text)
+        echo "api_url=$API_URL" >> $GITHUB_OUTPUT
+        echo "✅ API URL: $API_URL"
+
+    - name: Build React app
+      run: |
+        cd frontend
+        npm run build
+      env:
+        REACT_APP_API_URL: ${{ steps.get-api-url.outputs.api_url }}
+
+    - name: Get S3 bucket name
+      id: get-bucket
+      run: |
+        BUCKET_NAME=$(aws cloudformation describe-stacks --stack-name BackendStack --query 'Stacks[0].Outputs[?OutputKey==`BucketName`].OutputValue' --output text)
+        echo "bucket_name=$BUCKET_NAME" >> $GITHUB_OUTPUT
+
+    - name: Deploy to S3
+      run: |
+        aws s3 sync frontend/build/ s3://${{ steps.get-bucket.outputs.bucket_name }} --delete
+
+    - name: Invalidate CloudFront cache
+      run: |
+        DISTRIBUTION_ID=$(aws cloudformation describe-stacks --stack-name BackendStack --query 'Stacks[0].Outputs[?OutputKey==`DistributionId`].OutputValue' --output text)
+        aws cloudfront create-invalidation --distribution-id $DISTRIBUTION_ID --paths "/*"
+
+    - name: Get CloudFront URL
+      run: |
+        CLOUDFRONT_URL=$(aws cloudformation describe-stacks --stack-name BackendStack --query 'Stacks[0].Outputs[?OutputKey==`DistributionURL`].OutputValue' --output text)
+        echo "🚀 Frontend deployed to: $CLOUDFRONT_URL"
