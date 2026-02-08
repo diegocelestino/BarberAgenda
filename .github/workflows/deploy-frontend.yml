@@ -40,7 +40,7 @@ jobs:
     - name: Get API URL from CloudFormation
       id: get-api-url
       run: |
-        API_URL=$(aws cloudformation describe-stacks --stack-name BackendStack --query 'Stacks[0].Outputs[?OutputKey==`ApiUrl`].OutputValue' --output text)
+        API_URL=$(aws cloudformation describe-stacks --stack-name BarbershopStack --query 'Stacks[0].Outputs[?OutputKey==`ApiUrl`].OutputValue' --output text)
         echo "api_url=$API_URL" >> $GITHUB_OUTPUT
         echo "✅ API URL: $API_URL"
 
@@ -54,7 +54,7 @@ jobs:
     - name: Get S3 bucket name
       id: get-bucket
       run: |
-        BUCKET_NAME=$(aws cloudformation describe-stacks --stack-name BackendStack --query 'Stacks[0].Outputs[?OutputKey==`BucketName`].OutputValue' --output text)
+        BUCKET_NAME=$(aws cloudformation describe-stacks --stack-name BarbershopStack --query 'Stacks[0].Outputs[?OutputKey==`BucketName`].OutputValue' --output text)
         echo "bucket_name=$BUCKET_NAME" >> $GITHUB_OUTPUT
 
     - name: Deploy to S3
@@ -63,10 +63,10 @@ jobs:
 
     - name: Invalidate CloudFront cache
       run: |
-        DISTRIBUTION_ID=$(aws cloudformation describe-stacks --stack-name BackendStack --query 'Stacks[0].Outputs[?OutputKey==`DistributionId`].OutputValue' --output text)
+        DISTRIBUTION_ID=$(aws cloudformation describe-stacks --stack-name BarbershopStack --query 'Stacks[0].Outputs[?OutputKey==`DistributionId`].OutputValue' --output text)
         aws cloudfront create-invalidation --distribution-id $DISTRIBUTION_ID --paths "/*"
 
     - name: Get CloudFront URL
       run: |
-        CLOUDFRONT_URL=$(aws cloudformation describe-stacks --stack-name BackendStack --query 'Stacks[0].Outputs[?OutputKey==`DistributionURL`].OutputValue' --output text)
+        CLOUDFRONT_URL=$(aws cloudformation describe-stacks --stack-name BarbershopStack --query 'Stacks[0].Outputs[?OutputKey==`DistributionURL`].OutputValue' --output text)
         echo "🚀 Frontend deployed to: $CLOUDFRONT_URL"

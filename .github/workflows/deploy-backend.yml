@@ -1,10 +1,11 @@
-name: Deploy Backend
+name: Deploy Infrastructure
 
 on:
   push:
     branches: [ main ]
     paths:
-    - 'backend/**'
+    - 'backend/lambda/**'
+    - 'infrastructure/**'
     - '.github/workflows/deploy-backend.yml'
     paths-ignore:
     - 'mock-server/**'
@@ -44,10 +45,10 @@ jobs:
 
     - name: Install CDK dependencies
       run: |
-        cd backend
+        cd infrastructure
         npm install
 
     - name: Deploy CDK Stack
       run: |
-        cd backend
+        cd infrastructure
         npx cdk deploy --require-approval never
