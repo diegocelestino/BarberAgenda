@@ -7,11 +7,6 @@ on:
     - 'backend/lambda/**'
     - 'infrastructure/**'
     - '.github/workflows/deploy-backend.yml'
-    paths-ignore:
-    - 'mock-server/**'
-    - 'frontend/**'
-    - '*.md'
-    - 'README.md'
 
 jobs:
   deploy:
