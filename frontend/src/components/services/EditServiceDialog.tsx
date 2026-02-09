@@ -29,17 +29,23 @@ const EditServiceDialog: React.FC<EditServiceDialogProps> = ({
   const dispatch = useAppDispatch();
   const [loading, setLoading] = useState(false);
   const [title, setTitle] = useState('');
-  const [durationMinutes, setDurationMinutes] = useState(60);
+  const [name, setName] = useState('');
+  const [description, setDescription] = useState('');
+  const [price, setPrice] = useState(30);
+  const [duration, setDuration] = useState(30);
 
   useEffect(() => {
     if (service) {
       setTitle(service.title);
-      setDurationMinutes(service.durationMinutes);
+      setName(service.name);
+      setDescription(service.description || '');
+      setPrice(service.price);
+      setDuration(service.duration);
     }
   }, [service]);
 
   const handleSubmit = async () => {
-    if (!service || !title || durationMinutes <= 0) {
+    if (!service || !title || !name || price <= 0 || duration <= 0) {
       return;
     }
 
@@ -50,7 +56,11 @@ const EditServiceDialog: React.FC<EditServiceDialogProps> = ({
           serviceId: service.serviceId,
           data: {
             title,
-            durationMinutes,
+            name,
+            description: description || undefined,
+            price,
+            duration,
+            durationMinutes: duration,
           },
         })
       ).unwrap();
@@ -73,13 +83,43 @@ const EditServiceDialog: React.FC<EditServiceDialogProps> = ({
             onChange={(e) => setTitle(e.target.value)}
             required
             fullWidth
+            helperText="Internal title for admin use"
+          />
+
+          <TextField
+            label="Display Name"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            required
+            fullWidth
+            helperText="Name shown to customers"
+          />
+
+          <TextField
+            label="Description"
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            fullWidth
+            multiline
+            rows={2}
+            helperText="Optional description for customers"
+          />
+
+          <TextField
+            label="Price ($)"
+            type="number"
+            value={price}
+            onChange={(e) => setPrice(parseFloat(e.target.value))}
+            inputProps={{ min: 0, step: 5 }}
+            required
+            fullWidth
           />
 
           <TextField
             label="Duration (minutes)"
             type="number"
-            value={durationMinutes}
-            onChange={(e) => setDurationMinutes(parseInt(e.target.value))}
+            value={duration}
+            onChange={(e) => setDuration(parseInt(e.target.value))}
             inputProps={{ min: 15, step: 15 }}
             required
             fullWidth
@@ -93,7 +133,7 @@ const EditServiceDialog: React.FC<EditServiceDialogProps> = ({
         <Button
           onClick={handleSubmit}
           variant="contained"
-          disabled={loading || !title || durationMinutes <= 0}
+          disabled={loading || !title || !name || price <= 0 || duration <= 0}
           startIcon={loading ? <CircularProgress size={20} /> : null}
         >
           Save Changes

@@ -14,6 +14,18 @@ const loadAppointments = () => {
   }
 };
 
+// Load services data - reload each time to get latest
+const loadServices = () => {
+  try {
+    const dataPath = path.join(__dirname, '../../resources', 'services', 'default.json');
+    const data = fs.readFileSync(dataPath, 'utf8');
+    return JSON.parse(data);
+  } catch (error) {
+    console.error('Error loading services data:', error);
+    return [];
+  }
+};
+
 // In-memory database
 let appointments = loadAppointments();
 
@@ -80,6 +92,21 @@ const createAppointment = (req, res) => {
     return res.status(409).json({ error: 'Time slot conflicts with existing appointment' });
   }
   
+  // Look up service name from serviceId - reload services to get latest
+  let serviceName = 'Haircut'; // default
+  if (service) {
+    const services = loadServices();
+    const serviceObj = services.find(s => s.serviceId === service);
+    if (serviceObj) {
+      serviceName = serviceObj.name || serviceObj.title;
+      console.log(`Mapped service ID "${service}" to name "${serviceName}"`);
+    } else {
+      // If not found by ID, assume it's already a name
+      serviceName = service;
+      console.log(`Using service as-is: "${serviceName}"`);
+    }
+  }
+  
   const newAppointment = {
     appointmentId: uuidv4(),
     barberId,
@@ -87,13 +114,14 @@ const createAppointment = (req, res) => {
     customerPhone: customerPhone || '',
     startTime,
     endTime,
-    service: service || 'Haircut',
+    service: serviceName,
     notes: notes || '',
     status: 'scheduled',
     createdAt: Date.now(),
   };
   
   appointments.push(newAppointment);
+  console.log('Created appointment with service:', serviceName);
   res.status(201).json({ appointment: newAppointment });
 };
 
@@ -131,13 +159,24 @@ const updateAppointment = (req, res) => {
     }
   }
   
+  // Look up service name from serviceId if service is being updated
+  let serviceName = service;
+  if (service) {
+    const services = loadServices();
+    const serviceObj = services.find(s => s.serviceId === service);
+    if (serviceObj) {
+      serviceName = serviceObj.name || serviceObj.title;
+      console.log(`Mapped service ID "${service}" to name "${serviceName}"`);
+    }
+  }
+  
   appointments[appointmentIndex] = {
     ...appointments[appointmentIndex],
     ...(customerName && { customerName }),
     ...(customerPhone !== undefined && { customerPhone }),
     ...(startTime && { startTime }),
     ...(endTime && { endTime }),
-    ...(service && { service }),
+    ...(serviceName && { service: serviceName }),
     ...(notes !== undefined && { notes }),
     ...(status && { status }),
   };

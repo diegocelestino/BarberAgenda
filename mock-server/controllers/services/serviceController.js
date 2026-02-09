@@ -24,16 +24,20 @@ const getServiceById = (req, res) => {
 
 // Create service
 const createService = (req, res) => {
-  const { title, durationMinutes } = req.body;
+  const { title, name, description, price, duration, durationMinutes } = req.body;
   
-  if (!title || !durationMinutes) {
-    return res.status(400).json({ error: 'Title and duration are required' });
+  if (!title || !name || !price || !duration) {
+    return res.status(400).json({ error: 'Title, name, price, and duration are required' });
   }
   
   const newService = {
     serviceId: `service-${Date.now()}`,
     title,
-    durationMinutes: parseInt(durationMinutes),
+    name,
+    description: description || '',
+    price: parseFloat(price),
+    duration: parseInt(duration),
+    durationMinutes: parseInt(durationMinutes || duration),
   };
   
   services.push(newService);
@@ -47,7 +51,7 @@ const createService = (req, res) => {
 // Update service
 const updateService = (req, res) => {
   const { serviceId } = req.params;
-  const { title, durationMinutes } = req.body;
+  const { title, name, description, price, duration, durationMinutes } = req.body;
   
   const serviceIndex = services.findIndex(s => s.serviceId === serviceId);
   
@@ -57,6 +61,23 @@ const updateService = (req, res) => {
   
   if (title !== undefined) {
     services[serviceIndex].title = title;
+  }
+  
+  if (name !== undefined) {
+    services[serviceIndex].name = name;
+  }
+  
+  if (description !== undefined) {
+    services[serviceIndex].description = description;
+  }
+  
+  if (price !== undefined) {
+    services[serviceIndex].price = parseFloat(price);
+  }
+  
+  if (duration !== undefined) {
+    services[serviceIndex].duration = parseInt(duration);
+    services[serviceIndex].durationMinutes = parseInt(duration);
   }
   
   if (durationMinutes !== undefined) {

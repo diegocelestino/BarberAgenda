@@ -107,6 +107,8 @@ const ServicesList: React.FC = () => {
             <TableHead>
               <TableRow>
                 <TableCell>Service</TableCell>
+                <TableCell>Description</TableCell>
+                <TableCell align="right">Price</TableCell>
                 <TableCell align="right">Duration</TableCell>
                 <TableCell align="right">Actions</TableCell>
               </TableRow>
@@ -115,11 +117,26 @@ const ServicesList: React.FC = () => {
               {services.map((service) => (
                 <TableRow key={service.serviceId} hover>
                   <TableCell>
-                    <Typography variant="body1">{service.title}</Typography>
+                    <Typography variant="body1" fontWeight="medium">
+                      {service.name}
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      {service.title}
+                    </Typography>
+                  </TableCell>
+                  <TableCell>
+                    <Typography variant="body2" color="text.secondary">
+                      {service.description || '-'}
+                    </Typography>
                   </TableCell>
                   <TableCell align="right">
                     <Typography variant="body2" color="text.secondary">
-                      {service.durationMinutes} min
+                      ${service.price}
+                    </Typography>
+                  </TableCell>
+                  <TableCell align="right">
+                    <Typography variant="body2" color="text.secondary">
+                      {service.duration} min
                     </Typography>
                   </TableCell>
                   <TableCell align="right">

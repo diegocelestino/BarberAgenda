@@ -114,7 +114,7 @@ const BarberDetails: React.FC = () => {
       ).unwrap();
 
       setSuccessOpen(true);
-      setTimeout(() => navigate('/barbers'), 1500);
+      setTimeout(() => navigate('/admin/barbers'), 1500);
     } catch (err) {
       console.error('Failed to update barber:', err);
     }
@@ -148,7 +148,7 @@ const BarberDetails: React.FC = () => {
     <>
       <Paper elevation={2} sx={{ p: { xs: 2, sm: 3 } }}>
         <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-          <IconButton onClick={() => navigate('/barbers')} sx={{ mr: 1 }}>
+          <IconButton onClick={() => navigate('/admin/barbers')} sx={{ mr: 1 }}>
             <ArrowBackIcon />
           </IconButton>
           <Typography variant="h5" component="h2">
@@ -221,7 +221,7 @@ const BarberDetails: React.FC = () => {
               <Stack direction="row" spacing={2}>
                 <Button
                   variant="outlined"
-                  onClick={() => navigate('/barbers')}
+                  onClick={() => navigate('/admin/barbers')}
                   fullWidth
                 >
                   Cancel

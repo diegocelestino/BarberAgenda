@@ -1,0 +1,16 @@
+[
+  {
+    "username": "admin",
+    "password": "admin",
+    "email": "admin@barbershop.com",
+    "role": "admin",
+    "createdAt": 1704067200000
+  },
+  {
+    "username": "manager",
+    "password": "manager",
+    "email": "manager@barbershop.com",
+    "role": "manager",
+    "createdAt": 1704067200000
+  }
+]

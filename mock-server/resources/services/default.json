@@ -2,26 +2,46 @@
   {
     "serviceId": "service-1",
     "title": "Haircut",
-    "durationMinutes": 60
+    "name": "Haircut",
+    "description": "Professional haircut with styling",
+    "price": 30,
+    "duration": 30,
+    "durationMinutes": 30
   },
   {
     "serviceId": "service-2",
     "title": "Beard Trim",
-    "durationMinutes": 60
+    "name": "Beard Trim",
+    "description": "Precision beard trimming and shaping",
+    "price": 20,
+    "duration": 20,
+    "durationMinutes": 20
   },
   {
     "serviceId": "service-3",
     "title": "Haircut + Beard",
-    "durationMinutes": 60
+    "name": "Haircut + Beard",
+    "description": "Complete grooming package",
+    "price": 45,
+    "duration": 45,
+    "durationMinutes": 45
   },
   {
     "serviceId": "service-4",
     "title": "Hair Coloring",
-    "durationMinutes": 60
+    "name": "Hair Coloring",
+    "description": "Professional hair coloring service",
+    "price": 60,
+    "duration": 90,
+    "durationMinutes": 90
   },
   {
     "serviceId": "service-5",
     "title": "Shave",
-    "durationMinutes": 60
+    "name": "Shave",
+    "description": "Traditional hot towel shave",
+    "price": 25,
+    "duration": 30,
+    "durationMinutes": 30
   }
 ]

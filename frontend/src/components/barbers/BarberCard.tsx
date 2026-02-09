@@ -78,7 +78,7 @@ const BarberCard: React.FC<BarberCardProps> = ({ barber, onDelete }) => {
       </IconButton>
 
       <CardActionArea
-        onClick={() => navigate(`/barber/${barber.barberId}`)}
+        onClick={() => navigate(`/admin/barber/${barber.barberId}`)}
         sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column', alignItems: 'stretch' }}
       >
         <CardContent sx={{ flexGrow: 1, width: '100%' }}>

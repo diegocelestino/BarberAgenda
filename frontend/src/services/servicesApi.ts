@@ -3,16 +3,28 @@ import api from './api';
 export interface Service {
   serviceId: string;
   title: string;
+  name: string;
+  description?: string;
+  price: number;
+  duration: number;
   durationMinutes: number;
 }
 
 export interface CreateServiceData {
   title: string;
+  name: string;
+  description?: string;
+  price: number;
+  duration: number;
   durationMinutes: number;
 }
 
 export interface UpdateServiceData {
   title?: string;
+  name?: string;
+  description?: string;
+  price?: number;
+  duration?: number;
   durationMinutes?: number;
 }
 

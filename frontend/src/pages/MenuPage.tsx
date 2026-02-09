@@ -10,14 +10,14 @@ const MenuPage: React.FC = () => {
       title: 'Barbers',
       description: 'Manage barbers and their schedules',
       icon: <PeopleIcon sx={{ fontSize: 80 }} />,
-      path: '/barbers',
+      path: '/admin/barbers',
       color: '#90caf9',
     },
     {
       title: 'Services',
       description: 'Manage services and durations',
       icon: <BuildIcon sx={{ fontSize: 80 }} />,
-      path: '/services',
+      path: '/admin/services',
       color: '#f48fb1',
     },
   ];

@@ -45,6 +45,13 @@ export class BarbershopStack extends cdk.Stack {
       removalPolicy: cdk.RemovalPolicy.DESTROY,
     });
 
+    // DynamoDB Table - Users
+    const usersTable = new dynamodb.Table(this, 'UsersTable', {
+      partitionKey: { name: 'username', type: dynamodb.AttributeType.STRING },
+      billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
+      removalPolicy: cdk.RemovalPolicy.DESTROY,
+    });
+
     // Lambda Functions for Barbers CRUD (Java 21)
     const createBarberFn = new lambda.Function(this, 'CreateBarberFunction', {
       runtime: lambda.Runtime.JAVA_21,
@@ -185,6 +192,11 @@ export class BarbershopStack extends cdk.Stack {
     new cdk.CfnOutput(this, 'ServicesTableName', {
       value: servicesTable.tableName,
       description: 'Services DynamoDB Table',
+    });
+
+    new cdk.CfnOutput(this, 'UsersTableName', {
+      value: usersTable.tableName,
+      description: 'Users DynamoDB Table',
     });
 
     // Frontend Outputs

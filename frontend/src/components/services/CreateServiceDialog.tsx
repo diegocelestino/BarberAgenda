@@ -28,10 +28,13 @@ const CreateServiceDialog: React.FC<CreateServiceDialogProps> = ({
   const error = useAppSelector(selectServicesError);
 
   const [title, setTitle] = useState('');
-  const [durationMinutes, setDurationMinutes] = useState(60);
+  const [name, setName] = useState('');
+  const [description, setDescription] = useState('');
+  const [price, setPrice] = useState(30);
+  const [duration, setDuration] = useState(30);
 
   const handleSubmit = async () => {
-    if (!title || durationMinutes <= 0) {
+    if (!title || !name || price <= 0 || duration <= 0) {
       return;
     }
 
@@ -39,13 +42,20 @@ const CreateServiceDialog: React.FC<CreateServiceDialogProps> = ({
       await dispatch(
         createService({
           title,
-          durationMinutes,
+          name,
+          description: description || undefined,
+          price,
+          duration,
+          durationMinutes: duration,
         })
       ).unwrap();
 
       // Reset form
       setTitle('');
-      setDurationMinutes(60);
+      setName('');
+      setDescription('');
+      setPrice(30);
+      setDuration(30);
       
       onSuccess();
     } catch (err) {
@@ -55,7 +65,10 @@ const CreateServiceDialog: React.FC<CreateServiceDialogProps> = ({
 
   const handleClose = () => {
     setTitle('');
-    setDurationMinutes(60);
+    setName('');
+    setDescription('');
+    setPrice(30);
+    setDuration(30);
     onClose();
   };
 
@@ -72,14 +85,46 @@ const CreateServiceDialog: React.FC<CreateServiceDialogProps> = ({
             onChange={(e) => setTitle(e.target.value)}
             required
             fullWidth
-            placeholder="e.g., Haircut, Beard Trim"
+            placeholder="e.g., Haircut"
+            helperText="Internal title for admin use"
+          />
+
+          <TextField
+            label="Display Name"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            required
+            fullWidth
+            placeholder="e.g., Professional Haircut"
+            helperText="Name shown to customers"
+          />
+
+          <TextField
+            label="Description"
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            fullWidth
+            multiline
+            rows={2}
+            placeholder="e.g., Professional haircut with styling"
+            helperText="Optional description for customers"
+          />
+
+          <TextField
+            label="Price ($)"
+            type="number"
+            value={price}
+            onChange={(e) => setPrice(parseFloat(e.target.value))}
+            inputProps={{ min: 0, step: 5 }}
+            required
+            fullWidth
           />
 
           <TextField
             label="Duration (minutes)"
             type="number"
-            value={durationMinutes}
-            onChange={(e) => setDurationMinutes(parseInt(e.target.value))}
+            value={duration}
+            onChange={(e) => setDuration(parseInt(e.target.value))}
             inputProps={{ min: 15, step: 15 }}
             required
             fullWidth
@@ -91,7 +136,7 @@ const CreateServiceDialog: React.FC<CreateServiceDialogProps> = ({
         <Button
           onClick={handleSubmit}
           variant="contained"
-          disabled={loading || !title || durationMinutes <= 0}
+          disabled={loading || !title || !name || price <= 0 || duration <= 0}
         >
           {loading ? 'Creating...' : 'Create'}
         </Button>
