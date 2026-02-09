@@ -1,23 +1,33 @@
 import { useState, useEffect } from 'react';
 import {
-  Box,
-  Typography,
-  TextField,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
   Button,
-  Paper,
+  TextField,
   Stack,
   Chip,
   Alert,
-  Snackbar,
-  MenuItem,
   CircularProgress,
+  Box,
+  Typography,
 } from '@mui/material';
-import { Add as AddIcon } from '@mui/icons-material';
 import { useAppDispatch, useAppSelector } from '../../store/hooks';
 import { createBarber, selectBarbersLoading } from '../../store/barbers';
 import { fetchServices, selectAllServices, selectServicesLoading } from '../../store/services';
 
-const CreateBarber: React.FC = () => {
+interface CreateBarberDialogProps {
+  open: boolean;
+  onClose: () => void;
+  onSuccess: () => void;
+}
+
+const CreateBarberDialog: React.FC<CreateBarberDialogProps> = ({
+  open,
+  onClose,
+  onSuccess,
+}) => {
   const dispatch = useAppDispatch();
   const loading = useAppSelector(selectBarbersLoading);
   const services = useAppSelector(selectAllServices);
@@ -26,13 +36,12 @@ const CreateBarber: React.FC = () => {
   const [name, setName] = useState('');
   const [selectedServiceIds, setSelectedServiceIds] = useState<string[]>([]);
   const [rating, setRating] = useState<number>(5);
-  const [successOpen, setSuccessOpen] = useState(false);
 
   useEffect(() => {
-    if (services.length === 0) {
+    if (open && services.length === 0) {
       dispatch(fetchServices());
     }
-  }, [services.length, dispatch]);
+  }, [open, services.length, dispatch]);
 
   const handleToggleService = (serviceId: string) => {
     setSelectedServiceIds(prev =>
@@ -42,9 +51,7 @@ const CreateBarber: React.FC = () => {
     );
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
+  const handleSubmit = async () => {
     if (!name.trim() || selectedServiceIds.length === 0) {
       return;
     }
@@ -62,20 +69,25 @@ const CreateBarber: React.FC = () => {
       setName('');
       setSelectedServiceIds([]);
       setRating(5);
-      setSuccessOpen(true);
+      
+      onSuccess();
     } catch (err) {
       console.error('Failed to create barber:', err);
     }
   };
 
-  return (
-    <Paper elevation={2} sx={{ p: { xs: 2, sm: 3 }, mb: 3 }}>
-      <Typography variant="h5" component="h2" gutterBottom>
-        Create New Barber
-      </Typography>
+  const handleClose = () => {
+    setName('');
+    setSelectedServiceIds([]);
+    setRating(5);
+    onClose();
+  };
 
-      <Box component="form" onSubmit={handleSubmit}>
-        <Stack spacing={2.5}>
+  return (
+    <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
+      <DialogTitle>New Barber</DialogTitle>
+      <DialogContent>
+        <Stack spacing={2.5} sx={{ mt: 1 }}>
           <TextField
             label="Name"
             value={name}
@@ -129,36 +141,20 @@ const CreateBarber: React.FC = () => {
             fullWidth
             variant="outlined"
           />
-
-          <Button
-            type="submit"
-            variant="contained"
-            size="large"
-            startIcon={<AddIcon />}
-            disabled={loading || !name.trim() || selectedServiceIds.length === 0}
-            fullWidth
-          >
-            {loading ? 'Creating...' : 'Create Barber'}
-          </Button>
         </Stack>
-      </Box>
-
-      <Snackbar
-        open={successOpen}
-        autoHideDuration={3000}
-        onClose={() => setSuccessOpen(false)}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
-      >
-        <Alert
-          onClose={() => setSuccessOpen(false)}
-          severity="success"
-          sx={{ width: '100%' }}
+      </DialogContent>
+      <DialogActions>
+        <Button onClick={handleClose}>Cancel</Button>
+        <Button
+          onClick={handleSubmit}
+          variant="contained"
+          disabled={loading || !name.trim() || selectedServiceIds.length === 0}
         >
-          Barber created successfully!
-        </Alert>
-      </Snackbar>
-    </Paper>
+          {loading ? 'Creating...' : 'Create'}
+        </Button>
+      </DialogActions>
+    </Dialog>
   );
 };
 
-export default CreateBarber;
+export default CreateBarberDialog;

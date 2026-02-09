@@ -5,7 +5,9 @@ import {
   CircularProgress,
   Alert,
   Grid,
+  Button,
 } from '@mui/material';
+import { Add as AddIcon } from '@mui/icons-material';
 import { useAppDispatch, useAppSelector } from '../../store/hooks';
 import {
   fetchBarbers,
@@ -15,6 +17,7 @@ import {
 } from '../../store/barbers';
 import BarberCard from './BarberCard';
 import DeleteBarberDialog from './DeleteBarberDialog';
+import CreateBarberDialog from './CreateBarberDialog';
 
 const BarberList: React.FC = () => {
   const dispatch = useAppDispatch();
@@ -22,6 +25,7 @@ const BarberList: React.FC = () => {
   const loading = useAppSelector(selectBarbersLoading);
   const error = useAppSelector(selectBarbersError);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [selectedBarberId, setSelectedBarberId] = useState<string | null>(null);
 
   useEffect(() => {
@@ -43,6 +47,10 @@ const BarberList: React.FC = () => {
     setSelectedBarberId(null);
   };
 
+  const handleCreateSuccess = () => {
+    setCreateDialogOpen(false);
+  };
+
   if (loading) {
     return (
       <Box display="flex" justifyContent="center" alignItems="center" minHeight="200px">
@@ -61,9 +69,18 @@ const BarberList: React.FC = () => {
 
   return (
     <Box>
-      <Typography variant="h5" component="h2" gutterBottom sx={{ mb: 3 }}>
-        Barbers
-      </Typography>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+        <Typography variant="h5" component="h2">
+          Barbers
+        </Typography>
+        <Button
+          variant="contained"
+          startIcon={<AddIcon />}
+          onClick={() => setCreateDialogOpen(true)}
+        >
+          New Barber
+        </Button>
+      </Box>
 
       {barbers.length === 0 ? (
         <Alert severity="info">
@@ -84,6 +101,12 @@ const BarberList: React.FC = () => {
         barberId={selectedBarberId}
         onConfirm={handleDeleteConfirm}
         onCancel={handleDeleteCancel}
+      />
+
+      <CreateBarberDialog
+        open={createDialogOpen}
+        onClose={() => setCreateDialogOpen(false)}
+        onSuccess={handleCreateSuccess}
       />
     </Box>
   );

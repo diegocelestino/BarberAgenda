@@ -1,5 +1,4 @@
 import { Container } from '@mui/material';
-import CreateBarber from '../components/barbers/CreateBarber';
 import BarberList from '../components/barbers/BarberList';
 
 const BarbersPage: React.FC = () => {
@@ -13,7 +12,6 @@ const BarbersPage: React.FC = () => {
         px: { xs: 2, sm: 3 },
       }}
     >
-      <CreateBarber />
       <BarberList />
     </Container>
   );
