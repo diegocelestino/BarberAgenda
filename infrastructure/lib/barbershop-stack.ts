@@ -115,6 +115,21 @@ export class BarbershopStack extends cdk.Stack {
     barbersTable.grantReadWriteData(updateBarberFn);
     barbersTable.grantReadWriteData(deleteBarberFn);
 
+    // Lambda Function for Auth
+    const loginFn = new lambda.Function(this, 'LoginFunction', {
+      runtime: lambda.Runtime.JAVA_21,
+      handler: 'com.barbershop.handler.LoginHandler::handleRequest',
+      code: lambda.Code.fromAsset(path.join(__dirname, '../../backend/lambda/target/barber-scheduler-lambda-1.0.0.jar')),
+      environment: {
+        USERS_TABLE: usersTable.tableName,
+      },
+      timeout: cdk.Duration.seconds(30),
+      memorySize: 512,
+    });
+
+    // Grant DynamoDB permissions for auth
+    usersTable.grantReadData(loginFn);
+
     // API Gateway
     const api = new apigateway.RestApi(this, 'BarberSchedulerApi', {
       restApiName: 'Barber Scheduler API',
@@ -136,6 +151,13 @@ export class BarbershopStack extends cdk.Stack {
     barber.addMethod('GET', new apigateway.LambdaIntegration(getBarberFn));
     barber.addMethod('PUT', new apigateway.LambdaIntegration(updateBarberFn));
     barber.addMethod('DELETE', new apigateway.LambdaIntegration(deleteBarberFn));
+
+    // /auth resource
+    const auth = api.root.addResource('auth');
+    
+    // /auth/login resource
+    const login = auth.addResource('login');
+    login.addMethod('POST', new apigateway.LambdaIntegration(loginFn));
 
     // ========================================
     // Frontend - S3 + CloudFront

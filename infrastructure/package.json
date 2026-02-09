@@ -10,7 +10,8 @@
     "test": "jest",
     "cdk": "cdk",
     "deploy": "cdk deploy && node scripts/update-frontend-env.js",
-    "update-env": "node scripts/update-frontend-env.js"
+    "update-env": "node scripts/update-frontend-env.js",
+    "seed-admin": "ts-node scripts/seed-admin-user.ts"
   },
   "devDependencies": {
     "@types/jest": "^29.5.14",
@@ -26,6 +27,7 @@
     "@aws-cdk/aws-dynamodb": "^1.203.0",
     "@aws-cdk/aws-lambda": "^1.203.0",
     "@aws-sdk/client-cloudformation": "^3.0.0",
+    "@aws-sdk/client-dynamodb": "^3.0.0",
     "aws-cdk-lib": "2.208.0",
     "constructs": "^10.0.0"
   }
