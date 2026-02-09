@@ -1,26 +1,4 @@
-[INFO] 2 errors 
-[INFO] -------------------------------------------------------------
-[INFO] ------------------------------------------------------------------------
-[INFO] BUILD FAILURE
-[INFO] ------------------------------------------------------------------------
-[INFO] Total time:  1.800 s
-[INFO] Finished at: 2026-02-09T03:30:51Z
-[INFO] ------------------------------------------------------------------------
-Error:  Failed to execute goal org.apache.maven.plugins:maven-compiler-plugin:3.13.0:compile (default-compile) on project barber-scheduler-lambda: Compilation failure: Compilation failure: 
-Error:  /home/runner/work/BarberAgenda/BarberAgenda/backend/lambda/src/main/java/com/barbershop/handler/barbers/CreateBarberHandler.java:[32,19] cannot find symbol
-Error:    symbol:   method setSpecialties(body.get("[...]t<>())
-Error:    location: variable barber of type com.barbershop.model.Barber
-Error:  /home/runner/work/BarberAgenda/BarberAgenda/backend/lambda/src/main/java/com/barbershop/handler/barbers/UpdateBarberHandler.java:[44,31] cannot find symbol
-Error:    symbol:   method setSpecialties(java.util.List<java.lang.String>)
-Error:    location: variable existingBarber of type com.barbershop.model.Barber
-Error:  -> [Help 1]
-Error:  
-Error:  To see the full stack trace of the errors, re-run Maven with the -e switch.
-Error:  Re-run Maven using the -X switch to enable full debug logging.
-Error:  
-Error:  For more information about the errors and possible solutions, please read the following articles:
-Error:  [Help 1] http://cwiki.apache.org/confluence/display/MAVEN/MojoFailureException
-Error: Process completed with exit code 1.package com.barbershop.model;
+package com.barbershop.model;
 
 public class Appointment {
     private String appointmentId;
