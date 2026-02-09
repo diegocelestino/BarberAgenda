@@ -1,7 +1,8 @@
-import { CssBaseline, ThemeProvider, createTheme, Container, Box } from '@mui/material';
+import { CssBaseline, ThemeProvider, createTheme, Box } from '@mui/material';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import Header from './components/layout/Header';
-import CreateBarber from './components/barbers/CreateBarber';
-import BarberList from './components/barbers/BarberList';
+import HomePage from './pages/HomePage';
+import EditBarberPage from './pages/EditBarberPage';
 
 const theme = createTheme({
   palette: {
@@ -26,22 +27,15 @@ function App() {
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
-      <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
-        <Header />
-
-        <Container
-          component="main"
-          maxWidth="lg"
-          sx={{
-            mt: { xs: 2, sm: 4 },
-            mb: { xs: 2, sm: 4 },
-            px: { xs: 2, sm: 3 },
-          }}
-        >
-          <CreateBarber />
-          <BarberList />
-        </Container>
-      </Box>
+      <BrowserRouter>
+        <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+          <Header />
+          <Routes>
+            <Route path="/" element={<HomePage />} />
+            <Route path="/barber/:barberId" element={<EditBarberPage />} />
+          </Routes>
+        </Box>
+      </BrowserRouter>
     </ThemeProvider>
   );
 }

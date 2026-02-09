@@ -9,7 +9,8 @@ import {
   Stack,
   Rating,
 } from '@mui/material';
-import { Delete as DeleteIcon } from '@mui/icons-material';
+import { Delete as DeleteIcon, Edit as EditIcon } from '@mui/icons-material';
+import { useNavigate } from 'react-router-dom';
 import { Barber } from '../../services/api';
 
 interface BarberCardProps {
@@ -18,6 +19,8 @@ interface BarberCardProps {
 }
 
 const BarberCard: React.FC<BarberCardProps> = ({ barber, onDelete }) => {
+  const navigate = useNavigate();
+
   return (
     <Card
       sx={{
@@ -51,13 +54,20 @@ const BarberCard: React.FC<BarberCardProps> = ({ barber, onDelete }) => {
         </Stack>
       </CardContent>
 
-      <CardActions>
+      <CardActions sx={{ justifyContent: 'space-between', px: 2, pb: 2 }}>
+        <Button
+          size="small"
+          color="primary"
+          startIcon={<EditIcon />}
+          onClick={() => navigate(`/barber/${barber.barberId}`)}
+        >
+          Edit
+        </Button>
         <Button
           size="small"
           color="error"
           startIcon={<DeleteIcon />}
           onClick={() => onDelete(barber.barberId)}
-          fullWidth
         >
           Delete
         </Button>

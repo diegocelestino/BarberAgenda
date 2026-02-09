@@ -1,9 +1,13 @@
 import { configureStore } from '@reduxjs/toolkit';
 import barbersReducer from './barbers/barbersSlice';
+import appointmentsReducer from './appointments/appointmentsSlice';
+import servicesReducer from './services/servicesSlice';
 
 export const store = configureStore({
   reducer: {
     barbers: barbersReducer,
+    appointments: appointmentsReducer,
+    services: servicesReducer,
   },
 });
 

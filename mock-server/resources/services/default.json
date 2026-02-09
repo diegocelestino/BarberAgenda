@@ -1,0 +1,27 @@
+[
+  {
+    "serviceId": "service-1",
+    "title": "Haircut",
+    "durationMinutes": 60
+  },
+  {
+    "serviceId": "service-2",
+    "title": "Beard Trim",
+    "durationMinutes": 60
+  },
+  {
+    "serviceId": "service-3",
+    "title": "Haircut + Beard",
+    "durationMinutes": 60
+  },
+  {
+    "serviceId": "service-4",
+    "title": "Hair Coloring",
+    "durationMinutes": 60
+  },
+  {
+    "serviceId": "service-5",
+    "title": "Shave",
+    "durationMinutes": 60
+  }
+]

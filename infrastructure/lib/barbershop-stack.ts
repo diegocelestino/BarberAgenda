@@ -23,6 +23,28 @@ export class BarbershopStack extends cdk.Stack {
       removalPolicy: cdk.RemovalPolicy.DESTROY,
     });
 
+    // DynamoDB Table - Appointments
+    const appointmentsTable = new dynamodb.Table(this, 'AppointmentsTable', {
+      partitionKey: { name: 'barberId', type: dynamodb.AttributeType.STRING },
+      sortKey: { name: 'appointmentId', type: dynamodb.AttributeType.STRING },
+      billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
+      removalPolicy: cdk.RemovalPolicy.DESTROY,
+    });
+
+    // GSI for querying appointments by date
+    appointmentsTable.addGlobalSecondaryIndex({
+      indexName: 'DateIndex',
+      partitionKey: { name: 'barberId', type: dynamodb.AttributeType.STRING },
+      sortKey: { name: 'startTime', type: dynamodb.AttributeType.NUMBER },
+    });
+
+    // DynamoDB Table - Services
+    const servicesTable = new dynamodb.Table(this, 'ServicesTable', {
+      partitionKey: { name: 'serviceId', type: dynamodb.AttributeType.STRING },
+      billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
+      removalPolicy: cdk.RemovalPolicy.DESTROY,
+    });
+
     // Lambda Functions for Barbers CRUD (Java 21)
     const createBarberFn = new lambda.Function(this, 'CreateBarberFunction', {
       runtime: lambda.Runtime.JAVA_21,
@@ -153,6 +175,16 @@ export class BarbershopStack extends cdk.Stack {
     new cdk.CfnOutput(this, 'BarbersTableName', {
       value: barbersTable.tableName,
       description: 'Barbers DynamoDB Table',
+    });
+
+    new cdk.CfnOutput(this, 'AppointmentsTableName', {
+      value: appointmentsTable.tableName,
+      description: 'Appointments DynamoDB Table',
+    });
+
+    new cdk.CfnOutput(this, 'ServicesTableName', {
+      value: servicesTable.tableName,
+      description: 'Services DynamoDB Table',
     });
 
     // Frontend Outputs
