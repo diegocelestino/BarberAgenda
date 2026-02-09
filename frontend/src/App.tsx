@@ -1,25 +1,48 @@
-import React, { useState } from 'react';
-import './App.css';
-import CreateBarber from './components/CreateBarber';
-import BarberList from './components/BarberList';
+import { CssBaseline, ThemeProvider, createTheme, Container, Box } from '@mui/material';
+import Header from './components/layout/Header';
+import CreateBarber from './components/barbers/CreateBarber';
+import BarberList from './components/barbers/BarberList';
+
+const theme = createTheme({
+  palette: {
+    mode: 'dark',
+    primary: {
+      main: '#90caf9',
+    },
+    secondary: {
+      main: '#f48fb1',
+    },
+    background: {
+      default: '#121212',
+      paper: '#1e1e1e',
+    },
+  },
+  typography: {
+    fontFamily: '"Roboto", "Helvetica", "Arial", sans-serif',
+  },
+});
 
 function App() {
-  const [refreshKey, setRefreshKey] = useState(0);
-
-  const handleBarberCreated = () => {
-    setRefreshKey(prev => prev + 1);
-  };
-
   return (
-    <div className="App">
-      <header className="App-header">
-        <h1>Barber Shop Scheduler</h1>
-      </header>
-      <main style={{ padding: '2rem', maxWidth: '1200px', margin: '0 auto' }}>
-        <CreateBarber onSuccess={handleBarberCreated} />
-        <BarberList key={refreshKey} />
-      </main>
-    </div>
+    <ThemeProvider theme={theme}>
+      <CssBaseline />
+      <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+        <Header />
+
+        <Container
+          component="main"
+          maxWidth="lg"
+          sx={{
+            mt: { xs: 2, sm: 4 },
+            mb: { xs: 2, sm: 4 },
+            px: { xs: 2, sm: 3 },
+          }}
+        >
+          <CreateBarber />
+          <BarberList />
+        </Container>
+      </Box>
+    </ThemeProvider>
   );
 }
 
