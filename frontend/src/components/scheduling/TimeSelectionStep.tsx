@@ -89,7 +89,7 @@ const TimeSelectionStep: React.FC<TimeSelectionStepProps> = ({
     };
 
     loadAvailableTimes();
-  }, [selectedDate, barberId, serviceId, selectedService, dispatch, appointments]);
+  }, [selectedDate, barberId, serviceId, selectedService?.duration, dispatch]);
 
   const handleNext = () => {
     if (time) {
