@@ -135,7 +135,7 @@ const PublicHomePage: React.FC = () => {
     return (
       <Box
         sx={{
-          minHeight: '100vh',
+          height: 'calc(100vh - 64px)', // Subtract header height (64px is default AppBar height)
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
@@ -224,10 +224,13 @@ const PublicHomePage: React.FC = () => {
   return (
     <Box
       sx={{
-        minHeight: '100vh',
+        minHeight: 'calc(100vh - 64px)', // Subtract header height
         bgcolor: 'background.default',
         py: { xs: 2, sm: 4 },
         px: { xs: 1, sm: 2 },
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
       }}
     >
       <Container maxWidth="md">

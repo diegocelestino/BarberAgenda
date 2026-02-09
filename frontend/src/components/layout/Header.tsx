@@ -13,11 +13,11 @@ const Header: React.FC = () => {
   };
 
   return (
-    <AppBar position="static">
+    <AppBar position="sticky">
       <Toolbar>
         <IconButton
           color="inherit"
-          onClick={() => navigate(isAuthenticated ? '/admin' : '/')}
+          onClick={() => navigate('/')}
           edge="start"
           sx={{ mr: 2 }}
         >
