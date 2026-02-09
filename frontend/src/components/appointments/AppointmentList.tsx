@@ -17,7 +17,7 @@ import {
 } from '@mui/icons-material';
 import { Appointment } from '../../services/appointmentsApi';
 import { useAppDispatch } from '../../store/hooks';
-import { deleteAppointment, updateAppointment } from '../../store/appointments';
+import { updateAppointment } from '../../store/appointments';
 import DeleteAppointmentDialog from './DeleteAppointmentDialog';
 import EditAppointmentDialog from './EditAppointmentDialog';
 
