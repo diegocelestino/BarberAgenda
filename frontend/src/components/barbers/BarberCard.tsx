@@ -1,17 +1,20 @@
+import { useEffect } from 'react';
 import {
   Card,
   CardContent,
-  CardActions,
-  Button,
+  CardActionArea,
   Typography,
   Box,
   Chip,
   Stack,
   Rating,
+  IconButton,
 } from '@mui/material';
-import { Delete as DeleteIcon, Edit as EditIcon } from '@mui/icons-material';
+import { Delete as DeleteIcon } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { Barber } from '../../services/api';
+import { useAppDispatch, useAppSelector } from '../../store/hooks';
+import { fetchServices, selectAllServices } from '../../store/services';
 
 interface BarberCardProps {
   barber: Barber;
@@ -20,6 +23,25 @@ interface BarberCardProps {
 
 const BarberCard: React.FC<BarberCardProps> = ({ barber, onDelete }) => {
   const navigate = useNavigate();
+  const dispatch = useAppDispatch();
+  const services = useAppSelector(selectAllServices);
+
+  useEffect(() => {
+    if (services.length === 0) {
+      dispatch(fetchServices());
+    }
+  }, [services.length, dispatch]);
+
+  const handleDeleteClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    onDelete(barber.barberId);
+  };
+
+  const getServiceNames = () => {
+    return barber.serviceIds
+      .map(id => services.find(s => s.serviceId === id)?.title)
+      .filter(Boolean);
+  };
 
   return (
     <Card
@@ -27,51 +49,63 @@ const BarberCard: React.FC<BarberCardProps> = ({ barber, onDelete }) => {
         height: '100%',
         display: 'flex',
         flexDirection: 'column',
+        position: 'relative',
+        transition: 'transform 0.2s, box-shadow 0.2s',
+        '&:hover': {
+          transform: 'translateY(-4px)',
+          boxShadow: 4,
+        },
       }}
     >
-      <CardContent sx={{ flexGrow: 1 }}>
-        <Typography variant="h6" component="h3" gutterBottom>
-          {barber.name}
-        </Typography>
+      <IconButton
+        size="small"
+        color="error"
+        onClick={handleDeleteClick}
+        sx={{
+          position: 'absolute',
+          top: 8,
+          right: 8,
+          zIndex: 1,
+          backgroundColor: 'background.paper',
+          '&:hover': {
+            backgroundColor: 'error.dark',
+            color: 'white',
+          },
+        }}
+        title="Delete barber"
+      >
+        <DeleteIcon fontSize="small" />
+      </IconButton>
 
-        <Box sx={{ mb: 2 }}>
-          <Rating value={barber.rating} readOnly precision={0.1} size="small" />
-          <Typography variant="body2" color="text.secondary">
-            {barber.rating.toFixed(1)} / 5.0
+      <CardActionArea
+        onClick={() => navigate(`/barber/${barber.barberId}`)}
+        sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column', alignItems: 'stretch' }}
+      >
+        <CardContent sx={{ flexGrow: 1, width: '100%' }}>
+          <Typography variant="h6" component="h3" gutterBottom>
+            {barber.name}
           </Typography>
-        </Box>
 
-        <Stack direction="row" spacing={0.5} flexWrap="wrap" gap={0.5}>
-          {barber.specialties.map((specialty, index) => (
-            <Chip
-              key={index}
-              label={specialty}
-              size="small"
-              color="primary"
-              variant="outlined"
-            />
-          ))}
-        </Stack>
-      </CardContent>
+          <Box sx={{ mb: 2 }}>
+            <Rating value={barber.rating} readOnly precision={0.1} size="small" />
+            <Typography variant="body2" color="text.secondary">
+              {barber.rating.toFixed(1)} / 5.0
+            </Typography>
+          </Box>
 
-      <CardActions sx={{ justifyContent: 'space-between', px: 2, pb: 2 }}>
-        <Button
-          size="small"
-          color="primary"
-          startIcon={<EditIcon />}
-          onClick={() => navigate(`/barber/${barber.barberId}`)}
-        >
-          Edit
-        </Button>
-        <Button
-          size="small"
-          color="error"
-          startIcon={<DeleteIcon />}
-          onClick={() => onDelete(barber.barberId)}
-        >
-          Delete
-        </Button>
-      </CardActions>
+          <Stack direction="row" spacing={0.5} flexWrap="wrap" gap={0.5}>
+            {getServiceNames().map((serviceName, index) => (
+              <Chip
+                key={index}
+                label={serviceName}
+                size="small"
+                color="primary"
+                variant="outlined"
+              />
+            ))}
+          </Stack>
+        </CardContent>
+      </CardActionArea>
     </Card>
   );
 };

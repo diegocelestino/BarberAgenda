@@ -54,7 +54,7 @@ api.interceptors.response.use(
 export interface Barber {
   barberId: string;
   name: string;
-  specialties: string[];
+  serviceIds: string[];
   rating: number;
   photoUrl?: string;
   createdAt: number;
@@ -62,14 +62,14 @@ export interface Barber {
 
 export interface CreateBarberData {
   name: string;
-  specialties: string[];
+  serviceIds: string[];
   rating?: number;
   photoUrl?: string;
 }
 
 export interface UpdateBarberData {
   name?: string;
-  specialties?: string[];
+  serviceIds?: string[];
   rating?: number;
   photoUrl?: string;
 }

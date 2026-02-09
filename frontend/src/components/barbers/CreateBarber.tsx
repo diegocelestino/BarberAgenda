@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Box,
   Typography,
@@ -9,37 +9,43 @@ import {
   Chip,
   Alert,
   Snackbar,
+  MenuItem,
+  CircularProgress,
 } from '@mui/material';
 import { Add as AddIcon } from '@mui/icons-material';
 import { useAppDispatch, useAppSelector } from '../../store/hooks';
 import { createBarber, selectBarbersLoading } from '../../store/barbers';
+import { fetchServices, selectAllServices, selectServicesLoading } from '../../store/services';
 
 const CreateBarber: React.FC = () => {
   const dispatch = useAppDispatch();
   const loading = useAppSelector(selectBarbersLoading);
+  const services = useAppSelector(selectAllServices);
+  const servicesLoading = useAppSelector(selectServicesLoading);
   
   const [name, setName] = useState('');
-  const [specialtyInput, setSpecialtyInput] = useState('');
-  const [specialties, setSpecialties] = useState<string[]>([]);
+  const [selectedServiceIds, setSelectedServiceIds] = useState<string[]>([]);
   const [rating, setRating] = useState<number>(5);
   const [successOpen, setSuccessOpen] = useState(false);
 
-  const handleAddSpecialty = () => {
-    const trimmed = specialtyInput.trim();
-    if (trimmed && !specialties.includes(trimmed)) {
-      setSpecialties([...specialties, trimmed]);
-      setSpecialtyInput('');
+  useEffect(() => {
+    if (services.length === 0) {
+      dispatch(fetchServices());
     }
-  };
+  }, [services.length, dispatch]);
 
-  const handleRemoveSpecialty = (specialty: string) => {
-    setSpecialties(specialties.filter((s) => s !== specialty));
+  const handleToggleService = (serviceId: string) => {
+    setSelectedServiceIds(prev =>
+      prev.includes(serviceId)
+        ? prev.filter(id => id !== serviceId)
+        : [...prev, serviceId]
+    );
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!name.trim()) {
+    if (!name.trim() || selectedServiceIds.length === 0) {
       return;
     }
 
@@ -47,25 +53,18 @@ const CreateBarber: React.FC = () => {
       await dispatch(
         createBarber({
           name: name.trim(),
-          specialties: specialties.length > 0 ? specialties : ['General'],
+          serviceIds: selectedServiceIds,
           rating,
         })
       ).unwrap();
 
       // Reset form
       setName('');
-      setSpecialties([]);
+      setSelectedServiceIds([]);
       setRating(5);
       setSuccessOpen(true);
     } catch (err) {
       console.error('Failed to create barber:', err);
-    }
-  };
-
-  const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      handleAddSpecialty();
     }
   };
 
@@ -87,35 +86,30 @@ const CreateBarber: React.FC = () => {
           />
 
           <Box>
-            <Stack direction="row" spacing={1} sx={{ mb: 1 }}>
-              <TextField
-                label="Add Specialty"
-                value={specialtyInput}
-                onChange={(e) => setSpecialtyInput(e.target.value)}
-                onKeyPress={handleKeyPress}
-                placeholder="e.g., Haircut, Beard Trim"
-                fullWidth
-                variant="outlined"
-                size="small"
-              />
-              <Button
-                variant="outlined"
-                onClick={handleAddSpecialty}
-                disabled={!specialtyInput.trim()}
-              >
-                Add
-              </Button>
-            </Stack>
-
-            {specialties.length > 0 && (
+            <Typography variant="subtitle2" gutterBottom>
+              Services *
+            </Typography>
+            {servicesLoading ? (
+              <Box display="flex" alignItems="center" gap={1}>
+                <CircularProgress size={20} />
+                <Typography variant="body2" color="text.secondary">
+                  Loading services...
+                </Typography>
+              </Box>
+            ) : services.length === 0 ? (
+              <Alert severity="info">
+                No services available. Please create services first.
+              </Alert>
+            ) : (
               <Stack direction="row" spacing={0.5} flexWrap="wrap" gap={0.5}>
-                {specialties.map((specialty, index) => (
+                {services.map((service) => (
                   <Chip
-                    key={index}
-                    label={specialty}
-                    onDelete={() => handleRemoveSpecialty(specialty)}
-                    color="primary"
-                    size="small"
+                    key={service.serviceId}
+                    label={service.title}
+                    onClick={() => handleToggleService(service.serviceId)}
+                    color={selectedServiceIds.includes(service.serviceId) ? 'primary' : 'default'}
+                    variant={selectedServiceIds.includes(service.serviceId) ? 'filled' : 'outlined'}
+                    clickable
                   />
                 ))}
               </Stack>
@@ -141,7 +135,7 @@ const CreateBarber: React.FC = () => {
             variant="contained"
             size="large"
             startIcon={<AddIcon />}
-            disabled={loading || !name.trim()}
+            disabled={loading || !name.trim() || selectedServiceIds.length === 0}
             fullWidth
           >
             {loading ? 'Creating...' : 'Create Barber'}

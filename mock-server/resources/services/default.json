@@ -23,5 +23,10 @@
     "serviceId": "service-5",
     "title": "Shave",
     "durationMinutes": 60
+  },
+  {
+    "serviceId": "service-1770598659570",
+    "title": "Barba",
+    "durationMinutes": 60
   }
 ]

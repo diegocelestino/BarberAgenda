@@ -41,16 +41,16 @@ const getBarberById = (req, res) => {
 const createBarber = (req, res) => {
   console.log('POST /barbers', req.body);
   
-  const { name, specialties, rating, photoUrl } = req.body;
+  const { name, serviceIds, rating, photoUrl } = req.body;
   
-  if (!name || !specialties || !Array.isArray(specialties)) {
-    return res.status(400).json({ error: 'Name and specialties are required' });
+  if (!name || !serviceIds || !Array.isArray(serviceIds)) {
+    return res.status(400).json({ error: 'Name and serviceIds are required' });
   }
   
   const newBarber = {
     barberId: uuidv4(),
     name,
-    specialties,
+    serviceIds,
     rating: rating || 0,
     photoUrl: photoUrl || 'https://via.placeholder.com/150',
     createdAt: Date.now(),
@@ -71,12 +71,12 @@ const updateBarber = (req, res) => {
     return res.status(404).json({ error: 'Barber not found' });
   }
   
-  const { name, specialties, rating, photoUrl } = req.body;
+  const { name, serviceIds, rating, photoUrl } = req.body;
   
   barbers[barberIndex] = {
     ...barbers[barberIndex],
     ...(name && { name }),
-    ...(specialties && { specialties }),
+    ...(serviceIds && { serviceIds }),
     ...(rating !== undefined && { rating }),
     ...(photoUrl && { photoUrl }),
   };

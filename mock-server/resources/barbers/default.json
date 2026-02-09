@@ -2,7 +2,7 @@
   {
     "barberId": "550e8400-e29b-41d4-a716-446655440001",
     "name": "John Smith",
-    "specialties": ["Haircut", "Beard Trim"],
+    "serviceIds": ["service-1", "service-2"],
     "rating": 4.5,
     "photoUrl": "https://via.placeholder.com/150",
     "createdAt": 1704067200000
@@ -10,7 +10,7 @@
   {
     "barberId": "550e8400-e29b-41d4-a716-446655440002",
     "name": "Mike Johnson",
-    "specialties": ["Haircut", "Shave", "Hair Coloring"],
+    "serviceIds": ["service-1", "service-5", "service-4"],
     "rating": 4.8,
     "photoUrl": "https://via.placeholder.com/150",
     "createdAt": 1703980800000
@@ -18,7 +18,7 @@
   {
     "barberId": "550e8400-e29b-41d4-a716-446655440003",
     "name": "Carlos Silva",
-    "specialties": ["Haircut", "Beard Design", "Kids Haircut"],
+    "serviceIds": ["service-1", "service-3"],
     "rating": 4.7,
     "photoUrl": "https://via.placeholder.com/150",
     "createdAt": 1703894400000

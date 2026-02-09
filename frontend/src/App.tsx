@@ -1,7 +1,9 @@
 import { CssBaseline, ThemeProvider, createTheme, Box } from '@mui/material';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import Header from './components/layout/Header';
-import HomePage from './pages/HomePage';
+import MenuPage from './pages/MenuPage';
+import BarbersPage from './pages/BarbersPage';
+import ServicesPage from './pages/ServicesPage';
 import EditBarberPage from './pages/EditBarberPage';
 
 const theme = createTheme({
@@ -31,7 +33,9 @@ function App() {
         <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
           <Header />
           <Routes>
-            <Route path="/" element={<HomePage />} />
+            <Route path="/" element={<MenuPage />} />
+            <Route path="/barbers" element={<BarbersPage />} />
+            <Route path="/services" element={<ServicesPage />} />
             <Route path="/barber/:barberId" element={<EditBarberPage />} />
           </Routes>
         </Box>
