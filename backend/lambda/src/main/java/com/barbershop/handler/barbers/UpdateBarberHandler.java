@@ -40,8 +40,8 @@ public class UpdateBarberHandler implements RequestHandler<APIGatewayProxyReques
                 existingBarber.setName((String) updates.get("name"));
                 hasUpdates = true;
             }
-            if (updates.containsKey("specialties")) {
-                existingBarber.setSpecialties((List<String>) updates.get("specialties"));
+            if (updates.containsKey("serviceIds")) {
+                existingBarber.setServiceIds((List<String>) updates.get("serviceIds"));
                 hasUpdates = true;
             }
             if (updates.containsKey("rating")) {

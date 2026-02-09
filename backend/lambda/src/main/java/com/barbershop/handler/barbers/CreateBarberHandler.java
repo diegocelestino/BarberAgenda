@@ -29,8 +29,8 @@ public class CreateBarberHandler implements RequestHandler<APIGatewayProxyReques
             Barber barber = new Barber();
             barber.setBarberId(UUID.randomUUID().toString());
             barber.setName(name);
-            barber.setSpecialties(body.get("specialties") != null ? 
-                (List<String>) body.get("specialties") : new ArrayList<>());
+            barber.setServiceIds(body.get("serviceIds") != null ? 
+                (List<String>) body.get("serviceIds") : new ArrayList<>());
             barber.setRating(body.get("rating") != null ? 
                 ((Number) body.get("rating")).doubleValue() : 0.0);
             barber.setPhotoUrl(body.get("photoUrl") != null ? 
