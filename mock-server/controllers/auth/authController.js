@@ -1,29 +1,21 @@
 const fs = require('fs');
 const path = require('path');
-const bcrypt = require('bcryptjs');
 
 // Load users from JSON file
 const usersPath = path.join(__dirname, '../../resources/users/default.json');
 let users = JSON.parse(fs.readFileSync(usersPath, 'utf8'));
 
 // Login
-const login = async (req, res) => {
+const login = (req, res) => {
   const { username, password } = req.body;
   
   if (!username || !password) {
     return res.status(400).json({ error: 'Username and password are required' });
   }
   
-  const user = users.find(u => u.username === username);
+  const user = users.find(u => u.username === username && u.password === password);
   
   if (!user) {
-    return res.status(401).json({ error: 'Invalid username or password' });
-  }
-  
-  // Compare password with hashed password
-  const isPasswordValid = await bcrypt.compare(password, user.password);
-  
-  if (!isPasswordValid) {
     return res.status(401).json({ error: 'Invalid username or password' });
   }
   
@@ -55,7 +47,7 @@ const getCurrentUser = (req, res) => {
 };
 
 // Create user (admin only in production)
-const createUser = async (req, res) => {
+const createUser = (req, res) => {
   const { username, password, email, role } = req.body;
   
   if (!username || !password || !email) {
@@ -66,12 +58,9 @@ const createUser = async (req, res) => {
     return res.status(409).json({ error: 'Username already exists' });
   }
   
-  // Hash password before storing
-  const hashedPassword = await bcrypt.hash(password, 10);
-  
   const newUser = {
     username,
-    password: hashedPassword,
+    password,
     email,
     role: role || 'user',
     createdAt: Date.now(),

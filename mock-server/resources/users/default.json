@@ -1,14 +1,14 @@
 [
   {
     "username": "admin",
-    "password": "$2a$10$vxACw6G10AQm.2uR8FKiX.fjhfvSz4gbIUDfK2MxtqEYHA9K5VlNS",
+    "password": "admin",
     "email": "admin@barbershop.com",
     "role": "admin",
     "createdAt": 1704067200000
   },
   {
     "username": "manager",
-    "password": "$2a$10$dPPgpEwabwXOl1p5hDvhbeWBWufPfQPWFQMxXYxwydW/T2itVq7tC",
+    "password": "manager",
     "email": "manager@barbershop.com",
     "role": "manager",
     "createdAt": 1704067200000
