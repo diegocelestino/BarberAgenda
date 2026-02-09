@@ -89,6 +89,7 @@ const TimeSelectionStep: React.FC<TimeSelectionStepProps> = ({
     };
 
     loadAvailableTimes();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedDate, barberId, serviceId, selectedService?.duration, dispatch]);
 
   const handleNext = () => {
