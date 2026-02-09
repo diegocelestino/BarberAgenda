@@ -1,4 +1,4 @@
-package com.barbershop.handler;
+package com.barbershop.handler.barbers;
 
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
@@ -12,7 +12,7 @@ import software.amazon.awssdk.enhanced.dynamodb.Key;
 
 import java.util.*;
 
-public class DeleteBarberHandler implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
+public class GetBarberHandler implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
     private final DynamoDbTable<Barber> barbersTable = DynamoDbHelper.getBarbersTable();
 
     @Override
@@ -25,21 +25,19 @@ public class DeleteBarberHandler implements RequestHandler<APIGatewayProxyReques
 
             String barberId = pathParams.get("barberId");
             Key key = Key.builder().partitionValue(barberId).build();
-            Barber existingBarber = barbersTable.getItem(key);
+            Barber barber = barbersTable.getItem(key);
 
-            if (existingBarber == null) {
+            if (barber == null) {
                 return ResponseHelper.createErrorResponse(404, "Barber not found");
             }
 
-            barbersTable.deleteItem(key);
-
-            Map<String, String> response = new HashMap<>();
-            response.put("message", "Barber deleted successfully");
+            Map<String, Object> response = new HashMap<>();
+            response.put("barber", barber);
 
             return ResponseHelper.createResponse(200, response);
         } catch (Exception e) {
             context.getLogger().log("Error: " + e.getMessage());
-            return ResponseHelper.createErrorResponse(500, "Failed to delete barber: " + e.getMessage());
+            return ResponseHelper.createErrorResponse(500, "Failed to get barber: " + e.getMessage());
         }
     }
 }

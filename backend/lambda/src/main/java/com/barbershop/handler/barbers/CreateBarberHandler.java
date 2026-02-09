@@ -1,4 +1,4 @@
-package com.barbershop.handler;
+package com.barbershop.handler.barbers;
 
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;

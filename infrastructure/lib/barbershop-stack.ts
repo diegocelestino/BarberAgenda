@@ -55,7 +55,7 @@ export class BarbershopStack extends cdk.Stack {
     // Lambda Functions for Barbers CRUD (Java 21)
     const createBarberFn = new lambda.Function(this, 'CreateBarberFunction', {
       runtime: lambda.Runtime.JAVA_21,
-      handler: 'com.barbershop.handler.CreateBarberHandler::handleRequest',
+      handler: 'com.barbershop.handler.barbers.CreateBarberHandler::handleRequest',
       code: lambda.Code.fromAsset(path.join(__dirname, '../../backend/lambda/target/barber-scheduler-lambda-1.0.0.jar')),
       environment: {
         BARBERS_TABLE: barbersTable.tableName,
@@ -66,7 +66,7 @@ export class BarbershopStack extends cdk.Stack {
 
     const getBarbersListFn = new lambda.Function(this, 'GetBarbersListFunction', {
       runtime: lambda.Runtime.JAVA_21,
-      handler: 'com.barbershop.handler.GetBarbersListHandler::handleRequest',
+      handler: 'com.barbershop.handler.barbers.GetBarbersListHandler::handleRequest',
       code: lambda.Code.fromAsset(path.join(__dirname, '../../backend/lambda/target/barber-scheduler-lambda-1.0.0.jar')),
       environment: {
         BARBERS_TABLE: barbersTable.tableName,
@@ -77,7 +77,7 @@ export class BarbershopStack extends cdk.Stack {
 
     const getBarberFn = new lambda.Function(this, 'GetBarberFunction', {
       runtime: lambda.Runtime.JAVA_21,
-      handler: 'com.barbershop.handler.GetBarberHandler::handleRequest',
+      handler: 'com.barbershop.handler.barbers.GetBarberHandler::handleRequest',
       code: lambda.Code.fromAsset(path.join(__dirname, '../../backend/lambda/target/barber-scheduler-lambda-1.0.0.jar')),
       environment: {
         BARBERS_TABLE: barbersTable.tableName,
@@ -88,7 +88,7 @@ export class BarbershopStack extends cdk.Stack {
 
     const updateBarberFn = new lambda.Function(this, 'UpdateBarberFunction', {
       runtime: lambda.Runtime.JAVA_21,
-      handler: 'com.barbershop.handler.UpdateBarberHandler::handleRequest',
+      handler: 'com.barbershop.handler.barbers.UpdateBarberHandler::handleRequest',
       code: lambda.Code.fromAsset(path.join(__dirname, '../../backend/lambda/target/barber-scheduler-lambda-1.0.0.jar')),
       environment: {
         BARBERS_TABLE: barbersTable.tableName,
@@ -99,7 +99,7 @@ export class BarbershopStack extends cdk.Stack {
 
     const deleteBarberFn = new lambda.Function(this, 'DeleteBarberFunction', {
       runtime: lambda.Runtime.JAVA_21,
-      handler: 'com.barbershop.handler.DeleteBarberHandler::handleRequest',
+      handler: 'com.barbershop.handler.barbers.DeleteBarberHandler::handleRequest',
       code: lambda.Code.fromAsset(path.join(__dirname, '../../backend/lambda/target/barber-scheduler-lambda-1.0.0.jar')),
       environment: {
         BARBERS_TABLE: barbersTable.tableName,
@@ -118,7 +118,7 @@ export class BarbershopStack extends cdk.Stack {
     // Lambda Function for Auth
     const loginFn = new lambda.Function(this, 'LoginFunction', {
       runtime: lambda.Runtime.JAVA_21,
-      handler: 'com.barbershop.handler.LoginHandler::handleRequest',
+      handler: 'com.barbershop.handler.auth.LoginHandler::handleRequest',
       code: lambda.Code.fromAsset(path.join(__dirname, '../../backend/lambda/target/barber-scheduler-lambda-1.0.0.jar')),
       environment: {
         USERS_TABLE: usersTable.tableName,
@@ -129,6 +129,69 @@ export class BarbershopStack extends cdk.Stack {
 
     // Grant DynamoDB permissions for auth
     usersTable.grantReadData(loginFn);
+
+    // Lambda Functions for Services CRUD
+    const createServiceFn = new lambda.Function(this, 'CreateServiceFunction', {
+      runtime: lambda.Runtime.JAVA_21,
+      handler: 'com.barbershop.handler.services.CreateServiceHandler::handleRequest',
+      code: lambda.Code.fromAsset(path.join(__dirname, '../../backend/lambda/target/barber-scheduler-lambda-1.0.0.jar')),
+      environment: {
+        SERVICES_TABLE: servicesTable.tableName,
+      },
+      timeout: cdk.Duration.seconds(30),
+      memorySize: 512,
+    });
+
+    const getServicesListFn = new lambda.Function(this, 'GetServicesListFunction', {
+      runtime: lambda.Runtime.JAVA_21,
+      handler: 'com.barbershop.handler.services.GetServicesListHandler::handleRequest',
+      code: lambda.Code.fromAsset(path.join(__dirname, '../../backend/lambda/target/barber-scheduler-lambda-1.0.0.jar')),
+      environment: {
+        SERVICES_TABLE: servicesTable.tableName,
+      },
+      timeout: cdk.Duration.seconds(30),
+      memorySize: 512,
+    });
+
+    const getServiceFn = new lambda.Function(this, 'GetServiceFunction', {
+      runtime: lambda.Runtime.JAVA_21,
+      handler: 'com.barbershop.handler.services.GetServiceHandler::handleRequest',
+      code: lambda.Code.fromAsset(path.join(__dirname, '../../backend/lambda/target/barber-scheduler-lambda-1.0.0.jar')),
+      environment: {
+        SERVICES_TABLE: servicesTable.tableName,
+      },
+      timeout: cdk.Duration.seconds(30),
+      memorySize: 512,
+    });
+
+    const updateServiceFn = new lambda.Function(this, 'UpdateServiceFunction', {
+      runtime: lambda.Runtime.JAVA_21,
+      handler: 'com.barbershop.handler.services.UpdateServiceHandler::handleRequest',
+      code: lambda.Code.fromAsset(path.join(__dirname, '../../backend/lambda/target/barber-scheduler-lambda-1.0.0.jar')),
+      environment: {
+        SERVICES_TABLE: servicesTable.tableName,
+      },
+      timeout: cdk.Duration.seconds(30),
+      memorySize: 512,
+    });
+
+    const deleteServiceFn = new lambda.Function(this, 'DeleteServiceFunction', {
+      runtime: lambda.Runtime.JAVA_21,
+      handler: 'com.barbershop.handler.services.DeleteServiceHandler::handleRequest',
+      code: lambda.Code.fromAsset(path.join(__dirname, '../../backend/lambda/target/barber-scheduler-lambda-1.0.0.jar')),
+      environment: {
+        SERVICES_TABLE: servicesTable.tableName,
+      },
+      timeout: cdk.Duration.seconds(30),
+      memorySize: 512,
+    });
+
+    // Grant DynamoDB permissions for services
+    servicesTable.grantReadWriteData(createServiceFn);
+    servicesTable.grantReadWriteData(getServicesListFn);
+    servicesTable.grantReadWriteData(getServiceFn);
+    servicesTable.grantReadWriteData(updateServiceFn);
+    servicesTable.grantReadWriteData(deleteServiceFn);
 
     // API Gateway
     const api = new apigateway.RestApi(this, 'BarberSchedulerApi', {
@@ -158,6 +221,17 @@ export class BarbershopStack extends cdk.Stack {
     // /auth/login resource
     const login = auth.addResource('login');
     login.addMethod('POST', new apigateway.LambdaIntegration(loginFn));
+
+    // /services resource
+    const services = api.root.addResource('services');
+    services.addMethod('POST', new apigateway.LambdaIntegration(createServiceFn));
+    services.addMethod('GET', new apigateway.LambdaIntegration(getServicesListFn));
+
+    // /services/{serviceId} resource
+    const service = services.addResource('{serviceId}');
+    service.addMethod('GET', new apigateway.LambdaIntegration(getServiceFn));
+    service.addMethod('PUT', new apigateway.LambdaIntegration(updateServiceFn));
+    service.addMethod('DELETE', new apigateway.LambdaIntegration(deleteServiceFn));
 
     // ========================================
     // Frontend - S3 + CloudFront
