@@ -9,7 +9,7 @@ import java.util.List;
 public class Barber {
     private String barberId;
     private String name;
-    private List<String> specialties;
+    private List<String> serviceIds;
     private Double rating;
     private String photoUrl;
     private Long createdAt;
@@ -31,12 +31,12 @@ public class Barber {
         this.name = name;
     }
 
-    public List<String> getSpecialties() {
-        return specialties;
+    public List<String> getServiceIds() {
+        return serviceIds;
     }
 
-    public void setSpecialties(List<String> specialties) {
-        this.specialties = specialties;
+    public void setServiceIds(List<String> serviceIds) {
+        this.serviceIds = serviceIds;
     }
 
     public Double getRating() {
