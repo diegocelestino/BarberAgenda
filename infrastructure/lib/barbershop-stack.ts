@@ -193,6 +193,69 @@ export class BarbershopStack extends cdk.Stack {
     servicesTable.grantReadWriteData(updateServiceFn);
     servicesTable.grantReadWriteData(deleteServiceFn);
 
+    // Lambda Functions for Appointments CRUD
+    const createAppointmentFn = new lambda.Function(this, 'CreateAppointmentFunction', {
+      runtime: lambda.Runtime.JAVA_21,
+      handler: 'com.barbershop.handler.appointments.CreateAppointmentHandler::handleRequest',
+      code: lambda.Code.fromAsset(path.join(__dirname, '../../backend/lambda/target/barber-scheduler-lambda-1.0.0.jar')),
+      environment: {
+        APPOINTMENTS_TABLE: appointmentsTable.tableName,
+      },
+      timeout: cdk.Duration.seconds(30),
+      memorySize: 512,
+    });
+
+    const getAppointmentsListFn = new lambda.Function(this, 'GetAppointmentsListFunction', {
+      runtime: lambda.Runtime.JAVA_21,
+      handler: 'com.barbershop.handler.appointments.GetAppointmentsListHandler::handleRequest',
+      code: lambda.Code.fromAsset(path.join(__dirname, '../../backend/lambda/target/barber-scheduler-lambda-1.0.0.jar')),
+      environment: {
+        APPOINTMENTS_TABLE: appointmentsTable.tableName,
+      },
+      timeout: cdk.Duration.seconds(30),
+      memorySize: 512,
+    });
+
+    const getAppointmentFn = new lambda.Function(this, 'GetAppointmentFunction', {
+      runtime: lambda.Runtime.JAVA_21,
+      handler: 'com.barbershop.handler.appointments.GetAppointmentHandler::handleRequest',
+      code: lambda.Code.fromAsset(path.join(__dirname, '../../backend/lambda/target/barber-scheduler-lambda-1.0.0.jar')),
+      environment: {
+        APPOINTMENTS_TABLE: appointmentsTable.tableName,
+      },
+      timeout: cdk.Duration.seconds(30),
+      memorySize: 512,
+    });
+
+    const updateAppointmentFn = new lambda.Function(this, 'UpdateAppointmentFunction', {
+      runtime: lambda.Runtime.JAVA_21,
+      handler: 'com.barbershop.handler.appointments.UpdateAppointmentHandler::handleRequest',
+      code: lambda.Code.fromAsset(path.join(__dirname, '../../backend/lambda/target/barber-scheduler-lambda-1.0.0.jar')),
+      environment: {
+        APPOINTMENTS_TABLE: appointmentsTable.tableName,
+      },
+      timeout: cdk.Duration.seconds(30),
+      memorySize: 512,
+    });
+
+    const deleteAppointmentFn = new lambda.Function(this, 'DeleteAppointmentFunction', {
+      runtime: lambda.Runtime.JAVA_21,
+      handler: 'com.barbershop.handler.appointments.DeleteAppointmentHandler::handleRequest',
+      code: lambda.Code.fromAsset(path.join(__dirname, '../../backend/lambda/target/barber-scheduler-lambda-1.0.0.jar')),
+      environment: {
+        APPOINTMENTS_TABLE: appointmentsTable.tableName,
+      },
+      timeout: cdk.Duration.seconds(30),
+      memorySize: 512,
+    });
+
+    // Grant DynamoDB permissions for appointments
+    appointmentsTable.grantReadWriteData(createAppointmentFn);
+    appointmentsTable.grantReadWriteData(getAppointmentsListFn);
+    appointmentsTable.grantReadWriteData(getAppointmentFn);
+    appointmentsTable.grantReadWriteData(updateAppointmentFn);
+    appointmentsTable.grantReadWriteData(deleteAppointmentFn);
+
     // API Gateway
     const api = new apigateway.RestApi(this, 'BarberSchedulerApi', {
       restApiName: 'Barber Scheduler API',
@@ -214,6 +277,17 @@ export class BarbershopStack extends cdk.Stack {
     barber.addMethod('GET', new apigateway.LambdaIntegration(getBarberFn));
     barber.addMethod('PUT', new apigateway.LambdaIntegration(updateBarberFn));
     barber.addMethod('DELETE', new apigateway.LambdaIntegration(deleteBarberFn));
+
+    // /barbers/{barberId}/appointments resource
+    const appointments = barber.addResource('appointments');
+    appointments.addMethod('POST', new apigateway.LambdaIntegration(createAppointmentFn));
+    appointments.addMethod('GET', new apigateway.LambdaIntegration(getAppointmentsListFn));
+
+    // /barbers/{barberId}/appointments/{appointmentId} resource
+    const appointment = appointments.addResource('{appointmentId}');
+    appointment.addMethod('GET', new apigateway.LambdaIntegration(getAppointmentFn));
+    appointment.addMethod('PUT', new apigateway.LambdaIntegration(updateAppointmentFn));
+    appointment.addMethod('DELETE', new apigateway.LambdaIntegration(deleteAppointmentFn));
 
     // /auth resource
     const auth = api.root.addResource('auth');
