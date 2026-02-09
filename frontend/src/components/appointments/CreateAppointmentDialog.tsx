@@ -14,6 +14,7 @@ import {
 import { useAppDispatch, useAppSelector } from '../../store/hooks';
 import { createAppointment, selectAppointmentsLoading, selectAppointmentsError } from '../../store/appointments';
 import { fetchServices, selectAllServices, selectServicesLoading } from '../../store/services';
+import { selectSelectedBarber } from '../../store/barbers';
 
 interface CreateAppointmentDialogProps {
   open: boolean;
@@ -31,8 +32,9 @@ const CreateAppointmentDialog: React.FC<CreateAppointmentDialogProps> = ({
   const dispatch = useAppDispatch();
   const loading = useAppSelector(selectAppointmentsLoading);
   const error = useAppSelector(selectAppointmentsError);
-  const services = useAppSelector(selectAllServices);
+  const allServices = useAppSelector(selectAllServices);
   const servicesLoading = useAppSelector(selectServicesLoading);
+  const barber = useAppSelector(selectSelectedBarber);
 
   const [customerName, setCustomerName] = useState('');
   const [customerPhone, setCustomerPhone] = useState('');
@@ -42,14 +44,19 @@ const CreateAppointmentDialog: React.FC<CreateAppointmentDialogProps> = ({
   const [notes, setNotes] = useState('');
 
   useEffect(() => {
-    if (open && services.length === 0) {
+    if (open && allServices.length === 0) {
       dispatch(fetchServices());
     }
-  }, [open, services.length, dispatch]);
+  }, [open, allServices.length, dispatch]);
 
   const getSelectedService = () => {
-    return services.find(s => s.serviceId === selectedServiceId);
+    return allServices.find(s => s.serviceId === selectedServiceId);
   };
+
+  // Filter services to only show those offered by the barber
+  const availableServices = barber
+    ? allServices.filter(service => barber.serviceIds.includes(service.serviceId))
+    : [];
 
   const handleSubmit = async () => {
     if (!customerName || !date || !startTime || !selectedServiceId) {
@@ -154,10 +161,10 @@ const CreateAppointmentDialog: React.FC<CreateAppointmentDialogProps> = ({
               <MenuItem disabled>
                 <CircularProgress size={20} /> Loading services...
               </MenuItem>
-            ) : services.length === 0 ? (
-              <MenuItem disabled>No services available</MenuItem>
+            ) : availableServices.length === 0 ? (
+              <MenuItem disabled>No services available for this barber</MenuItem>
             ) : (
-              services.map((service) => (
+              availableServices.map((service) => (
                 <MenuItem key={service.serviceId} value={service.serviceId}>
                   {service.title}
                 </MenuItem>

@@ -13,6 +13,7 @@ import {
 import { useAppDispatch, useAppSelector } from '../../store/hooks';
 import { updateAppointment } from '../../store/appointments';
 import { fetchServices, selectAllServices, selectServicesLoading } from '../../store/services';
+import { selectSelectedBarber } from '../../store/barbers';
 import { Appointment } from '../../services/appointmentsApi';
 
 interface EditAppointmentDialogProps {
@@ -31,8 +32,9 @@ const EditAppointmentDialog: React.FC<EditAppointmentDialogProps> = ({
   onSuccess,
 }) => {
   const dispatch = useAppDispatch();
-  const services = useAppSelector(selectAllServices);
+  const allServices = useAppSelector(selectAllServices);
   const servicesLoading = useAppSelector(selectServicesLoading);
+  const barber = useAppSelector(selectSelectedBarber);
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     customerName: '',
@@ -44,15 +46,15 @@ const EditAppointmentDialog: React.FC<EditAppointmentDialogProps> = ({
   });
 
   useEffect(() => {
-    if (open && services.length === 0) {
+    if (open && allServices.length === 0) {
       dispatch(fetchServices());
     }
-  }, [open, services.length, dispatch]);
+  }, [open, allServices.length, dispatch]);
 
   useEffect(() => {
     if (appointment) {
       // Find service ID by matching service title
-      const matchingService = services.find(s => s.title === appointment.service);
+      const matchingService = allServices.find(s => s.title === appointment.service);
       
       setFormData({
         customerName: appointment.customerName,
@@ -63,13 +65,18 @@ const EditAppointmentDialog: React.FC<EditAppointmentDialogProps> = ({
         notes: appointment.notes || '',
       });
     }
-  }, [appointment, services]);
+  }, [appointment, allServices]);
+
+  // Filter services to only show those offered by the barber
+  const availableServices = barber
+    ? allServices.filter(service => barber.serviceIds.includes(service.serviceId))
+    : [];
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!appointment || !formData.serviceId) return;
 
-    const selectedService = services.find(s => s.serviceId === formData.serviceId);
+    const selectedService = allServices.find(s => s.serviceId === formData.serviceId);
     if (!selectedService) {
       alert('Please select a valid service');
       return;
@@ -128,7 +135,7 @@ const EditAppointmentDialog: React.FC<EditAppointmentDialogProps> = ({
     return appointment.startTime < Date.now();
   };
 
-  const selectedService = services.find(s => s.serviceId === formData.serviceId);
+  const selectedService = allServices.find(s => s.serviceId === formData.serviceId);
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
@@ -165,10 +172,10 @@ const EditAppointmentDialog: React.FC<EditAppointmentDialogProps> = ({
                 <MenuItem disabled>
                   <CircularProgress size={20} /> Loading services...
                 </MenuItem>
-              ) : services.length === 0 ? (
-                <MenuItem disabled>No services available</MenuItem>
+              ) : availableServices.length === 0 ? (
+                <MenuItem disabled>No services available for this barber</MenuItem>
               ) : (
-                services.map((service) => (
+                availableServices.map((service) => (
                   <MenuItem key={service.serviceId} value={service.serviceId}>
                     {service.title}
                   </MenuItem>
