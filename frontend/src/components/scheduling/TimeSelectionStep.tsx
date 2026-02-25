@@ -4,7 +4,30 @@ import { AccessTime as TimeIcon } from '@mui/icons-material';
 import { format, startOfDay, endOfDay } from 'date-fns';
 import { useAppDispatch, useAppSelector } from '../../store/hooks';
 import { fetchAppointmentsByBarber } from '../../store/appointments/appointmentsThunks';
-import { generateTimeSlots } from '../../config/businessHours';
+import { selectBarberById } from '../../store/barbers/barbersSelectors';
+import { BarberSchedule } from '../../services/api';
+
+const generateSlotsFromSchedule = (schedule: BarberSchedule): string[] => {
+  const slots: string[] = [];
+  const [openH, openM] = schedule.openTime.split(':').map(Number);
+  const [closeH, closeM] = schedule.closeTime.split(':').map(Number);
+  const [lunchStartH, lunchStartM] = schedule.lunchStart.split(':').map(Number);
+  const [lunchEndH, lunchEndM] = schedule.lunchEnd.split(':').map(Number);
+
+  const startMinutes = openH * 60 + openM;
+  const endMinutes = closeH * 60 + closeM;
+  const lunchStart = lunchStartH * 60 + lunchStartM;
+  const lunchEnd = lunchEndH * 60 + lunchEndM;
+
+  for (let m = startMinutes; m < endMinutes; m += schedule.slotInterval) {
+    // Skip lunch break slots
+    if (m >= lunchStart && m < lunchEnd) continue;
+    const h = Math.floor(m / 60);
+    const min = m % 60;
+    slots.push(`${h.toString().padStart(2, '0')}:${min.toString().padStart(2, '0')}`);
+  }
+  return slots;
+};
 
 interface TimeSelectionStepProps {
   onNext: (time: string) => void;
@@ -33,8 +56,7 @@ const TimeSelectionStep: React.FC<TimeSelectionStepProps> = ({
     state.services.services.find(s => s.serviceId === serviceId)
   );
 
-  // Get appointments for the selected barber and date
-  const appointments = useAppSelector((state) => state.appointments.appointments);
+  const barber = useAppSelector((state) => selectBarberById(state, barberId));
 
   useEffect(() => {
     const loadAvailableTimes = async () => {
@@ -44,7 +66,7 @@ const TimeSelectionStep: React.FC<TimeSelectionStepProps> = ({
       const dayStart = startOfDay(selectedDate).getTime();
       const dayEnd = endOfDay(selectedDate).getTime();
       
-      await dispatch(
+      const result = await dispatch(
         fetchAppointmentsByBarber({
           barberId,
           params: {
@@ -54,8 +76,19 @@ const TimeSelectionStep: React.FC<TimeSelectionStepProps> = ({
         })
       );
 
-      // Generate all possible time slots from config
-      const allTimes = generateTimeSlots();
+      // Use the fetched appointments directly from the result
+      const fetchedAppointments = (result.payload as any[]) ?? [];
+
+      // Generate time slots from barber's schedule, fallback to defaults
+      const schedule: BarberSchedule = barber?.schedule ?? {
+        openTime: '09:00',
+        closeTime: '18:00',
+        lunchStart: '12:00',
+        lunchEnd: '13:00',
+        workDays: [1, 2, 3, 4, 5, 6],
+        slotInterval: 30,
+      };
+      const allTimes = generateSlotsFromSchedule(schedule);
 
       // Filter out times that conflict with existing appointments
       const serviceDuration = selectedService?.duration || 30;
@@ -67,7 +100,7 @@ const TimeSelectionStep: React.FC<TimeSelectionStepProps> = ({
         const slotEndTime = slotStartTime + (serviceDuration * 60 * 1000);
 
         // Check if this slot conflicts with any existing appointment
-        const hasConflict = appointments.some((appointment) => {
+        const hasConflict = fetchedAppointments.some((appointment: any) => {
           if (appointment.status === 'cancelled') return false;
           
           const appointmentStart = appointment.startTime;
@@ -90,7 +123,7 @@ const TimeSelectionStep: React.FC<TimeSelectionStepProps> = ({
 
     loadAvailableTimes();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedDate, barberId, serviceId, selectedService?.duration, dispatch]);
+  }, [selectedDate, barberId, serviceId, selectedService?.duration, barber?.schedule, dispatch]);
 
   const handleNext = () => {
     if (time) {

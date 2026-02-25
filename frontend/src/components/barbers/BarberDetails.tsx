@@ -28,6 +28,7 @@ import {
 import { clearAppointments } from '../../store/appointments';
 import { fetchServices, selectAllServices, selectServicesLoading } from '../../store/services';
 import AppointmentCalendar from '../appointments/AppointmentCalendar';
+import BarberScheduleTab from './BarberScheduleTab';
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -158,6 +159,7 @@ const BarberDetails: React.FC = () => {
 
         <Tabs value={tabValue} onChange={(_, newValue) => setTabValue(newValue)} sx={{ mb: 3 }}>
           <Tab label="Details" />
+          <Tab label="Schedule" />
           <Tab label="Appointments" />
         </Tabs>
 
@@ -242,6 +244,10 @@ const BarberDetails: React.FC = () => {
         </TabPanel>
 
         <TabPanel value={tabValue} index={1}>
+          <BarberScheduleTab barber={barber} />
+        </TabPanel>
+
+        <TabPanel value={tabValue} index={2}>
           <AppointmentCalendar />
         </TabPanel>
       </Paper>

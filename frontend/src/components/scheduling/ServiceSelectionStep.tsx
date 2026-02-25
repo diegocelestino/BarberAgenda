@@ -1,5 +1,5 @@
 import { useEffect, useMemo } from 'react';
-import { Box, Typography, Card, CardContent, CardActionArea, Grid, CircularProgress, Chip } from '@mui/material';
+import { Box, Typography, Card, CardContent, CardActionArea, Grid, CircularProgress, Chip, Button } from '@mui/material';
 import { MiscellaneousServices as ServicesIcon } from '@mui/icons-material';
 import { useAppDispatch, useAppSelector } from '../../store/hooks';
 import { fetchServices } from '../../store/services/servicesThunks';
@@ -91,6 +91,12 @@ const ServiceSelectionStep: React.FC<ServiceSelectionStepProps> = ({ onNext, onB
           </Grid>
         ))}
       </Grid>
+
+      <Box sx={{ display: 'flex', gap: 2, mt: 3 }}>
+        <Button variant="outlined" onClick={onBack} fullWidth>
+          Back
+        </Button>
+      </Box>
     </Box>
   );
 };

@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Container, Typography, Box, Button, Paper, Stepper, Step, StepLabel } from '@mui/material';
 import { ContentCut as ContentCutIcon, CalendarMonth as CalendarIcon } from '@mui/icons-material';
+import { useLocation } from 'react-router-dom';
 import PhoneNumberStep from '../components/scheduling/PhoneNumberStep';
 import BarberSelectionStep from '../components/scheduling/BarberSelectionStep';
 import ServiceSelectionStep from '../components/scheduling/ServiceSelectionStep';
@@ -25,6 +26,7 @@ interface AppointmentData {
 
 const PublicHomePage: React.FC = () => {
   const dispatch = useAppDispatch();
+  const location = useLocation();
   const [schedulingStarted, setSchedulingStarted] = useState(false);
   const [activeStep, setActiveStep] = useState(0);
   const [appointmentData, setAppointmentData] = useState<AppointmentData>({
@@ -35,6 +37,15 @@ const PublicHomePage: React.FC = () => {
     time: '',
     name: '',
   });
+
+  // Reset to home screen when Home icon is clicked
+  useEffect(() => {
+    if (location.state?.reset) {
+      setSchedulingStarted(false);
+      setActiveStep(0);
+      setAppointmentData({ phoneNumber: '', barberId: '', serviceId: '', date: null, time: '', name: '' });
+    }
+  }, [location.state?.reset]);
 
   // Get selected service for duration calculation
   const selectedService = useAppSelector((state) => 
@@ -91,7 +102,7 @@ const PublicHomePage: React.FC = () => {
     // Create date in local timezone (São Paulo)
     const year = appointmentData.date.getFullYear();
     const month = appointmentData.date.getMonth();
-    const day = appointmentData.date.getDate();
+    const day = appointmentData.date.getDate(); 
     const [hours, minutes] = appointmentData.time.split(':');
     
     // Create a new date with local timezone
@@ -290,6 +301,7 @@ const PublicHomePage: React.FC = () => {
               onNext={handleDateSelect}
               onBack={handleBack}
               selectedDate={appointmentData.date || undefined}
+              barberId={appointmentData.barberId}
             />
           )}
 

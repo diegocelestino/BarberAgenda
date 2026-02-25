@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { Box, Typography, Card, CardContent, CardActionArea, Grid, CircularProgress, Avatar } from '@mui/material';
+import { Box, Typography, Card, CardContent, CardActionArea, Grid, CircularProgress, Avatar, Button } from '@mui/material';
 import { ContentCut as ContentCutIcon } from '@mui/icons-material';
 import { useAppDispatch, useAppSelector } from '../../store/hooks';
 import { fetchBarbers } from '../../store/barbers/barbersThunks';
@@ -72,6 +72,12 @@ const BarberSelectionStep: React.FC<BarberSelectionStepProps> = ({ onNext, onBac
           </Grid>
         ))}
       </Grid>
+
+      <Box sx={{ display: 'flex', gap: 2, mt: 3 }}>
+        <Button variant="outlined" onClick={onBack} fullWidth>
+          Back
+        </Button>
+      </Box>
     </Box>
   );
 };

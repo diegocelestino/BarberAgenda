@@ -12,6 +12,16 @@ const PhoneNumberStep: React.FC<PhoneNumberStepProps> = ({ onNext, onBack, initi
   const [phoneNumber, setPhoneNumber] = useState(initialValue);
   const [error, setError] = useState('');
 
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const onlyNumbers = e.target.value.replace(/\D/g, '');
+    if (onlyNumbers.length > 11) {
+      setError('Phone number must not exceed 11 digits');
+      return;
+    }
+    setError('');
+    setPhoneNumber(onlyNumbers);
+  };
+
   const handleSubmit = () => {
     // Basic phone validation
     const cleaned = phoneNumber.replace(/\D/g, '');
@@ -40,10 +50,11 @@ const PhoneNumberStep: React.FC<PhoneNumberStepProps> = ({ onNext, onBack, initi
         fullWidth
         label="Phone Number"
         value={phoneNumber}
-        onChange={(e) => setPhoneNumber(e.target.value)}
-        placeholder="(555) 123-4567"
+        onChange={handleChange}
+        placeholder="11999999999"
         error={!!error}
         helperText={error}
+        inputProps={{ inputMode: 'numeric', pattern: '[0-9]*' }}
         sx={{ mb: 3 }}
       />
 

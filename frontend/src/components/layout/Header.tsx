@@ -17,7 +17,7 @@ const Header: React.FC = () => {
       <Toolbar>
         <IconButton
           color="inherit"
-          onClick={() => navigate('/')}
+          onClick={() => navigate('/', { state: { reset: Date.now() } })}
           edge="start"
           sx={{ mr: 2 }}
         >

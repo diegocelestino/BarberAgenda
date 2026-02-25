@@ -51,6 +51,15 @@ api.interceptors.response.use(
   }
 );
 
+export interface BarberSchedule {
+  openTime: string;       // "HH:MM" e.g. "09:00"
+  closeTime: string;      // "HH:MM" e.g. "18:00"
+  lunchStart: string;     // "HH:MM" e.g. "12:00"
+  lunchEnd: string;       // "HH:MM" e.g. "13:00"
+  workDays: number[];     // 0=Sun, 1=Mon ... 6=Sat
+  slotInterval: number;   // minutes e.g. 30
+}
+
 export interface Barber {
   barberId: string;
   name: string;
@@ -58,6 +67,7 @@ export interface Barber {
   rating: number;
   photoUrl?: string;
   createdAt: number;
+  schedule?: BarberSchedule;
 }
 
 export interface CreateBarberData {
@@ -65,6 +75,7 @@ export interface CreateBarberData {
   serviceIds: string[];
   rating?: number;
   photoUrl?: string;
+  schedule?: BarberSchedule;
 }
 
 export interface UpdateBarberData {
@@ -72,6 +83,7 @@ export interface UpdateBarberData {
   serviceIds?: string[];
   rating?: number;
   photoUrl?: string;
+  schedule?: BarberSchedule;
 }
 
 // Barber API functions

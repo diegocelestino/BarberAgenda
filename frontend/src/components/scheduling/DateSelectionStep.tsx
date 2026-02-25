@@ -3,16 +3,23 @@ import { Box, Typography, Button } from '@mui/material';
 import { CalendarMonth as CalendarIcon } from '@mui/icons-material';
 import { LocalizationProvider, DateCalendar } from '@mui/x-date-pickers';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
-import { isBusinessDay, getMaxBookingDate } from '../../config/businessHours';
+import { getMaxBookingDate } from '../../config/businessHours';
+import { useAppSelector } from '../../store/hooks';
+import { selectBarberById } from '../../store/barbers/barbersSelectors';
 
 interface DateSelectionStepProps {
   onNext: (date: Date) => void;
   onBack: () => void;
   selectedDate?: Date;
+  barberId: string;
 }
 
-const DateSelectionStep: React.FC<DateSelectionStepProps> = ({ onNext, onBack, selectedDate }) => {
+const DateSelectionStep: React.FC<DateSelectionStepProps> = ({ onNext, onBack, selectedDate, barberId }) => {
   const [date, setDate] = useState<Date | null>(selectedDate || null);
+  const barber = useAppSelector((state) => selectBarberById(state, barberId));
+
+  const workDays = barber?.schedule?.workDays ?? [1, 2, 3, 4, 5, 6];
+  const isWorkDay = (d: Date) => workDays.includes(d.getDay());
 
   const handleNext = () => {
     if (date) {
@@ -43,7 +50,7 @@ const DateSelectionStep: React.FC<DateSelectionStepProps> = ({ onNext, onBack, s
             onChange={(newDate) => setDate(newDate)}
             minDate={minDate}
             maxDate={maxDate}
-            shouldDisableDate={(date) => !isBusinessDay(date)}
+            shouldDisableDate={(date) => !isWorkDay(date)}
             sx={{
               bgcolor: 'background.default',
               borderRadius: 2,
