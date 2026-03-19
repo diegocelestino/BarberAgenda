@@ -5,7 +5,7 @@ A modern, serverless web application that enables customers to easily book appoi
 ## Project Structure
 
 ```
-├── backend/              # Backend Lambda functions (Java)
+├── backend/              # Backend Lambda functions (Node)
 │   └── lambda/          # Java Lambda handlers
 ├── frontend/            # React frontend application
 ├── infrastructure/      # AWS CDK infrastructure code
