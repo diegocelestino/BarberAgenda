@@ -62,7 +62,7 @@ export class BarbershopStack extends cdk.Stack {
             image: lambda.Runtime.NODEJS_22_X.bundlingImage,
             command: [
               'bash', '-c',
-              'npm config set cache /tmp/.npm && npm ci && npm run build && cp -r dist /asset-output && cp -r node_modules /asset-output',
+              'export npm_config_cache=/tmp/.npm && npm ci && npm run build && cp -r dist /asset-output && cp -r node_modules /asset-output',
             ],
           },
         }),
