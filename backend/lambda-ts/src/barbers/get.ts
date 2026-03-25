@@ -22,7 +22,7 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
       return error(404, 'Barber not found');
     }
 
-    return ok(unmarshall(result.Item));
+    return ok({ barber: unmarshall(result.Item) });
   } catch (err) {
     console.error('Error getting barber:', err);
     return error(500, 'Internal server error');

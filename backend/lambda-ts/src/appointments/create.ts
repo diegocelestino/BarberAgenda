@@ -15,10 +15,11 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
     }
 
     const body = JSON.parse(event.body || '{}');
-    const { customerName, customerPhone, serviceId, startTime, endTime } = body;
+    const { customerName, customerPhone, service, serviceId, startTime, endTime, notes } = body;
 
-    if (!customerName || !customerPhone || !serviceId || !startTime || !endTime) {
-      return error(400, 'customerName, customerPhone, serviceId, startTime, and endTime are required');
+    const serviceValue = service || serviceId;
+    if (!customerName || !customerPhone || !serviceValue || !startTime || !endTime) {
+      return error(400, 'customerName, customerPhone, service, startTime, and endTime are required');
     }
 
     const appointment = {
@@ -26,9 +27,10 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
       appointmentId: randomUUID(),
       customerName,
       customerPhone,
-      serviceId,
+      service: serviceValue,
       startTime,
       endTime,
+      notes: notes || '',
       status: 'scheduled',
       createdAt: Date.now(),
     };
@@ -38,7 +40,7 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
       Item: marshall(appointment),
     }));
 
-    return created(appointment);
+    return created({ appointment });
   } catch (err) {
     console.error('Error creating appointment:', err);
     return error(500, 'Internal server error');

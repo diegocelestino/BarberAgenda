@@ -19,9 +19,10 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
     const barber = {
       barberId: randomUUID(),
       name,
-      email: email || '',
-      phone: phone || '',
-      specialties: specialties || [],
+      serviceIds: body.serviceIds || [],
+      rating: body.rating || 5,
+      photoUrl: body.photoUrl || '',
+      schedule: body.schedule || null,
       createdAt: Date.now(),
     };
 
@@ -30,7 +31,7 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
       Item: marshall(barber),
     }));
 
-    return created(barber);
+    return created({ barber });
   } catch (err) {
     console.error('Error creating barber:', err);
     return error(500, 'Internal server error');

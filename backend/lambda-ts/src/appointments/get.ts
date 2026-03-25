@@ -27,7 +27,7 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
       return error(404, 'Appointment not found');
     }
 
-    return ok(unmarshall(result.Item));
+    return ok({ appointment: unmarshall(result.Item) });
   } catch (err) {
     console.error('Error getting appointment:', err);
     return error(500, 'Internal server error');

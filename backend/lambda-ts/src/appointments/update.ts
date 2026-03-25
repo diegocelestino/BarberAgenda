@@ -11,18 +11,15 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
     const appointmentId = event.pathParameters?.appointmentId;
     
     if (!barberId || !appointmentId) {
-      return {
-        statusCode: 400,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: 'barberId and appointmentId are required' }),
-      };
+      return error(400, 'barberId and appointmentId are required');
     }
 
     const body = JSON.parse(event.body || '{}');
-    const { customerName, customerPhone, serviceId, startTime, endTime, status } = body;
+    const { customerName, customerPhone, service, startTime, endTime, notes, status } = body;
 
     const updates: string[] = [];
     const values: Record<string, any> = {};
+    const names: Record<string, string> = {};
 
     if (customerName) {
       updates.push('customerName = :customerName');
@@ -32,9 +29,10 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
       updates.push('customerPhone = :customerPhone');
       values[':customerPhone'] = { S: customerPhone };
     }
-    if (serviceId) {
-      updates.push('serviceId = :serviceId');
-      values[':serviceId'] = { S: serviceId };
+    if (service) {
+      updates.push('#service = :service');
+      values[':service'] = { S: service };
+      names['#service'] = 'service';
     }
     if (startTime) {
       updates.push('startTime = :startTime');
@@ -44,9 +42,14 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
       updates.push('endTime = :endTime');
       values[':endTime'] = { N: endTime.toString() };
     }
+    if (notes !== undefined) {
+      updates.push('notes = :notes');
+      values[':notes'] = { S: notes };
+    }
     if (status) {
       updates.push('#status = :status');
       values[':status'] = { S: status };
+      names['#status'] = 'status';
     }
 
     if (updates.length === 0) {
@@ -61,10 +64,10 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
       },
       UpdateExpression: `SET ${updates.join(', ')}`,
       ExpressionAttributeValues: values,
-      ExpressionAttributeNames: status ? { '#status': 'status' } : undefined,
+      ExpressionAttributeNames: Object.keys(names).length > 0 ? names : undefined,
     }));
 
-    return ok({ message: 'Appointment updated successfully' });
+    return ok({ appointment: { barberId, appointmentId, ...body } });
   } catch (err) {
     console.error('Error updating appointment:', err);
     return error(500, 'Internal server error');

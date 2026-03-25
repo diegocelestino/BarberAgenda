@@ -9,32 +9,33 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
   try {
     const serviceId = event.pathParameters?.serviceId;
     if (!serviceId) {
-      return {
-        statusCode: 400,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: 'serviceId is required' }),
-      };
+      return error(400, 'serviceId is required');
     }
 
     const body = JSON.parse(event.body || '{}');
-    const { name, description, duration, price } = body;
+    const { title, name, description, duration, durationMinutes, price } = body;
 
     const updates: string[] = [];
     const values: Record<string, any> = {};
     const names: Record<string, string> = {};
 
-    if (name) {
-      updates.push('#name = :name');
-      values[':name'] = { S: name };
+    const serviceName = title || name;
+    if (serviceName) {
+      updates.push('#title = :title, #name = :name');
+      values[':title'] = { S: serviceName };
+      values[':name'] = { S: serviceName };
+      names['#title'] = 'title';
       names['#name'] = 'name';
     }
     if (description !== undefined) {
       updates.push('description = :description');
       values[':description'] = { S: description };
     }
-    if (duration) {
-      updates.push('duration = :duration');
-      values[':duration'] = { N: duration.toString() };
+    const serviceDuration = durationMinutes || duration;
+    if (serviceDuration) {
+      updates.push('duration = :duration, durationMinutes = :durationMinutes');
+      values[':duration'] = { N: serviceDuration.toString() };
+      values[':durationMinutes'] = { N: serviceDuration.toString() };
     }
     if (price) {
       updates.push('price = :price');

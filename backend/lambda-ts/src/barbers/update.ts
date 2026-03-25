@@ -1,4 +1,5 @@
 import { UpdateItemCommand } from '@aws-sdk/client-dynamodb';
+import { marshall } from '@aws-sdk/util-dynamodb';
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
 import { dynamo } from '../utils/dynamodb';
 import { ok, error } from '../utils/response';
@@ -13,7 +14,7 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
     }
 
     const body = JSON.parse(event.body || '{}');
-    const { name, email, phone, specialties } = body;
+    const { name, serviceIds, rating, photoUrl, schedule } = body;
 
     const updates: string[] = [];
     const values: Record<string, any> = {};
@@ -24,17 +25,21 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
       values[':name'] = { S: name };
       names['#name'] = 'name';
     }
-    if (email !== undefined) {
-      updates.push('email = :email');
-      values[':email'] = { S: email };
+    if (serviceIds) {
+      updates.push('serviceIds = :serviceIds');
+      values[':serviceIds'] = { L: serviceIds.map((s: string) => ({ S: s })) };
     }
-    if (phone !== undefined) {
-      updates.push('phone = :phone');
-      values[':phone'] = { S: phone };
+    if (rating !== undefined) {
+      updates.push('rating = :rating');
+      values[':rating'] = { N: rating.toString() };
     }
-    if (specialties) {
-      updates.push('specialties = :specialties');
-      values[':specialties'] = { L: specialties.map((s: string) => ({ S: s })) };
+    if (photoUrl !== undefined) {
+      updates.push('photoUrl = :photoUrl');
+      values[':photoUrl'] = { S: photoUrl };
+    }
+    if (schedule !== undefined) {
+      updates.push('schedule = :schedule');
+      values[':schedule'] = schedule ? { M: marshall(schedule) } : { NULL: true };
     }
 
     if (updates.length === 0) {
@@ -49,7 +54,7 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
       ExpressionAttributeNames: Object.keys(names).length > 0 ? names : undefined,
     }));
 
-    return ok({ message: 'Barber updated successfully' });
+    return ok({ barber: { barberId, ...body } });
   } catch (err) {
     console.error('Error updating barber:', err);
     return error(500, 'Internal server error');

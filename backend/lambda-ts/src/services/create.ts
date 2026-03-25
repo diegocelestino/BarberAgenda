@@ -10,17 +10,22 @@ const tableName = process.env.SERVICES_TABLE!;
 export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
   try {
     const body = JSON.parse(event.body || '{}');
-    const { name, description, duration, price } = body;
+    const { title, name, description, duration, durationMinutes, price } = body;
 
-    if (!name || !duration || !price) {
-      return error(400, 'name, duration, and price are required');
+    const serviceName = title || name;
+    const serviceDuration = durationMinutes || duration;
+
+    if (!serviceName || !serviceDuration || !price) {
+      return error(400, 'title/name, duration/durationMinutes, and price are required');
     }
 
     const service = {
       serviceId: randomUUID(),
-      name,
+      title: serviceName,
+      name: serviceName,
       description: description || '',
-      duration,
+      duration: serviceDuration,
+      durationMinutes: serviceDuration,
       price,
       createdAt: Date.now(),
     };

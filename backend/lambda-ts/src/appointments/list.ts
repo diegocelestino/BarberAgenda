@@ -23,7 +23,7 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
 
     const items = result.Items?.map(item => unmarshall(item)) || [];
     
-    return ok(items);
+    return ok({ appointments: items });
   } catch (err) {
     console.error('Error listing appointments:', err);
     return error(500, 'Internal server error');
