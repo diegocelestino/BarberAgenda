@@ -1,22 +1,19 @@
-import { DynamoDBClient, QueryCommand } from '@aws-sdk/client-dynamodb';
+import { QueryCommand } from '@aws-sdk/client-dynamodb';
 import { unmarshall } from '@aws-sdk/util-dynamodb';
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
+import { dynamo } from '../utils/dynamodb';
+import { ok, error } from '../utils/response';
 
-const client = new DynamoDBClient({});
 const tableName = process.env.APPOINTMENTS_TABLE!;
 
 export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
   try {
     const barberId = event.pathParameters?.barberId;
     if (!barberId) {
-      return {
-        statusCode: 400,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: 'barberId is required' }),
-      };
+      return error(400, 'barberId is required');
     }
 
-    const result = await client.send(new QueryCommand({
+    const result = await dynamo.send(new QueryCommand({
       TableName: tableName,
       KeyConditionExpression: 'barberId = :barberId',
       ExpressionAttributeValues: {
@@ -26,17 +23,9 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
 
     const items = result.Items?.map(item => unmarshall(item)) || [];
     
-    return {
-      statusCode: 200,
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(items),
-    };
-  } catch (error) {
-    console.error('Error listing appointments:', error);
-    return {
-      statusCode: 500,
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ message: 'Internal server error' }),
-    };
+    return ok(items);
+  } catch (err) {
+    console.error('Error listing appointments:', err);
+    return error(500, 'Internal server error');
   }
 };

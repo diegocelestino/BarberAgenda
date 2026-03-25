@@ -1,45 +1,30 @@
-import { DynamoDBClient, GetItemCommand } from '@aws-sdk/client-dynamodb';
+import { GetItemCommand } from '@aws-sdk/client-dynamodb';
 import { unmarshall } from '@aws-sdk/util-dynamodb';
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
+import { dynamo } from '../utils/dynamodb';
+import { ok, error } from '../utils/response';
 
-const client = new DynamoDBClient({});
 const tableName = process.env.BARBERS_TABLE!;
 
 export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
   try {
     const barberId = event.pathParameters?.barberId;
     if (!barberId) {
-      return {
-        statusCode: 400,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: 'barberId is required' }),
-      };
+      return error(400, 'barberId is required');
     }
 
-    const result = await client.send(new GetItemCommand({
+    const result = await dynamo.send(new GetItemCommand({
       TableName: tableName,
       Key: { barberId: { S: barberId } },
     }));
 
     if (!result.Item) {
-      return {
-        statusCode: 404,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: 'Barber not found' }),
-      };
+      return error(404, 'Barber not found');
     }
 
-    return {
-      statusCode: 200,
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(unmarshall(result.Item)),
-    };
-  } catch (error) {
-    console.error('Error getting barber:', error);
-    return {
-      statusCode: 500,
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ message: 'Internal server error' }),
-    };
+    return ok(unmarshall(result.Item));
+  } catch (err) {
+    console.error('Error getting barber:', err);
+    return error(500, 'Internal server error');
   }
 };

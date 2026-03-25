@@ -1,45 +1,30 @@
-import { DynamoDBClient, GetItemCommand } from '@aws-sdk/client-dynamodb';
+import { GetItemCommand } from '@aws-sdk/client-dynamodb';
 import { unmarshall } from '@aws-sdk/util-dynamodb';
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
+import { dynamo } from '../utils/dynamodb';
+import { ok, error } from '../utils/response';
 
-const client = new DynamoDBClient({});
 const tableName = process.env.SERVICES_TABLE!;
 
 export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
   try {
     const serviceId = event.pathParameters?.serviceId;
     if (!serviceId) {
-      return {
-        statusCode: 400,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: 'serviceId is required' }),
-      };
+      return error(400, 'serviceId is required');
     }
 
-    const result = await client.send(new GetItemCommand({
+    const result = await dynamo.send(new GetItemCommand({
       TableName: tableName,
       Key: { serviceId: { S: serviceId } },
     }));
 
     if (!result.Item) {
-      return {
-        statusCode: 404,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: 'Service not found' }),
-      };
+      return error(404, 'Service not found');
     }
 
-    return {
-      statusCode: 200,
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(unmarshall(result.Item)),
-    };
-  } catch (error) {
-    console.error('Error getting service:', error);
-    return {
-      statusCode: 500,
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ message: 'Internal server error' }),
-    };
+    return ok(unmarshall(result.Item));
+  } catch (err) {
+    console.error('Error getting service:', err);
+    return error(500, 'Internal server error');
   }
 };

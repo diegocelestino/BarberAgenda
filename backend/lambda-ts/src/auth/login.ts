@@ -1,8 +1,9 @@
-import { DynamoDBClient, GetItemCommand } from '@aws-sdk/client-dynamodb';
+import { GetItemCommand } from '@aws-sdk/client-dynamodb';
 import { unmarshall } from '@aws-sdk/util-dynamodb';
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
+import { dynamo } from '../utils/dynamodb';
+import { ok, error } from '../utils/response';
 
-const client = new DynamoDBClient({});
 const tableName = process.env.USERS_TABLE!;
 
 export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
@@ -11,51 +12,31 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
     const { username, password } = body;
 
     if (!username || !password) {
-      return {
-        statusCode: 400,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: 'username and password are required' }),
-      };
+      return error(400, 'username and password are required');
     }
 
-    const result = await client.send(new GetItemCommand({
+    const result = await dynamo.send(new GetItemCommand({
       TableName: tableName,
       Key: { username: { S: username } },
     }));
 
     if (!result.Item) {
-      return {
-        statusCode: 401,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: 'Invalid credentials' }),
-      };
+      return error(401, 'Invalid credentials');
     }
 
     const user = unmarshall(result.Item);
     
     // Simple password check (in production, use proper hashing)
     if (user.password !== password) {
-      return {
-        statusCode: 401,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: 'Invalid credentials' }),
-      };
+      return error(401, 'Invalid credentials');
     }
 
-    return {
-      statusCode: 200,
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ 
-        message: 'Login successful',
-        user: { username: user.username, role: user.role }
-      }),
-    };
-  } catch (error) {
-    console.error('Error during login:', error);
-    return {
-      statusCode: 500,
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ message: 'Internal server error' }),
-    };
+    return ok({ 
+      message: 'Login successful',
+      user: { username: user.username, role: user.role }
+    });
+  } catch (err) {
+    console.error('Error during login:', err);
+    return error(500, 'Internal server error');
   }
 };

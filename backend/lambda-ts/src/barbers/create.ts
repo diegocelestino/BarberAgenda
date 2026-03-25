@@ -1,9 +1,10 @@
-import { DynamoDBClient, PutItemCommand } from '@aws-sdk/client-dynamodb';
+import { PutItemCommand } from '@aws-sdk/client-dynamodb';
 import { marshall } from '@aws-sdk/util-dynamodb';
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
 import { randomUUID } from 'crypto';
+import { dynamo } from '../utils/dynamodb';
+import { created, error } from '../utils/response';
 
-const client = new DynamoDBClient({});
 const tableName = process.env.BARBERS_TABLE!;
 
 export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
@@ -12,11 +13,7 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
     const { name, email, phone, specialties } = body;
 
     if (!name) {
-      return {
-        statusCode: 400,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: 'name is required' }),
-      };
+      return error(400, 'name is required');
     }
 
     const barber = {
@@ -28,22 +25,14 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
       createdAt: Date.now(),
     };
 
-    await client.send(new PutItemCommand({
+    await dynamo.send(new PutItemCommand({
       TableName: tableName,
       Item: marshall(barber),
     }));
 
-    return {
-      statusCode: 201,
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(barber),
-    };
-  } catch (error) {
-    console.error('Error creating barber:', error);
-    return {
-      statusCode: 500,
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ message: 'Internal server error' }),
-    };
+    return created(barber);
+  } catch (err) {
+    console.error('Error creating barber:', err);
+    return error(500, 'Internal server error');
   }
 };

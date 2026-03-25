@@ -1,7 +1,8 @@
-import { DynamoDBClient, UpdateItemCommand } from '@aws-sdk/client-dynamodb';
+import { UpdateItemCommand } from '@aws-sdk/client-dynamodb';
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
+import { dynamo } from '../utils/dynamodb';
+import { ok, error } from '../utils/response';
 
-const client = new DynamoDBClient({});
 const tableName = process.env.APPOINTMENTS_TABLE!;
 
 export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
@@ -49,14 +50,10 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
     }
 
     if (updates.length === 0) {
-      return {
-        statusCode: 400,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: 'No fields to update' }),
-      };
+      return error(400, 'No fields to update');
     }
 
-    await client.send(new UpdateItemCommand({
+    await dynamo.send(new UpdateItemCommand({
       TableName: tableName,
       Key: { 
         barberId: { S: barberId },
@@ -67,17 +64,9 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
       ExpressionAttributeNames: status ? { '#status': 'status' } : undefined,
     }));
 
-    return {
-      statusCode: 200,
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ message: 'Appointment updated successfully' }),
-    };
-  } catch (error) {
-    console.error('Error updating appointment:', error);
-    return {
-      statusCode: 500,
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ message: 'Internal server error' }),
-    };
+    return ok({ message: 'Appointment updated successfully' });
+  } catch (err) {
+    console.error('Error updating appointment:', err);
+    return error(500, 'Internal server error');
   }
 };

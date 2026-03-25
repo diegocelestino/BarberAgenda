@@ -1,9 +1,10 @@
-import { DynamoDBClient, PutItemCommand } from '@aws-sdk/client-dynamodb';
+import { PutItemCommand } from '@aws-sdk/client-dynamodb';
 import { marshall } from '@aws-sdk/util-dynamodb';
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
 import { randomUUID } from 'crypto';
+import { dynamo } from '../utils/dynamodb';
+import { created, error } from '../utils/response';
 
-const client = new DynamoDBClient({});
 const tableName = process.env.SERVICES_TABLE!;
 
 export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
@@ -12,11 +13,7 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
     const { name, description, duration, price } = body;
 
     if (!name || !duration || !price) {
-      return {
-        statusCode: 400,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: 'name, duration, and price are required' }),
-      };
+      return error(400, 'name, duration, and price are required');
     }
 
     const service = {
@@ -28,22 +25,14 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
       createdAt: Date.now(),
     };
 
-    await client.send(new PutItemCommand({
+    await dynamo.send(new PutItemCommand({
       TableName: tableName,
       Item: marshall(service),
     }));
 
-    return {
-      statusCode: 201,
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(service),
-    };
-  } catch (error) {
-    console.error('Error creating service:', error);
-    return {
-      statusCode: 500,
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ message: 'Internal server error' }),
-    };
+    return created(service);
+  } catch (err) {
+    console.error('Error creating service:', err);
+    return error(500, 'Internal server error');
   }
 };

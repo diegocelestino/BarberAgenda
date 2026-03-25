@@ -1,7 +1,8 @@
-import { DynamoDBClient, DeleteItemCommand } from '@aws-sdk/client-dynamodb';
+import { DeleteItemCommand } from '@aws-sdk/client-dynamodb';
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
+import { dynamo } from '../utils/dynamodb';
+import { ok, error } from '../utils/response';
 
-const client = new DynamoDBClient({});
 const tableName = process.env.APPOINTMENTS_TABLE!;
 
 export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
@@ -10,14 +11,10 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
     const appointmentId = event.pathParameters?.appointmentId;
     
     if (!barberId || !appointmentId) {
-      return {
-        statusCode: 400,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: 'barberId and appointmentId are required' }),
-      };
+      return error(400, 'barberId and appointmentId are required');
     }
 
-    await client.send(new DeleteItemCommand({
+    await dynamo.send(new DeleteItemCommand({
       TableName: tableName,
       Key: { 
         barberId: { S: barberId },
@@ -25,17 +22,9 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
       },
     }));
 
-    return {
-      statusCode: 200,
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ message: 'Appointment deleted successfully' }),
-    };
-  } catch (error) {
-    console.error('Error deleting appointment:', error);
-    return {
-      statusCode: 500,
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ message: 'Internal server error' }),
-    };
+    return ok({ message: 'Appointment deleted successfully' });
+  } catch (err) {
+    console.error('Error deleting appointment:', err);
+    return error(500, 'Internal server error');
   }
 };

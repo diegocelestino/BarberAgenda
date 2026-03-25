@@ -1,19 +1,15 @@
-import { DynamoDBClient, UpdateItemCommand } from '@aws-sdk/client-dynamodb';
-import { marshall } from '@aws-sdk/util-dynamodb';
+import { UpdateItemCommand } from '@aws-sdk/client-dynamodb';
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
+import { dynamo } from '../utils/dynamodb';
+import { ok, error } from '../utils/response';
 
-const client = new DynamoDBClient({});
 const tableName = process.env.BARBERS_TABLE!;
 
 export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
   try {
     const barberId = event.pathParameters?.barberId;
     if (!barberId) {
-      return {
-        statusCode: 400,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: 'barberId is required' }),
-      };
+      return error(400, 'barberId is required');
     }
 
     const body = JSON.parse(event.body || '{}');
@@ -42,14 +38,10 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
     }
 
     if (updates.length === 0) {
-      return {
-        statusCode: 400,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: 'No fields to update' }),
-      };
+      return error(400, 'No fields to update');
     }
 
-    await client.send(new UpdateItemCommand({
+    await dynamo.send(new UpdateItemCommand({
       TableName: tableName,
       Key: { barberId: { S: barberId } },
       UpdateExpression: `SET ${updates.join(', ')}`,
@@ -57,17 +49,9 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
       ExpressionAttributeNames: Object.keys(names).length > 0 ? names : undefined,
     }));
 
-    return {
-      statusCode: 200,
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ message: 'Barber updated successfully' }),
-    };
-  } catch (error) {
-    console.error('Error updating barber:', error);
-    return {
-      statusCode: 500,
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ message: 'Internal server error' }),
-    };
+    return ok({ message: 'Barber updated successfully' });
+  } catch (err) {
+    console.error('Error updating barber:', err);
+    return error(500, 'Internal server error');
   }
 };
