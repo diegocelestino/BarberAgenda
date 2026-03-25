@@ -4,7 +4,7 @@ on:
   push:
     branches: [ main ]
     paths:
-    - 'backend/lambda/**'
+    - 'backend/lambda-ts/**'
     - 'infrastructure/**'
     - '.github/workflows/deploy-backend.yml'
 
@@ -14,17 +14,10 @@ jobs:
     steps:
     - uses: actions/checkout@v3
 
-    - name: Setup Java
-      uses: actions/setup-java@v3
-      with:
-        distribution: 'corretto'
-        java-version: '21'
-        cache: 'maven'
-
     - name: Setup Node.js
       uses: actions/setup-node@v3
       with:
-        node-version: '18'
+        node-version: '22'
 
     - name: Configure AWS Credentials
       uses: aws-actions/configure-aws-credentials@v2
@@ -33,17 +26,10 @@ jobs:
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         aws-region: sa-east-1
 
-    - name: Build Java Lambda with Maven
-      run: |
-        cd backend/lambda
-        mvn clean package -DskipTests
-
     - name: Install CDK dependencies
-      run: |
-        cd infrastructure
-        npm install
+      run: npm install
+      working-directory: infrastructure
 
     - name: Deploy CDK Stack
-      run: |
-        cd infrastructure
-        npx cdk deploy --require-approval never
+      run: npx cdk deploy --require-approval never
+      working-directory: infrastructure

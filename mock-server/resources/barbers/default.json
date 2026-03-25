@@ -5,7 +5,15 @@
     "serviceIds": ["service-1", "service-2"],
     "rating": 4.5,
     "photoUrl": "https://via.placeholder.com/150",
-    "createdAt": 1704067200000
+    "createdAt": 1704067200000,
+    "schedule": {
+      "openTime": "09:00",
+      "closeTime": "18:00",
+      "lunchStart": "12:00",
+      "lunchEnd": "13:00",
+      "workDays": [1, 2, 3, 4, 5, 6],
+      "slotInterval": 30
+    }
   },
   {
     "barberId": "550e8400-e29b-41d4-a716-446655440002",
@@ -13,7 +21,15 @@
     "serviceIds": ["service-1", "service-5", "service-4"],
     "rating": 4.8,
     "photoUrl": "https://via.placeholder.com/150",
-    "createdAt": 1703980800000
+    "createdAt": 1703980800000,
+    "schedule": {
+      "openTime": "08:00",
+      "closeTime": "17:00",
+      "lunchStart": "12:00",
+      "lunchEnd": "13:00",
+      "workDays": [1, 2, 3, 4, 5],
+      "slotInterval": 30
+    }
   },
   {
     "barberId": "550e8400-e29b-41d4-a716-446655440003",
@@ -21,6 +37,14 @@
     "serviceIds": ["service-1", "service-3"],
     "rating": 4.7,
     "photoUrl": "https://via.placeholder.com/150",
-    "createdAt": 1703894400000
+    "createdAt": 1703894400000,
+    "schedule": {
+      "openTime": "10:00",
+      "closeTime": "19:00",
+      "lunchStart": "13:00",
+      "lunchEnd": "14:00",
+      "workDays": [2, 3, 4, 5, 6],
+      "slotInterval": 45
+    }
   }
 ]

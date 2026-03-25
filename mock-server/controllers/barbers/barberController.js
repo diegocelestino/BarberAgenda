@@ -71,7 +71,7 @@ const updateBarber = (req, res) => {
     return res.status(404).json({ error: 'Barber not found' });
   }
   
-  const { name, serviceIds, rating, photoUrl } = req.body;
+  const { name, serviceIds, rating, photoUrl, schedule } = req.body;
   
   barbers[barberIndex] = {
     ...barbers[barberIndex],
@@ -79,6 +79,7 @@ const updateBarber = (req, res) => {
     ...(serviceIds && { serviceIds }),
     ...(rating !== undefined && { rating }),
     ...(photoUrl && { photoUrl }),
+    ...(schedule && { schedule }),
   };
   
   res.json({ barber: barbers[barberIndex] });
