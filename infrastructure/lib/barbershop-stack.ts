@@ -2,6 +2,7 @@ import * as cdk from 'aws-cdk-lib';
 import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
 import * as apigateway from 'aws-cdk-lib/aws-apigateway';
+import * as iam from 'aws-cdk-lib/aws-iam';
 import * as s3 from 'aws-cdk-lib/aws-s3';
 import * as cloudfront from 'aws-cdk-lib/aws-cloudfront';
 import * as origins from 'aws-cdk-lib/aws-cloudfront-origins';
@@ -133,6 +134,20 @@ export class BarbershopStack extends cdk.Stack {
     usersTable.grantReadData(loginFn);
 
     // ========================================
+    // Notification functions
+    // ========================================
+
+    const sendEmailFn = makeFn('SendEmailFunction', 'dist/notifications/sendEmail.handler', { 
+      BARBERSHOP_EMAIL: process.env.BARBERSHOP_EMAIL || ''
+    });
+    
+    // Grant SES permissions
+    sendEmailFn.addToRolePolicy(new iam.PolicyStatement({
+      actions: ['ses:SendEmail', 'ses:SendRawEmail'],
+      resources: ['*'],
+    }));
+
+    // ========================================
     // API Gateway
     // ========================================
 
@@ -184,6 +199,10 @@ export class BarbershopStack extends cdk.Stack {
     // /auth/login
     const auth = api.root.addResource('auth');
     auth.addResource('login').addMethod('POST', int(loginFn));
+
+    // /notifications/email
+    const notifications = api.root.addResource('notifications');
+    notifications.addResource('email').addMethod('POST', int(sendEmailFn));
 
     // ========================================
     // Frontend - S3 + CloudFront

@@ -3,6 +3,7 @@ import { CheckCircleOutline as SuccessIcon, WhatsApp as WhatsAppIcon } from '@mu
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { WHATSAPP_NUMBER } from '../../config/whatsapp';
+import { sendAppointmentEmail } from '../../services/notificationsApi';
 
 interface SuccessStepProps {
   onClose: () => void;
@@ -23,7 +24,7 @@ const SuccessStep: React.FC<SuccessStepProps> = ({
   serviceName = '',
   phoneNumber = '',
 }) => {
-  const handleWhatsAppClick = () => {
+  const handleWhatsAppClick = async () => {
     const formattedDate = format(date, "dd 'de' MMMM 'de' yyyy", { locale: ptBR });
     const message = `Olá! Meu agendamento foi confirmado:\n\n` +
       `👤 Nome: ${name}\n` +
@@ -38,10 +39,23 @@ const SuccessStep: React.FC<SuccessStepProps> = ({
     const cleanNumber = WHATSAPP_NUMBER.replace(/\D/g, '');
     const whatsappUrl = `https://wa.me/${cleanNumber}?text=${encodedMessage}`;
     
-    console.log('WhatsApp URL:', whatsappUrl); // Debug log
-    console.log('WhatsApp Number:', WHATSAPP_NUMBER); // Debug log
-    
+    // Open WhatsApp
     window.open(whatsappUrl, '_blank');
+    
+    // Send email notification
+    try {
+      await sendAppointmentEmail({
+        name,
+        phoneNumber,
+        barberName: barberName || '',
+        serviceName: serviceName || '',
+        date: formattedDate,
+        time,
+      });
+    } catch (error) {
+      console.error('Failed to send email:', error);
+    }
+    
     onClose();
   };
 
