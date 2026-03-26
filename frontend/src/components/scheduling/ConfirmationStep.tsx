@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Box, Typography, Button, Card, CardContent, Divider, CircularProgress, Alert } from '@mui/material';
 import { CheckCircle as CheckIcon, Person, Phone, ContentCut, MiscellaneousServices, CalendarMonth, AccessTime } from '@mui/icons-material';
 import { format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 import { useAppSelector } from '../../store/hooks';
 
 interface ConfirmationStepProps {
@@ -41,7 +42,7 @@ const ConfirmationStep: React.FC<ConfirmationStepProps> = ({
     try {
       await onConfirm();
     } catch (err) {
-      setError('Failed to book appointment. Please try again.');
+      setError('Falha ao agendar. Por favor, tente novamente.');
       setLoading(false);
     }
   };
@@ -51,12 +52,12 @@ const ConfirmationStep: React.FC<ConfirmationStepProps> = ({
       <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
         <CheckIcon sx={{ fontSize: { xs: 32, sm: 40 }, color: 'primary.main', mr: 2 }} />
         <Typography variant="h5" color="text.primary" sx={{ fontSize: { xs: '1.25rem', sm: '1.5rem' } }}>
-          Confirm Your Appointment
+          Confirme seu Agendamento
         </Typography>
       </Box>
 
       <Typography variant="body1" color="text.secondary" sx={{ mb: 3, fontSize: { xs: '0.875rem', sm: '1rem' } }}>
-        Please review your appointment details
+        Por favor, revise os detalhes do seu agendamento
       </Typography>
 
       <Card sx={{ mb: 3, bgcolor: 'background.default' }}>
@@ -65,7 +66,7 @@ const ConfirmationStep: React.FC<ConfirmationStepProps> = ({
             <Person sx={{ mr: 2, color: 'text.secondary' }} />
             <Box>
               <Typography variant="caption" color="text.secondary">
-                Name
+                Nome
               </Typography>
               <Typography variant="body1" color="text.primary">
                 {name}
@@ -79,7 +80,7 @@ const ConfirmationStep: React.FC<ConfirmationStepProps> = ({
             <Phone sx={{ mr: 2, color: 'text.secondary' }} />
             <Box>
               <Typography variant="caption" color="text.secondary">
-                Phone Number
+                Telefone
               </Typography>
               <Typography variant="body1" color="text.primary">
                 {phoneNumber}
@@ -93,10 +94,10 @@ const ConfirmationStep: React.FC<ConfirmationStepProps> = ({
             <ContentCut sx={{ mr: 2, color: 'text.secondary' }} />
             <Box>
               <Typography variant="caption" color="text.secondary">
-                Barber
+                Barbeiro
               </Typography>
               <Typography variant="body1" color="text.primary">
-                {barber?.name || 'Unknown'}
+                {barber?.name || 'Desconhecido'}
               </Typography>
             </Box>
           </Box>
@@ -107,13 +108,13 @@ const ConfirmationStep: React.FC<ConfirmationStepProps> = ({
             <MiscellaneousServices sx={{ mr: 2, color: 'text.secondary' }} />
             <Box>
               <Typography variant="caption" color="text.secondary">
-                Service
+                Serviço
               </Typography>
               <Typography variant="body1" color="text.primary">
-                {service?.name || 'Unknown'}
+                {service?.name || 'Desconhecido'}
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                ${service?.price} • {service?.duration} min
+                R$ {service?.price} • {service?.duration} min
               </Typography>
             </Box>
           </Box>
@@ -124,10 +125,10 @@ const ConfirmationStep: React.FC<ConfirmationStepProps> = ({
             <CalendarMonth sx={{ mr: 2, color: 'text.secondary' }} />
             <Box>
               <Typography variant="caption" color="text.secondary">
-                Date
+                Data
               </Typography>
               <Typography variant="body1" color="text.primary">
-                {format(date, 'EEEE, MMMM d, yyyy')}
+                {format(date, "EEEE, dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
               </Typography>
             </Box>
           </Box>
@@ -138,7 +139,7 @@ const ConfirmationStep: React.FC<ConfirmationStepProps> = ({
             <AccessTime sx={{ mr: 2, color: 'text.secondary' }} />
             <Box>
               <Typography variant="caption" color="text.secondary">
-                Time
+                Horário
               </Typography>
               <Typography variant="body1" color="text.primary">
                 {time}
@@ -161,7 +162,7 @@ const ConfirmationStep: React.FC<ConfirmationStepProps> = ({
           fullWidth
           disabled={loading}
         >
-          Back
+          Voltar
         </Button>
         <Button
           variant="contained"
@@ -170,7 +171,7 @@ const ConfirmationStep: React.FC<ConfirmationStepProps> = ({
           disabled={loading}
           startIcon={loading ? <CircularProgress size={20} /> : null}
         >
-          {loading ? 'Booking...' : 'Confirm Appointment'}
+          {loading ? 'Agendando...' : 'Confirmar Agendamento'}
         </Button>
       </Box>
     </Box>

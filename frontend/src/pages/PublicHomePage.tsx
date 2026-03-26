@@ -13,7 +13,7 @@ import SuccessStep from '../components/scheduling/SuccessStep';
 import { useAppDispatch, useAppSelector } from '../store/hooks';
 import { createAppointment } from '../store/appointments/appointmentsThunks';
 
-const steps = ['Phone', 'Barber', 'Service', 'Date', 'Time', 'Name', 'Confirm'];
+const steps = ['Telefone', 'Barbeiro', 'Serviço', 'Data', 'Horário', 'Nome', 'Confirmar'];
 
 interface AppointmentData {
   phoneNumber: string;
@@ -196,7 +196,7 @@ const PublicHomePage: React.FC = () => {
                 mb: 2,
               }}
             >
-              Barber Shop
+              Miguel Castilho
             </Typography>
 
             <Typography
@@ -204,7 +204,7 @@ const PublicHomePage: React.FC = () => {
               color="text.secondary"
               sx={{ mb: 4 }}
             >
-              Book your appointment in just a few clicks
+              Agende seu corte com apenas alguns cliques
             </Typography>
 
             <Button
@@ -224,7 +224,7 @@ const PublicHomePage: React.FC = () => {
                 transition: 'all 0.3s',
               }}
             >
-              Schedule Appointment
+              Agendar horário
             </Button>
           </Paper>
         </Container>

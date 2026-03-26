@@ -3,6 +3,7 @@ import { Box, Typography, Button } from '@mui/material';
 import { CalendarMonth as CalendarIcon } from '@mui/icons-material';
 import { LocalizationProvider, DateCalendar } from '@mui/x-date-pickers';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
+import { ptBR } from 'date-fns/locale';
 import { getMaxBookingDate } from '../../config/businessHours';
 import { useAppSelector } from '../../store/hooks';
 import { selectBarberById } from '../../store/barbers/barbersSelectors';
@@ -35,16 +36,16 @@ const DateSelectionStep: React.FC<DateSelectionStepProps> = ({ onNext, onBack, s
       <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
         <CalendarIcon sx={{ fontSize: { xs: 32, sm: 40 }, color: 'primary.main', mr: 2 }} />
         <Typography variant="h5" color="text.primary" sx={{ fontSize: { xs: '1.25rem', sm: '1.5rem' } }}>
-          Choose a Date
+          Escolha uma Data
         </Typography>
       </Box>
 
       <Typography variant="body1" color="text.secondary" sx={{ mb: 3, fontSize: { xs: '0.875rem', sm: '1rem' } }}>
-        Select your preferred appointment date
+        Selecione a data de sua preferência
       </Typography>
 
       <Box sx={{ display: 'flex', justifyContent: 'center', mb: 3 }}>
-        <LocalizationProvider dateAdapter={AdapterDateFns}>
+        <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={ptBR}>
           <DateCalendar
             value={date}
             onChange={(newDate) => setDate(newDate)}
@@ -76,7 +77,7 @@ const DateSelectionStep: React.FC<DateSelectionStepProps> = ({ onNext, onBack, s
           onClick={onBack}
           fullWidth
         >
-          Back
+          Voltar
         </Button>
         <Button
           variant="contained"
@@ -84,7 +85,7 @@ const DateSelectionStep: React.FC<DateSelectionStepProps> = ({ onNext, onBack, s
           fullWidth
           disabled={!date}
         >
-          Next
+          Próximo
         </Button>
       </Box>
     </Box>

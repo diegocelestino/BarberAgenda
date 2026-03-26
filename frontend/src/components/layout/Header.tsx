@@ -24,7 +24,7 @@ const Header: React.FC = () => {
           <HomeIcon />
         </IconButton>
         <Typography variant="h6" component="h1" sx={{ flexGrow: 1 }}>
-          Barber Shop Scheduler
+          Miguel Castilho Agenda
         </Typography>
         {isAuthenticated && (
           <Button
@@ -32,7 +32,7 @@ const Header: React.FC = () => {
             startIcon={<LogoutIcon />}
             onClick={handleLogout}
           >
-            Logout
+            Sair
           </Button>
         )}
       </Toolbar>

@@ -86,31 +86,31 @@ const ServicesList: React.FC = () => {
     <Box>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
         <Typography variant="h5" component="h2">
-          Services
+          Serviços
         </Typography>
         <Button
           variant="contained"
           startIcon={<AddIcon />}
           onClick={() => setCreateDialogOpen(true)}
         >
-          New Service
+          Novo Serviço
         </Button>
       </Box>
 
       {services.length === 0 ? (
         <Alert severity="info">
-          No services found. Create one to get started!
+          Nenhum serviço encontrado. Crie um para começar!
         </Alert>
       ) : (
         <TableContainer component={Paper}>
           <Table>
             <TableHead>
               <TableRow>
-                <TableCell>Service</TableCell>
-                <TableCell>Description</TableCell>
-                <TableCell align="right">Price</TableCell>
-                <TableCell align="right">Duration</TableCell>
-                <TableCell align="right">Actions</TableCell>
+                <TableCell>Serviço</TableCell>
+                <TableCell>Descrição</TableCell>
+                <TableCell align="right">Preço</TableCell>
+                <TableCell align="right">Duração</TableCell>
+                <TableCell align="right">Ações</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
@@ -131,7 +131,7 @@ const ServicesList: React.FC = () => {
                   </TableCell>
                   <TableCell align="right">
                     <Typography variant="body2" color="text.secondary">
-                      ${service.price}
+                      R$ {service.price}
                     </Typography>
                   </TableCell>
                   <TableCell align="right">
@@ -143,7 +143,7 @@ const ServicesList: React.FC = () => {
                     <IconButton
                       size="small"
                       onClick={() => handleEditClick(service)}
-                      title="Edit service"
+                      title="Editar serviço"
                     >
                       <EditIcon />
                     </IconButton>
@@ -151,7 +151,7 @@ const ServicesList: React.FC = () => {
                       size="small"
                       color="error"
                       onClick={() => handleDeleteClick(service)}
-                      title="Delete service"
+                      title="Excluir serviço"
                     >
                       <DeleteIcon />
                     </IconButton>

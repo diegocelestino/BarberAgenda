@@ -45,12 +45,12 @@ const ServiceSelectionStep: React.FC<ServiceSelectionStepProps> = ({ onNext, onB
       <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
         <ServicesIcon sx={{ fontSize: { xs: 32, sm: 40 }, color: 'primary.main', mr: 2 }} />
         <Typography variant="h5" color="text.primary" sx={{ fontSize: { xs: '1.25rem', sm: '1.5rem' } }}>
-          Choose a Service
+          Escolha um Serviço
         </Typography>
       </Box>
 
       <Typography variant="body1" color="text.secondary" sx={{ mb: 3, fontSize: { xs: '0.875rem', sm: '1rem' } }}>
-        What service would you like?
+        Qual serviço você deseja?
       </Typography>
 
       <Grid container spacing={2}>
@@ -94,7 +94,7 @@ const ServiceSelectionStep: React.FC<ServiceSelectionStepProps> = ({ onNext, onB
 
       <Box sx={{ display: 'flex', gap: 2, mt: 3 }}>
         <Button variant="outlined" onClick={onBack} fullWidth>
-          Back
+          Voltar
         </Button>
       </Box>
     </Box>

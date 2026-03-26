@@ -15,7 +15,7 @@ const PhoneNumberStep: React.FC<PhoneNumberStepProps> = ({ onNext, onBack, initi
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const onlyNumbers = e.target.value.replace(/\D/g, '');
     if (onlyNumbers.length > 11) {
-      setError('Phone number must not exceed 11 digits');
+      setError('O telefone não pode ter mais de 11 dígitos');
       return;
     }
     setError('');
@@ -26,7 +26,7 @@ const PhoneNumberStep: React.FC<PhoneNumberStepProps> = ({ onNext, onBack, initi
     // Basic phone validation
     const cleaned = phoneNumber.replace(/\D/g, '');
     if (cleaned.length < 10) {
-      setError('Please enter a valid phone number');
+      setError('Por favor, insira um número de telefone válido');
       return;
     }
     setError('');
@@ -38,17 +38,17 @@ const PhoneNumberStep: React.FC<PhoneNumberStepProps> = ({ onNext, onBack, initi
       <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
         <PhoneIcon sx={{ fontSize: { xs: 32, sm: 40 }, color: 'primary.main', mr: 2 }} />
         <Typography variant="h5" color="text.primary" sx={{ fontSize: { xs: '1.25rem', sm: '1.5rem' } }}>
-          Enter Your Phone Number
+          Digite seu Telefone
         </Typography>
       </Box>
 
       <Typography variant="body1" color="text.secondary" sx={{ mb: 3, fontSize: { xs: '0.875rem', sm: '1rem' } }}>
-        We'll use this to send you appointment reminders
+        Usaremos para enviar lembretes do seu agendamento
       </Typography>
 
       <TextField
         fullWidth
-        label="Phone Number"
+        label="Telefone"
         value={phoneNumber}
         onChange={handleChange}
         placeholder="11999999999"
@@ -64,14 +64,14 @@ const PhoneNumberStep: React.FC<PhoneNumberStepProps> = ({ onNext, onBack, initi
           onClick={onBack}
           fullWidth
         >
-          Back
+          Voltar
         </Button>
         <Button
           variant="contained"
           onClick={handleSubmit}
           fullWidth
         >
-          Next
+          Próximo
         </Button>
       </Box>
     </Box>

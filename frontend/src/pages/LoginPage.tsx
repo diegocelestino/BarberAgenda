@@ -30,10 +30,10 @@ const LoginPage: React.FC = () => {
       if (success) {
         navigate('/admin');
       } else {
-        setError('Invalid username or password');
+        setError('Usuário ou senha inválidos');
       }
     } catch (err) {
-      setError('An error occurred. Please try again.');
+      setError('Ocorreu um erro. Por favor, tente novamente.');
     } finally {
       setLoading(false);
     }
@@ -53,7 +53,7 @@ const LoginPage: React.FC = () => {
           <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', mb: 3 }}>
             <LoginIcon sx={{ fontSize: 48, mb: 2, color: 'primary.main' }} />
             <Typography component="h1" variant="h5">
-              Admin Login
+              Login Admin
             </Typography>
           </Box>
 
@@ -68,7 +68,7 @@ const LoginPage: React.FC = () => {
               margin="normal"
               required
               fullWidth
-              label="Username"
+              label="Usuário"
               autoComplete="username"
               autoFocus
               value={username}
@@ -78,7 +78,7 @@ const LoginPage: React.FC = () => {
               margin="normal"
               required
               fullWidth
-              label="Password"
+              label="Senha"
               type="password"
               autoComplete="current-password"
               value={password}
@@ -91,11 +91,11 @@ const LoginPage: React.FC = () => {
               sx={{ mt: 3, mb: 2 }}
               disabled={loading}
             >
-              {loading ? 'Signing in...' : 'Sign In'}
+              {loading ? 'Entrando...' : 'Entrar'}
             </Button>
             <Box sx={{ mt: 2, textAlign: 'center' }}>
               <Typography variant="body2" color="text.secondary">
-                Demo credentials: admin / admin
+                Credenciais demo: admin / admin
               </Typography>
             </Box>
           </Box>

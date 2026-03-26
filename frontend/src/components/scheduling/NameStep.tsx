@@ -14,7 +14,7 @@ const NameStep: React.FC<NameStepProps> = ({ onNext, onBack, initialValue = '' }
 
   const handleSubmit = () => {
     if (name.trim().length < 2) {
-      setError('Please enter your name');
+      setError('Por favor, digite seu nome');
       return;
     }
     setError('');
@@ -26,20 +26,20 @@ const NameStep: React.FC<NameStepProps> = ({ onNext, onBack, initialValue = '' }
       <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
         <PersonIcon sx={{ fontSize: { xs: 32, sm: 40 }, color: 'primary.main', mr: 2 }} />
         <Typography variant="h5" color="text.primary" sx={{ fontSize: { xs: '1.25rem', sm: '1.5rem' } }}>
-          Enter Your Name
+          Digite seu Nome
         </Typography>
       </Box>
 
       <Typography variant="body1" color="text.secondary" sx={{ mb: 3, fontSize: { xs: '0.875rem', sm: '1rem' } }}>
-        How should we address you?
+        Como devemos te chamar?
       </Typography>
 
       <TextField
         fullWidth
-        label="Full Name"
+        label="Nome Completo"
         value={name}
         onChange={(e) => setName(e.target.value)}
-        placeholder="John Doe"
+        placeholder="João Silva"
         error={!!error}
         helperText={error}
         sx={{ mb: 3 }}
@@ -51,14 +51,14 @@ const NameStep: React.FC<NameStepProps> = ({ onNext, onBack, initialValue = '' }
           onClick={onBack}
           fullWidth
         >
-          Back
+          Voltar
         </Button>
         <Button
           variant="contained"
           onClick={handleSubmit}
           fullWidth
         >
-          Next
+          Próximo
         </Button>
       </Box>
     </Box>

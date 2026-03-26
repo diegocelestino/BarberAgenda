@@ -71,20 +71,20 @@ const BarberList: React.FC = () => {
     <Box>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
         <Typography variant="h5" component="h2">
-          Barbers
+          Barbeiros
         </Typography>
         <Button
           variant="contained"
           startIcon={<AddIcon />}
           onClick={() => setCreateDialogOpen(true)}
         >
-          New Barber
+          Novo Barbeiro
         </Button>
       </Box>
 
       {barbers.length === 0 ? (
         <Alert severity="info">
-          No barbers found. Create one to get started!
+          Nenhum barbeiro encontrado. Crie um para começar!
         </Alert>
       ) : (
         <Grid container spacing={2}>

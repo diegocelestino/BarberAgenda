@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Box, Typography, Button, Grid, Chip, CircularProgress } from '@mui/material';
 import { AccessTime as TimeIcon } from '@mui/icons-material';
 import { format, startOfDay, endOfDay } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 import { useAppDispatch, useAppSelector } from '../../store/hooks';
 import { fetchAppointmentsByBarber } from '../../store/appointments/appointmentsThunks';
 import { selectBarberById } from '../../store/barbers/barbersSelectors';
@@ -144,18 +145,18 @@ const TimeSelectionStep: React.FC<TimeSelectionStepProps> = ({
       <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
         <TimeIcon sx={{ fontSize: { xs: 32, sm: 40 }, color: 'primary.main', mr: 2 }} />
         <Typography variant="h5" color="text.primary" sx={{ fontSize: { xs: '1.25rem', sm: '1.5rem' } }}>
-          Choose a Time
+          Escolha um Horário
         </Typography>
       </Box>
 
       <Typography variant="body1" color="text.secondary" sx={{ mb: 1, fontSize: { xs: '0.875rem', sm: '1rem' } }}>
-        Available times for {format(selectedDate, 'MMMM d, yyyy')}
+        Horários disponíveis para {format(selectedDate, "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
       </Typography>
 
       <Typography variant="body2" color="text.secondary" sx={{ mb: 3, fontSize: { xs: '0.75rem', sm: '0.875rem' } }}>
         {availableTimes.length > 0 
-          ? 'Select your preferred appointment time' 
-          : 'No available times for this date. Please select another date.'}
+          ? 'Selecione o horário de sua preferência' 
+          : 'Não há horários disponíveis para esta data. Por favor, selecione outra data.'}
       </Typography>
 
       {availableTimes.length > 0 ? (
@@ -188,7 +189,7 @@ const TimeSelectionStep: React.FC<TimeSelectionStepProps> = ({
           borderRadius: 2,
         }}>
           <Typography variant="body1" color="text.secondary">
-            All time slots are booked for this date
+            Todos os horários estão reservados para esta data
           </Typography>
         </Box>
       )}
@@ -199,7 +200,7 @@ const TimeSelectionStep: React.FC<TimeSelectionStepProps> = ({
           onClick={onBack}
           fullWidth
         >
-          Back
+          Voltar
         </Button>
         <Button
           variant="contained"
@@ -207,7 +208,7 @@ const TimeSelectionStep: React.FC<TimeSelectionStepProps> = ({
           fullWidth
           disabled={!time}
         >
-          Next
+          Próximo
         </Button>
       </Box>
     </Box>

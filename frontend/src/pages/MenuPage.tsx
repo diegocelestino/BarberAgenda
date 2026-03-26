@@ -7,15 +7,15 @@ const MenuPage: React.FC = () => {
 
   const menuItems = [
     {
-      title: 'Barbers',
-      description: 'Manage barbers and their schedules',
+      title: 'Barbeiros',
+      description: 'Gerenciar barbeiros e seus horários',
       icon: <PeopleIcon sx={{ fontSize: 80 }} />,
       path: '/admin/barbers',
       color: '#90caf9',
     },
     {
-      title: 'Services',
-      description: 'Manage services and durations',
+      title: 'Serviços',
+      description: 'Gerenciar serviços e durações',
       icon: <BuildIcon sx={{ fontSize: 80 }} />,
       path: '/admin/services',
       color: '#f48fb1',
@@ -39,7 +39,7 @@ const MenuPage: React.FC = () => {
         gutterBottom
         sx={{ mb: 6, fontWeight: 'bold' }}
       >
-        Welcome
+        Bem-vindo
       </Typography>
 
       <Grid container spacing={4}>

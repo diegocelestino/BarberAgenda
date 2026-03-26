@@ -1,6 +1,8 @@
+import { useState } from 'react';
 import { Box, Typography, Button, Card, CardContent } from '@mui/material';
 import { CheckCircleOutline as SuccessIcon } from '@mui/icons-material';
 import { format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 
 interface SuccessStepProps {
   onClose: () => void;
@@ -35,26 +37,26 @@ const SuccessStep: React.FC<SuccessStepProps> = ({ onClose, date, time, name }) 
       </Box>
 
       <Typography variant="h4" color="text.primary" gutterBottom>
-        Appointment Confirmed!
+        Agendamento Confirmado!
       </Typography>
 
       <Typography variant="body1" color="text.secondary" sx={{ mb: 4 }}>
-        Thank you, {name}! Your appointment has been successfully booked.
+        Obrigado, {name}! Seu agendamento foi realizado com sucesso.
       </Typography>
 
       <Card sx={{ mb: 4, bgcolor: 'background.default' }}>
         <CardContent>
           <Typography variant="h6" color="text.primary" gutterBottom>
-            Appointment Details
+            Detalhes do Agendamento
           </Typography>
           <Typography variant="body1" color="text.secondary">
-            {format(date, 'EEEE, MMMM d, yyyy')} at {time}
+            {format(date, "EEEE, dd 'de' MMMM 'de' yyyy", { locale: ptBR })} às {time}
           </Typography>
         </CardContent>
       </Card>
 
       <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-        You'll receive a confirmation message shortly. We look forward to seeing you!
+        Você receberá uma mensagem de confirmação em breve. Esperamos ver você!
       </Typography>
 
       <Button
@@ -63,7 +65,7 @@ const SuccessStep: React.FC<SuccessStepProps> = ({ onClose, date, time, name }) 
         size="large"
         fullWidth
       >
-        Done
+        Concluir
       </Button>
     </Box>
   );
