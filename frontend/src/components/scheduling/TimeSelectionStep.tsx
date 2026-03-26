@@ -91,14 +91,22 @@ const TimeSelectionStep: React.FC<TimeSelectionStepProps> = ({
       };
       const allTimes = generateSlotsFromSchedule(schedule);
 
-      // Filter out times that conflict with existing appointments
+      // Filter out times that conflict with existing appointments or are in the past
+      const now = new Date();
+      const oneHourFromNow = new Date(now.getTime() + 60 * 60 * 1000); // 1 hour from now
       const serviceDuration = selectedService?.duration || 30;
+      
       const availableSlots = allTimes.filter((timeSlot) => {
         const [hours, minutes] = timeSlot.split(':').map(Number);
         const slotStart = new Date(selectedDate);
         slotStart.setHours(hours, minutes, 0, 0);
         const slotStartTime = slotStart.getTime();
         const slotEndTime = slotStartTime + (serviceDuration * 60 * 1000);
+
+        // Check if slot is at least 1 hour in the future
+        if (slotStartTime < oneHourFromNow.getTime()) {
+          return false;
+        }
 
         // Check if this slot conflicts with any existing appointment
         const hasConflict = fetchedAppointments.some((appointment: any) => {

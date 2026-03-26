@@ -4,6 +4,7 @@ import { CalendarMonth as CalendarIcon } from '@mui/icons-material';
 import { LocalizationProvider, DateCalendar } from '@mui/x-date-pickers';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { ptBR } from 'date-fns/locale';
+import { startOfDay } from 'date-fns';
 import { getMaxBookingDate } from '../../config/businessHours';
 import { useAppSelector } from '../../store/hooks';
 import { selectBarberById } from '../../store/barbers/barbersSelectors';
@@ -20,7 +21,34 @@ const DateSelectionStep: React.FC<DateSelectionStepProps> = ({ onNext, onBack, s
   const barber = useAppSelector((state) => selectBarberById(state, barberId));
 
   const workDays = barber?.schedule?.workDays ?? [1, 2, 3, 4, 5, 6];
-  const isWorkDay = (d: Date) => workDays.includes(d.getDay());
+  
+  const shouldDisableDate = (d: Date) => {
+    // Check if it's a work day
+    if (!workDays.includes(d.getDay())) {
+      return true;
+    }
+
+    // Check if it's today and we're within 1 hour of closing time
+    const now = new Date();
+    const isToday = startOfDay(d).getTime() === startOfDay(now).getTime();
+    
+    if (isToday) {
+      const schedule = barber?.schedule;
+      if (schedule) {
+        const [closeH, closeM] = schedule.closeTime.split(':').map(Number);
+        const closingTime = new Date(now);
+        closingTime.setHours(closeH, closeM, 0, 0);
+        
+        // Disable today if we're within 1 hour of closing
+        const oneHourBeforeClose = closingTime.getTime() - (60 * 60 * 1000);
+        if (now.getTime() >= oneHourBeforeClose) {
+          return true;
+        }
+      }
+    }
+    
+    return false;
+  };
 
   const handleNext = () => {
     if (date) {
@@ -51,7 +79,7 @@ const DateSelectionStep: React.FC<DateSelectionStepProps> = ({ onNext, onBack, s
             onChange={(newDate) => setDate(newDate)}
             minDate={minDate}
             maxDate={maxDate}
-            shouldDisableDate={(date) => !isWorkDay(date)}
+            shouldDisableDate={shouldDisableDate}
             sx={{
               bgcolor: 'background.default',
               borderRadius: 2,
