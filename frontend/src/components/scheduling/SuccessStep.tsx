@@ -34,7 +34,12 @@ const SuccessStep: React.FC<SuccessStepProps> = ({
       `🕐 Horário: ${time}`;
     
     const encodedMessage = encodeURIComponent(message);
-    const whatsappUrl = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodedMessage}`;
+    // Remove any non-numeric characters from the phone number
+    const cleanNumber = WHATSAPP_NUMBER.replace(/\D/g, '');
+    const whatsappUrl = `https://wa.me/${cleanNumber}?text=${encodedMessage}`;
+    
+    console.log('WhatsApp URL:', whatsappUrl); // Debug log
+    console.log('WhatsApp Number:', WHATSAPP_NUMBER); // Debug log
     
     window.open(whatsappUrl, '_blank');
     onClose();
