@@ -1,6 +1,7 @@
-import { CssBaseline, ThemeProvider, createTheme, Box } from '@mui/material';
+import { CssBaseline, ThemeProvider, Box } from '@mui/material';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
+import { theme } from './theme/theme';
 import Header from './components/layout/Header';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 import PublicHomePage from './pages/PublicHomePage';
@@ -9,25 +10,6 @@ import MenuPage from './pages/MenuPage';
 import BarbersPage from './pages/BarbersPage';
 import ServicesPage from './pages/ServicesPage';
 import EditBarberPage from './pages/EditBarberPage';
-
-const theme = createTheme({
-  palette: {
-    mode: 'dark',
-    primary: {
-      main: '#90caf9',
-    },
-    secondary: {
-      main: '#f48fb1',
-    },
-    background: {
-      default: '#121212',
-      paper: '#1e1e1e',
-    },
-  },
-  typography: {
-    fontFamily: '"Roboto", "Helvetica", "Arial", sans-serif',
-  },
-});
 
 function App() {
   return (
