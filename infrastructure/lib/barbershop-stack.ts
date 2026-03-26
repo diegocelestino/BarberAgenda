@@ -13,6 +13,9 @@ export class BarbershopStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
 
+    // Get email from context or environment
+    const barbershopEmail = this.node.tryGetContext('barbershopEmail') || process.env.BARBERSHOP_EMAIL;
+
     // ========================================
     // DynamoDB Tables
     // ========================================
@@ -138,7 +141,7 @@ export class BarbershopStack extends cdk.Stack {
     // ========================================
 
     const sendEmailFn = makeFn('SendEmailFunction', 'dist/notifications/sendEmail.handler', { 
-      BARBERSHOP_EMAIL: process.env.BARBERSHOP_EMAIL || ''
+      BARBERSHOP_EMAIL: barbershopEmail
     });
     
     // Grant SES permissions
