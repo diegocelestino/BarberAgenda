@@ -244,7 +244,7 @@ const PublicHomePage: React.FC = () => {
       sx={{
         minHeight: 'calc(100vh - 64px)', // Subtract header height
         bgcolor: 'background.default',
-        py: { xs: 2, sm: 4 },
+        py: { xs: 1, sm: 2 },
         px: { xs: 1, sm: 2 },
         display: 'flex',
         alignItems: 'center',
@@ -255,7 +255,7 @@ const PublicHomePage: React.FC = () => {
         <Paper
           elevation={8}
           sx={{
-            p: { xs: 2, sm: 4 },
+            p: { xs: 1.5, sm: 3 },
             borderRadius: 4,
             bgcolor: 'background.paper',
           }}
@@ -264,9 +264,16 @@ const PublicHomePage: React.FC = () => {
             <Stepper 
               activeStep={activeStep} 
               sx={{ 
-                mb: { xs: 2, sm: 4 },
+                mb: { xs: 1.5, sm: 2 },
+                px: { xs: 0.5, sm: 1 },
                 '& .MuiStepLabel-label': {
                   display: { xs: 'none', sm: 'block' }
+                },
+                '& .MuiStepConnector-root': {
+                  flex: { xs: '0 1 auto', sm: '1 1 auto' }
+                },
+                '& .MuiStep-root': {
+                  px: { xs: 0.25, sm: 1 }
                 }
               }}
             >

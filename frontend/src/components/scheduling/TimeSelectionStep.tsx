@@ -142,7 +142,7 @@ const TimeSelectionStep: React.FC<TimeSelectionStepProps> = ({
 
   return (
     <Box>
-      <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
+      <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
         <TimeIcon sx={{ fontSize: { xs: 32, sm: 40 }, color: 'primary.main', mr: 2 }} />
         <Typography variant="h5" color="text.primary" sx={{ fontSize: { xs: '1.25rem', sm: '1.5rem' } }}>
           Escolha um Horário
@@ -153,14 +153,14 @@ const TimeSelectionStep: React.FC<TimeSelectionStepProps> = ({
         Horários disponíveis para {format(selectedDate, "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
       </Typography>
 
-      <Typography variant="body2" color="text.secondary" sx={{ mb: 3, fontSize: { xs: '0.75rem', sm: '0.875rem' } }}>
+      <Typography variant="body2" color="text.secondary" sx={{ mb: 2, fontSize: { xs: '0.75rem', sm: '0.875rem' } }}>
         {availableTimes.length > 0 
           ? 'Selecione o horário de sua preferência' 
           : 'Não há horários disponíveis para esta data. Por favor, selecione outra data.'}
       </Typography>
 
       {availableTimes.length > 0 ? (
-        <Box sx={{ mb: 3, maxHeight: 300, overflowY: 'auto' }}>
+        <Box sx={{ mb: 2, maxHeight: 300, overflowY: 'auto' }}>
           <Grid container spacing={1}>
             {availableTimes.map((timeSlot) => (
               <Grid item xs={4} sm={3} key={timeSlot}>
@@ -182,8 +182,8 @@ const TimeSelectionStep: React.FC<TimeSelectionStepProps> = ({
         </Box>
       ) : (
         <Box sx={{ 
-          mb: 3, 
-          p: 3, 
+          mb: 2, 
+          p: 2, 
           textAlign: 'center',
           bgcolor: 'background.default',
           borderRadius: 2,

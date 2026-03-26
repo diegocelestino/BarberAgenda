@@ -33,18 +33,18 @@ const DateSelectionStep: React.FC<DateSelectionStepProps> = ({ onNext, onBack, s
 
   return (
     <Box>
-      <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
+      <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
         <CalendarIcon sx={{ fontSize: { xs: 32, sm: 40 }, color: 'primary.main', mr: 2 }} />
         <Typography variant="h5" color="text.primary" sx={{ fontSize: { xs: '1.25rem', sm: '1.5rem' } }}>
           Escolha uma Data
         </Typography>
       </Box>
 
-      <Typography variant="body1" color="text.secondary" sx={{ mb: 3, fontSize: { xs: '0.875rem', sm: '1rem' } }}>
+      <Typography variant="body1" color="text.secondary" sx={{ mb: 2, fontSize: { xs: '0.875rem', sm: '1rem' } }}>
         Selecione a data de sua preferência
       </Typography>
 
-      <Box sx={{ display: 'flex', justifyContent: 'center', mb: 3 }}>
+      <Box sx={{ display: 'flex', justifyContent: 'center', mb: 2 }}>
         <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={ptBR}>
           <DateCalendar
             value={date}

@@ -49,20 +49,20 @@ const ConfirmationStep: React.FC<ConfirmationStepProps> = ({
 
   return (
     <Box>
-      <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
+      <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
         <CheckIcon sx={{ fontSize: { xs: 32, sm: 40 }, color: 'primary.main', mr: 2 }} />
         <Typography variant="h5" color="text.primary" sx={{ fontSize: { xs: '1.25rem', sm: '1.5rem' } }}>
           Confirme seu Agendamento
         </Typography>
       </Box>
 
-      <Typography variant="body1" color="text.secondary" sx={{ mb: 3, fontSize: { xs: '0.875rem', sm: '1rem' } }}>
+      <Typography variant="body1" color="text.secondary" sx={{ mb: 2, fontSize: { xs: '0.875rem', sm: '1rem' } }}>
         Por favor, revise os detalhes do seu agendamento
       </Typography>
 
-      <Card sx={{ mb: 3, bgcolor: 'background.default' }}>
+      <Card sx={{ mb: 2, bgcolor: 'background.default' }}>
         <CardContent>
-          <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', mb: 1.5 }}>
             <Person sx={{ mr: 2, color: 'text.secondary' }} />
             <Box>
               <Typography variant="caption" color="text.secondary">
@@ -74,9 +74,9 @@ const ConfirmationStep: React.FC<ConfirmationStepProps> = ({
             </Box>
           </Box>
 
-          <Divider sx={{ my: 2 }} />
+          <Divider sx={{ my: 1.5 }} />
 
-          <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', mb: 1.5 }}>
             <Phone sx={{ mr: 2, color: 'text.secondary' }} />
             <Box>
               <Typography variant="caption" color="text.secondary">
@@ -88,9 +88,9 @@ const ConfirmationStep: React.FC<ConfirmationStepProps> = ({
             </Box>
           </Box>
 
-          <Divider sx={{ my: 2 }} />
+          <Divider sx={{ my: 1.5 }} />
 
-          <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', mb: 1.5 }}>
             <ContentCut sx={{ mr: 2, color: 'text.secondary' }} />
             <Box>
               <Typography variant="caption" color="text.secondary">
@@ -102,9 +102,9 @@ const ConfirmationStep: React.FC<ConfirmationStepProps> = ({
             </Box>
           </Box>
 
-          <Divider sx={{ my: 2 }} />
+          <Divider sx={{ my: 1.5 }} />
 
-          <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', mb: 1.5 }}>
             <MiscellaneousServices sx={{ mr: 2, color: 'text.secondary' }} />
             <Box>
               <Typography variant="caption" color="text.secondary">
@@ -119,9 +119,9 @@ const ConfirmationStep: React.FC<ConfirmationStepProps> = ({
             </Box>
           </Box>
 
-          <Divider sx={{ my: 2 }} />
+          <Divider sx={{ my: 1.5 }} />
 
-          <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', mb: 1.5 }}>
             <CalendarMonth sx={{ mr: 2, color: 'text.secondary' }} />
             <Box>
               <Typography variant="caption" color="text.secondary">
@@ -133,7 +133,7 @@ const ConfirmationStep: React.FC<ConfirmationStepProps> = ({
             </Box>
           </Box>
 
-          <Divider sx={{ my: 2 }} />
+          <Divider sx={{ my: 1.5 }} />
 
           <Box sx={{ display: 'flex', alignItems: 'center' }}>
             <AccessTime sx={{ mr: 2, color: 'text.secondary' }} />
@@ -150,7 +150,7 @@ const ConfirmationStep: React.FC<ConfirmationStepProps> = ({
       </Card>
 
       {error && (
-        <Alert severity="error" sx={{ mb: 3 }}>
+        <Alert severity="error" sx={{ mb: 2 }}>
           {error}
         </Alert>
       )}

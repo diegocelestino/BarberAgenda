@@ -8,12 +8,18 @@ A modern, serverless web application that enables customers to easily book appoi
 ├── backend/
 │   └── lambda-ts/           # TypeScript Lambda functions
 │       └── src/
-│           ├── appointments/ # Appointment CRUD operations
-│           ├── auth/        # Authentication handlers
-│           ├── barbers/     # Barber management
-│           ├── services/    # Service management
-│           └── utils/       # Shared utilities (DynamoDB, responses)
+│           ├── appointments/ # Appointment CRUD operations (create, delete, get, list, update)
+│           ├── auth/        # Authentication handlers (login)
+│           ├── barbers/     # Barber management (create, delete, get, list, update)
+│           ├── services/    # Service management (create, delete, get, list, update)
+│           └── utils/       # Shared utilities (DynamoDB client, API responses)
 ├── frontend/                # React frontend application
+│   └── src/
+│       ├── components/      # React components (scheduling, barbers, services, auth)
+│       ├── pages/          # Page components
+│       ├── store/          # Redux store (appointments, barbers, services)
+│       ├── services/       # API client services
+│       └── theme/          # Theme configuration
 ├── infrastructure/          # AWS CDK infrastructure code
 └── .github/workflows/       # CI/CD pipelines
 ```
@@ -89,4 +95,5 @@ npm run build
 - WhatsApp integration for appointment confirmations
 - Real-time availability checking
 - Responsive design for mobile and desktop
+- Portuguese (Brazil) localization
 

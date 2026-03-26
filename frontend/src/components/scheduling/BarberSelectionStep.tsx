@@ -30,14 +30,14 @@ const BarberSelectionStep: React.FC<BarberSelectionStepProps> = ({ onNext, onBac
 
   return (
     <Box>
-      <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
+      <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
         <ContentCutIcon sx={{ fontSize: { xs: 32, sm: 40 }, color: 'primary.main', mr: 2 }} />
         <Typography variant="h5" color="text.primary" sx={{ fontSize: { xs: '1.25rem', sm: '1.5rem' } }}>
           Escolha seu Barbeiro
         </Typography>
       </Box>
 
-      <Typography variant="body1" color="text.secondary" sx={{ mb: 3, fontSize: { xs: '0.875rem', sm: '1rem' } }}>
+      <Typography variant="body1" color="text.secondary" sx={{ mb: 2, fontSize: { xs: '0.875rem', sm: '1rem' } }}>
         Selecione o barbeiro de sua preferência
       </Typography>
 
@@ -73,7 +73,7 @@ const BarberSelectionStep: React.FC<BarberSelectionStepProps> = ({ onNext, onBac
         ))}
       </Grid>
 
-      <Box sx={{ display: 'flex', gap: 2, mt: 3 }}>
+      <Box sx={{ display: 'flex', gap: 2, mt: 2 }}>
         <Button variant="outlined" onClick={onBack} fullWidth>
           Voltar
         </Button>

@@ -51,13 +51,13 @@ const SuccessStep: React.FC<SuccessStepProps> = ({
         sx={{
           display: 'flex',
           justifyContent: 'center',
-          mb: 3,
+          mb: 2,
         }}
       >
         <Box
           sx={{
-            width: 120,
-            height: 120,
+            width: 100,
+            height: 100,
             borderRadius: '50%',
             bgcolor: 'success.main',
             display: 'flex',
@@ -65,7 +65,7 @@ const SuccessStep: React.FC<SuccessStepProps> = ({
             justifyContent: 'center',
           }}
         >
-          <SuccessIcon sx={{ fontSize: 60, color: 'white' }} />
+          <SuccessIcon sx={{ fontSize: 50, color: 'white' }} />
         </Box>
       </Box>
 
@@ -73,11 +73,11 @@ const SuccessStep: React.FC<SuccessStepProps> = ({
         Agendamento Confirmado!
       </Typography>
 
-      <Typography variant="body1" color="text.secondary" sx={{ mb: 4 }}>
+      <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
         Obrigado, {name}! Seu agendamento foi realizado com sucesso.
       </Typography>
 
-      <Card sx={{ mb: 4, bgcolor: 'background.default' }}>
+      <Card sx={{ mb: 3, bgcolor: 'background.default' }}>
         <CardContent>
           <Typography variant="h6" color="text.primary" gutterBottom>
             Detalhes do Agendamento
@@ -88,7 +88,7 @@ const SuccessStep: React.FC<SuccessStepProps> = ({
         </CardContent>
       </Card>
 
-      <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+      <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
         Você receberá uma mensagem de confirmação em breve. Esperamos ver você!
       </Typography>
 
