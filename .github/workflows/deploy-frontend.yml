@@ -45,6 +45,7 @@ jobs:
         npm run build
       env:
         REACT_APP_API_URL: ${{ steps.get-api-url.outputs.api_url }}
+        REACT_APP_WHATSAPP_NUMBER: ${{ secrets.WHATSAPP_NUMBER }}
 
     - name: Get S3 bucket name
       id: get-bucket
