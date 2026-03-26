@@ -54,6 +54,13 @@ const PublicHomePage: React.FC = () => {
       : null
   );
 
+  // Get selected barber
+  const selectedBarber = useAppSelector((state) => 
+    appointmentData.barberId 
+      ? state.barbers.barbers.find(b => b.barberId === appointmentData.barberId)
+      : null
+  );
+
   const handleNext = () => {
     setActiveStep((prev) => prev + 1);
   };
@@ -343,6 +350,9 @@ const PublicHomePage: React.FC = () => {
               date={appointmentData.date}
               time={appointmentData.time}
               name={appointmentData.name}
+              barberName={selectedBarber?.name}
+              serviceName={selectedService?.name}
+              phoneNumber={appointmentData.phoneNumber}
             />
           )}
         </Paper>
