@@ -47,6 +47,7 @@ jobs:
         REACT_APP_API_URL: ${{ steps.get-api-url.outputs.api_url }}
         REACT_APP_WHATSAPP_NUMBER: ${{ secrets.WHATSAPP_NUMBER }}
         REACT_APP_BARBERSHOP_EMAIL: ${{ secrets.BARBERSHOP_EMAIL }}
+        REACT_APP_RECAPTCHA_SITE_KEY: ${{ secrets.RECAPTCHA_SITE_KEY }}
 
     - name: Get S3 bucket name
       id: get-bucket

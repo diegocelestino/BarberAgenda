@@ -1,8 +1,9 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { Box, Typography, Button, Card, CardContent, Divider, CircularProgress, Alert } from '@mui/material';
 import { CheckCircle as CheckIcon, Person, Phone, ContentCut, MiscellaneousServices, CalendarMonth, AccessTime } from '@mui/icons-material';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import ReCAPTCHA from 'react-google-recaptcha';
 import { useAppSelector } from '../../store/hooks';
 
 interface ConfirmationStepProps {
@@ -28,6 +29,8 @@ const ConfirmationStep: React.FC<ConfirmationStepProps> = ({
 }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [recaptchaToken, setRecaptchaToken] = useState<string | null>(null);
+  const recaptchaRef = useRef<ReCAPTCHA>(null);
   
   const barber = useAppSelector((state) => 
     state.barbers.barbers.find(b => b.barberId === barberId)
@@ -36,7 +39,21 @@ const ConfirmationStep: React.FC<ConfirmationStepProps> = ({
     state.services.services.find(s => s.serviceId === serviceId)
   );
 
+  const recaptchaSiteKey = process.env.REACT_APP_RECAPTCHA_SITE_KEY || '';
+
+  const handleRecaptchaChange = (token: string | null) => {
+    setRecaptchaToken(token);
+    if (token) {
+      setError('');
+    }
+  };
+
   const handleConfirm = async () => {
+    if (!recaptchaToken) {
+      setError('Por favor, complete a verificação reCAPTCHA.');
+      return;
+    }
+
     setLoading(true);
     setError('');
     try {
@@ -44,6 +61,11 @@ const ConfirmationStep: React.FC<ConfirmationStepProps> = ({
     } catch (err) {
       setError('Falha ao agendar. Por favor, tente novamente.');
       setLoading(false);
+      // Reset reCAPTCHA on error
+      if (recaptchaRef.current) {
+        recaptchaRef.current.reset();
+        setRecaptchaToken(null);
+      }
     }
   };
 
@@ -155,6 +177,17 @@ const ConfirmationStep: React.FC<ConfirmationStepProps> = ({
         </Alert>
       )}
 
+      {recaptchaSiteKey && (
+        <Box sx={{ display: 'flex', justifyContent: 'center', mb: 2 }}>
+          <ReCAPTCHA
+            ref={recaptchaRef}
+            sitekey={recaptchaSiteKey}
+            onChange={handleRecaptchaChange}
+            hl="pt-BR"
+          />
+        </Box>
+      )}
+
       <Box sx={{ display: 'flex', gap: 2 }}>
         <Button
           variant="outlined"
@@ -168,7 +201,7 @@ const ConfirmationStep: React.FC<ConfirmationStepProps> = ({
           variant="contained"
           onClick={handleConfirm}
           fullWidth
-          disabled={loading}
+          disabled={loading || !recaptchaToken}
           startIcon={loading ? <CircularProgress size={20} /> : null}
         >
           {loading ? 'Agendando...' : 'Confirmar Agendamento'}
