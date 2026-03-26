@@ -33,3 +33,5 @@ jobs:
     - name: Deploy CDK Stack
       run: npx cdk deploy --require-approval never
       working-directory: infrastructure
+      env:
+        BARBERSHOP_EMAIL: ${{ secrets.BARBERSHOP_EMAIL }}
