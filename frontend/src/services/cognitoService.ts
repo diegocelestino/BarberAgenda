@@ -90,7 +90,15 @@ const cognitoAuth = {
 
     const data = await response.json();
     
-    // Handle challenge (e.g., NEW_PASSWORD_REQUIRED)
+    // Handle NEW_PASSWORD_REQUIRED challenge
+    if (data.ChallengeName === 'NEW_PASSWORD_REQUIRED') {
+      const error: any = new Error('NEW_PASSWORD_REQUIRED');
+      error.session = data.Session;
+      error.challengeParameters = data.ChallengeParameters;
+      throw error;
+    }
+
+    // Handle other challenges
     if (data.ChallengeName) {
       throw new Error(`Challenge required: ${data.ChallengeName}`);
     }
@@ -102,6 +110,55 @@ const cognitoAuth = {
     };
 
     // Decode ID token to get user info (simple base64 decode)
+    const idTokenPayload = JSON.parse(atob(tokens.idToken.split('.')[1]));
+    
+    const user: CognitoUser = {
+      username: idTokenPayload['cognito:username'],
+      email: idTokenPayload.email,
+      attributes: idTokenPayload,
+    };
+
+    return { user, tokens };
+  },
+
+  changePassword: async (
+    username: string,
+    oldPassword: string,
+    newPassword: string,
+    session: string
+  ): Promise<{ user: CognitoUser; tokens: AuthTokens }> => {
+    const response = await fetch(`https://cognito-idp.${awsConfig.region}.amazonaws.com/`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-amz-json-1.1',
+        'X-Amz-Target': 'AWSCognitoIdentityProviderService.RespondToAuthChallenge',
+      },
+      body: JSON.stringify({
+        ChallengeName: 'NEW_PASSWORD_REQUIRED',
+        ClientId: awsConfig.userPoolClientId,
+        ChallengeResponses: {
+          USERNAME: username,
+          PASSWORD: oldPassword,
+          NEW_PASSWORD: newPassword,
+        },
+        Session: session,
+      }),
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || 'Password change failed');
+    }
+
+    const data = await response.json();
+
+    const tokens: AuthTokens = {
+      accessToken: data.AuthenticationResult.AccessToken,
+      idToken: data.AuthenticationResult.IdToken,
+      refreshToken: data.AuthenticationResult.RefreshToken,
+    };
+
+    // Decode ID token to get user info
     const idTokenPayload = JSON.parse(atob(tokens.idToken.split('.')[1]));
     
     const user: CognitoUser = {
@@ -212,3 +269,8 @@ export const cognitoService = isProductionAuth() ? cognitoAuth : mockAuth;
 
 // Helper to check if using mock auth
 export const isMockAuth = () => !isProductionAuth();
+
+// Export changePassword for production (mock doesn't need it)
+export const changePassword = isProductionAuth() 
+  ? cognitoAuth.changePassword 
+  : async () => { throw new Error('Password change not available in mock mode'); };

@@ -3,7 +3,7 @@ import { cognitoService, CognitoUser, isMockAuth } from '../services/cognitoServ
 
 interface AuthContextType {
   isAuthenticated: boolean;
-  login: (username: string, password: string) => Promise<boolean>;
+  login: (username: string, password: string, newPassword?: string) => Promise<boolean>;
   logout: () => void;
   user: CognitoUser | null;
   getAccessToken: () => string | null;
@@ -58,9 +58,22 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     checkAuth();
   }, []);
 
-  const login = async (username: string, password: string): Promise<boolean> => {
+  const login = async (username: string, password: string, newPassword?: string): Promise<boolean> => {
     try {
-      const { user: cognitoUser, tokens } = await cognitoService.login(username, password);
+      let result;
+      
+      if (newPassword) {
+        // Handle password change challenge
+        const { changePassword } = await import('../services/cognitoService');
+        const session = localStorage.getItem('cognitoSession') || '';
+        result = await changePassword(username, password, newPassword, session);
+        localStorage.removeItem('cognitoSession');
+      } else {
+        // Normal login
+        result = await cognitoService.login(username, password);
+      }
+      
+      const { user: cognitoUser, tokens } = result;
       
       setIsAuthenticated(true);
       setUser(cognitoUser);
@@ -72,7 +85,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       return true;
     } catch (error: any) {
       console.error('Login failed:', error);
-      return false;
+      
+      // Store session for password change challenge
+      if (error.message === 'NEW_PASSWORD_REQUIRED' && error.session) {
+        localStorage.setItem('cognitoSession', error.session);
+      }
+      
+      throw error;
     }
   };
 
