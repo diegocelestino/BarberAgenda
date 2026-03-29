@@ -98,7 +98,7 @@ const CreateAppointmentDialog: React.FC<CreateAppointmentDialogProps> = ({
             customerPhone,
             startTime: startDateTime,
             endTime: endDateTime,
-            service: selectedService.title,
+            service: selectedServiceId, // Send service ID
             notes,
           },
         })

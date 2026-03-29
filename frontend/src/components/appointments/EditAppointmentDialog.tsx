@@ -53,22 +53,24 @@ const EditAppointmentDialog: React.FC<EditAppointmentDialogProps> = ({
 
   useEffect(() => {
     if (appointment) {
-      // Find service ID by matching service title
-      const matchingService = allServices.find(s => s.title === appointment.service);
+      // Service is already stored as ID, use it directly
       
-      // Format date in local timezone for datetime-local input
+      // Convert timestamp to Brazil timezone (UTC-3) for display
       const appointmentDate = new Date(appointment.startTime);
-      const year = appointmentDate.getFullYear();
-      const month = String(appointmentDate.getMonth() + 1).padStart(2, '0');
-      const day = String(appointmentDate.getDate()).padStart(2, '0');
-      const hours = String(appointmentDate.getHours()).padStart(2, '0');
-      const minutes = String(appointmentDate.getMinutes()).padStart(2, '0');
+      
+      // Format in Brazil timezone for datetime-local input
+      const brazilDate = new Date(appointmentDate.toLocaleString('en-US', { timeZone: 'America/Sao_Paulo' }));
+      const year = brazilDate.getFullYear();
+      const month = String(brazilDate.getMonth() + 1).padStart(2, '0');
+      const day = String(brazilDate.getDate()).padStart(2, '0');
+      const hours = String(brazilDate.getHours()).padStart(2, '0');
+      const minutes = String(brazilDate.getMinutes()).padStart(2, '0');
       const localDateTimeString = `${year}-${month}-${day}T${hours}:${minutes}`;
       
       setFormData({
         customerName: appointment.customerName,
         customerPhone: appointment.customerPhone || '',
-        serviceId: matchingService?.serviceId || '',
+        serviceId: appointment.service, // Service is already an ID
         startTime: localDateTimeString,
         status: appointment.status,
         notes: appointment.notes || '',
@@ -91,12 +93,10 @@ const EditAppointmentDialog: React.FC<EditAppointmentDialogProps> = ({
       return;
     }
 
-    // Parse datetime in local timezone (São Paulo)
+    // Parse datetime as Brazil timezone (UTC-3)
     // formData.startTime is in format "YYYY-MM-DDTHH:mm"
-    const dateTimeParts = formData.startTime.split('T');
-    const [year, month, day] = dateTimeParts[0].split('-').map(Number);
-    const [hours, minutes] = dateTimeParts[1].split(':').map(Number);
-    const appointmentDateTime = new Date(year, month - 1, day, hours, minutes, 0, 0);
+    const dateTimeString = formData.startTime + ':00-03:00'; // Add seconds and Brazil timezone
+    const appointmentDateTime = new Date(dateTimeString);
     
     const startTime = appointmentDateTime.getTime();
     const endTime = startTime + selectedService.durationMinutes * 60 * 1000;
@@ -122,7 +122,7 @@ const EditAppointmentDialog: React.FC<EditAppointmentDialogProps> = ({
         data: {
           customerName: formData.customerName,
           customerPhone: formData.customerPhone || undefined,
-          service: selectedService.title,
+          service: formData.serviceId, // Send service ID
           startTime,
           endTime,
           status: formData.status,

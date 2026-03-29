@@ -13,6 +13,11 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
       return error(400, 'barberId is required');
     }
 
+    // Get query parameters
+    const startDate = event.queryStringParameters?.startDate;
+    const endDate = event.queryStringParameters?.endDate;
+    const status = event.queryStringParameters?.status;
+
     const result = await dynamo.send(new QueryCommand({
       TableName: tableName,
       KeyConditionExpression: 'barberId = :barberId',
@@ -21,7 +26,27 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
       },
     }));
 
-    const items = result.Items?.map(item => unmarshall(item)) || [];
+    let items = result.Items?.map(item => unmarshall(item)) || [];
+    
+    // Apply filters
+    if (startDate) {
+      const startTimestamp = parseInt(startDate);
+      items = items.filter(item => item.startTime >= startTimestamp);
+    }
+    
+    if (endDate) {
+      const endTimestamp = parseInt(endDate);
+      items = items.filter(item => item.startTime <= endTimestamp);
+    }
+    
+    if (status) {
+      // Support comma-separated status values (e.g., "completed,cancelled")
+      const statusList = status.split(',').map(s => s.trim());
+      items = items.filter(item => statusList.includes(item.status));
+    }
+    
+    // Sort by start time
+    items.sort((a, b) => a.startTime - b.startTime);
     
     return ok({ appointments: items });
   } catch (err) {

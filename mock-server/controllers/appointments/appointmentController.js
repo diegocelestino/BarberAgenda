@@ -32,9 +32,9 @@ let appointments = loadAppointments();
 // Get appointments for a barber
 const getAppointmentsByBarber = (req, res) => {
   const { barberId } = req.params;
-  const { startDate, endDate } = req.query;
+  const { startDate, endDate, status } = req.query;
   
-  console.log(`GET /barbers/${barberId}/appointments`);
+  console.log(`GET /barbers/${barberId}/appointments`, { startDate, endDate, status });
   
   let filtered = appointments.filter(a => a.barberId === barberId);
   
@@ -44,6 +44,12 @@ const getAppointmentsByBarber = (req, res) => {
   
   if (endDate) {
     filtered = filtered.filter(a => a.startTime <= parseInt(endDate));
+  }
+  
+  if (status) {
+    // Support comma-separated status values (e.g., "completed,cancelled")
+    const statusList = status.split(',').map(s => s.trim());
+    filtered = filtered.filter(a => statusList.includes(a.status));
   }
   
   // Sort by start time
@@ -92,21 +98,7 @@ const createAppointment = (req, res) => {
     return res.status(409).json({ error: 'Time slot conflicts with existing appointment' });
   }
   
-  // Look up service name from serviceId - reload services to get latest
-  let serviceName = 'Haircut'; // default
-  if (service) {
-    const services = loadServices();
-    const serviceObj = services.find(s => s.serviceId === service);
-    if (serviceObj) {
-      serviceName = serviceObj.name || serviceObj.title;
-      console.log(`Mapped service ID "${service}" to name "${serviceName}"`);
-    } else {
-      // If not found by ID, assume it's already a name
-      serviceName = service;
-      console.log(`Using service as-is: "${serviceName}"`);
-    }
-  }
-  
+  // Store service as-is (should be serviceId)
   const newAppointment = {
     appointmentId: uuidv4(),
     barberId,
@@ -114,14 +106,14 @@ const createAppointment = (req, res) => {
     customerPhone: customerPhone || '',
     startTime,
     endTime,
-    service: serviceName,
+    service: service || 'service-1', // Store service ID, default to service-1
     notes: notes || '',
     status: 'scheduled',
     createdAt: Date.now(),
   };
   
   appointments.push(newAppointment);
-  console.log('Created appointment with service:', serviceName);
+  console.log('Created appointment with service ID:', service);
   res.status(201).json({ appointment: newAppointment });
 };
 
@@ -159,24 +151,14 @@ const updateAppointment = (req, res) => {
     }
   }
   
-  // Look up service name from serviceId if service is being updated
-  let serviceName = service;
-  if (service) {
-    const services = loadServices();
-    const serviceObj = services.find(s => s.serviceId === service);
-    if (serviceObj) {
-      serviceName = serviceObj.name || serviceObj.title;
-      console.log(`Mapped service ID "${service}" to name "${serviceName}"`);
-    }
-  }
-  
+  // Store service as-is (should be serviceId)
   appointments[appointmentIndex] = {
     ...appointments[appointmentIndex],
     ...(customerName && { customerName }),
     ...(customerPhone !== undefined && { customerPhone }),
     ...(startTime && { startTime }),
     ...(endTime && { endTime }),
-    ...(serviceName && { service: serviceName }),
+    ...(service && { service }), // Store service ID directly
     ...(notes !== undefined && { notes }),
     ...(status && { status }),
   };

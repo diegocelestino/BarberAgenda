@@ -16,8 +16,9 @@ import {
   CheckCircle as CheckCircleIcon,
 } from '@mui/icons-material';
 import { Appointment } from '../../services/appointmentsApi';
-import { useAppDispatch } from '../../store/hooks';
+import { useAppDispatch, useAppSelector } from '../../store/hooks';
 import { updateAppointment } from '../../store/appointments';
+import { selectAllServices } from '../../store/services';
 import DeleteAppointmentDialog from './DeleteAppointmentDialog';
 import EditAppointmentDialog from './EditAppointmentDialog';
 
@@ -28,10 +29,16 @@ interface AppointmentListProps {
 
 const AppointmentList: React.FC<AppointmentListProps> = ({ appointments, barberId }) => {
   const dispatch = useAppDispatch();
+  const services = useAppSelector(selectAllServices);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [selectedAppointmentId, setSelectedAppointmentId] = useState<string | null>(null);
   const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
+
+  const getServiceName = (serviceId: string): string => {
+    const service = services.find(s => s.serviceId === serviceId);
+    return service ? service.title : serviceId;
+  };
 
   const handleDeleteClick = (appointmentId: string) => {
     setSelectedAppointmentId(appointmentId);
@@ -125,7 +132,7 @@ const AppointmentList: React.FC<AppointmentListProps> = ({ appointments, barberI
                       {formatTime(appointment.startTime)} • {formatDuration(appointment.startTime, appointment.endTime)}
                     </Typography>
                     <Typography variant="body2" color="text.secondary">
-                      {appointment.service}
+                      {getServiceName(appointment.service)}
                     </Typography>
                     {appointment.customerPhone && (
                       <Typography variant="body2" color="text.secondary">

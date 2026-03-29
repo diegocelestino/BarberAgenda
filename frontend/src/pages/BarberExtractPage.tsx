@@ -36,7 +36,7 @@ import {
   selectAppointmentsLoading,
   clearAppointments,
 } from '../store/appointments';
-import { selectAllServices } from '../store/services';
+import { fetchServices, selectAllServices } from '../store/services';
 
 const BarberExtractPage: React.FC = () => {
   const { barberId } = useParams<{ barberId: string }>();
@@ -61,6 +61,7 @@ const BarberExtractPage: React.FC = () => {
   useEffect(() => {
     if (barberId) {
       dispatch(fetchBarberById(barberId));
+      dispatch(fetchServices()); // Fetch services for price calculation
     }
     
     return () => {
@@ -78,13 +79,20 @@ const BarberExtractPage: React.FC = () => {
       const start = startDateObj.getTime();
       const end = endDateObj.getTime();
       
-      dispatch(fetchAppointmentsByBarber({ barberId, params: { startDate: start, endDate: end } }));
+      // Fetch only completed appointments
+      dispatch(fetchAppointmentsByBarber({ 
+        barberId, 
+        params: { 
+          startDate: start, 
+          endDate: end,
+          status: 'completed' // Only fetch completed appointments
+        } 
+      }));
     }
   }, [barberId, startDate, endDate, dispatch]);
 
-  // Filter completed appointments
+  // All appointments are already completed from the API
   const completedAppointments = appointments
-    .filter(apt => apt.status === 'completed')
     .sort((a, b) => b.startTime - a.startTime); // Most recent first
 
   const formatDateTime = (timestamp: number) => {
@@ -95,9 +103,14 @@ const BarberExtractPage: React.FC = () => {
     };
   };
 
-  const getServicePrice = (serviceName: string): number => {
-    const service = services.find(s => s.title === serviceName || s.name === serviceName);
+  const getServicePrice = (serviceId: string): number => {
+    const service = services.find(s => s.serviceId === serviceId);
     return service ? service.price : 0;
+  };
+
+  const getServiceName = (serviceId: string): string => {
+    const service = services.find(s => s.serviceId === serviceId);
+    return service ? service.title : serviceId;
   };
 
   const calculateTotal = () => {
@@ -122,11 +135,12 @@ const BarberExtractPage: React.FC = () => {
     const tableData = completedAppointments.map(apt => {
       const { date, time } = formatDateTime(apt.startTime);
       const price = getServicePrice(apt.service);
+      const serviceName = getServiceName(apt.service);
       return [
         date,
         time,
         apt.customerName,
-        apt.service,
+        serviceName,
         `R$ ${price.toFixed(2)}`,
         apt.notes || '-',
       ];
@@ -255,6 +269,7 @@ const BarberExtractPage: React.FC = () => {
                   {completedAppointments.map((appointment) => {
                     const { date, time } = formatDateTime(appointment.startTime);
                     const price = getServicePrice(appointment.service);
+                    const serviceName = getServiceName(appointment.service);
                     return (
                       <TableRow key={appointment.appointmentId} hover>
                         <TableCell>{date}</TableCell>
@@ -265,7 +280,7 @@ const BarberExtractPage: React.FC = () => {
                           </Typography>
                         </TableCell>
                         <TableCell>
-                          <Chip label={appointment.service} size="small" color="success" />
+                          <Chip label={serviceName} size="small" color="success" />
                         </TableCell>
                         <TableCell>
                           <Typography variant="body2" fontWeight="medium">

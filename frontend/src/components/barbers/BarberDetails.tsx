@@ -87,6 +87,15 @@ const BarberDetails: React.FC = () => {
     }
   };
 
+  const handleAppointmentUpdate = () => {
+    // Refresh appointments after completing one
+    if (barberId) {
+      const startDate = Date.now();
+      const endDate = Date.now() + 30 * 24 * 60 * 60 * 1000;
+      dispatch(fetchAppointmentsByBarber({ barberId, params: { startDate, endDate } }));
+    }
+  };
+
   if (loading && !barber) {
     return (
       <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
@@ -153,6 +162,7 @@ const BarberDetails: React.FC = () => {
             appointments={scheduledAppointments}
             barberId={barberId || ''}
             loading={appointmentsLoading}
+            onAppointmentUpdate={handleAppointmentUpdate}
           />
         </Grid>
 

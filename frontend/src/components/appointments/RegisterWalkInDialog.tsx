@@ -65,7 +65,9 @@ const RegisterWalkInDialog: React.FC<RegisterWalkInDialogProps> = ({
 
     try {
       const now = Date.now();
-
+      
+      // selectedService already contains the serviceId
+      
       // Create the appointment
       const createdAppointment = await dispatch(
         createAppointment({
@@ -73,7 +75,7 @@ const RegisterWalkInDialog: React.FC<RegisterWalkInDialogProps> = ({
           data: {
             customerName: customerName.trim(),
             customerPhone: '',
-            service: selectedService,
+            service: selectedService, // Send service ID directly
             startTime: now,
             endTime: now + 1000, // 1 second after start
             notes: 'Atendimento sem agendamento',

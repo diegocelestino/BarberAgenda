@@ -25,8 +25,9 @@ import {
   Edit as EditIcon,
   CheckCircle as CheckCircleIcon,
 } from '@mui/icons-material';
-import { useAppDispatch } from '../../store/hooks';
+import { useAppDispatch, useAppSelector } from '../../store/hooks';
 import { updateAppointment } from '../../store/appointments';
+import { selectAllServices } from '../../store/services';
 import { Appointment } from '../../services/appointmentsApi';
 import EditAppointmentDialog from './EditAppointmentDialog';
 
@@ -34,19 +35,27 @@ interface AppointmentNavigationCardProps {
   appointments: Appointment[];
   barberId: string;
   loading?: boolean;
+  onAppointmentUpdate?: () => void;
 }
 
 const AppointmentNavigationCard: React.FC<AppointmentNavigationCardProps> = ({
   appointments,
   barberId,
   loading = false,
+  onAppointmentUpdate,
 }) => {
   const dispatch = useAppDispatch();
+  const services = useAppSelector(selectAllServices);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
   const [successOpen, setSuccessOpen] = useState(false);
+
+  const getServiceName = (serviceId: string): string => {
+    const service = services.find(s => s.serviceId === serviceId);
+    return service ? service.title : serviceId;
+  };
 
   // Reset index when appointments change
   useEffect(() => {
@@ -94,12 +103,12 @@ const AppointmentNavigationCard: React.FC<AppointmentNavigationCardProps> = ({
       setSuccessMessage('Agendamento marcado como concluído!');
       setSuccessOpen(true);
 
-      // Move to next appointment if available
-      if (hasNext) {
-        setCurrentIndex(prev => prev + 1);
-      } else if (hasPrevious) {
-        setCurrentIndex(prev => prev - 1);
+      // Notify parent to refresh appointments
+      if (onAppointmentUpdate) {
+        onAppointmentUpdate();
       }
+
+      // Don't manually change index - let useEffect reset it when appointments update
     } catch (err) {
       console.error('Failed to complete appointment:', err);
     }
@@ -113,6 +122,11 @@ const AppointmentNavigationCard: React.FC<AppointmentNavigationCardProps> = ({
     setEditDialogOpen(false);
     setSuccessMessage('Agendamento atualizado com sucesso!');
     setSuccessOpen(true);
+    
+    // Notify parent to refresh appointments
+    if (onAppointmentUpdate) {
+      onAppointmentUpdate();
+    }
   };
 
   const formatDateTime = (timestamp: number) => {
@@ -197,7 +211,7 @@ const AppointmentNavigationCard: React.FC<AppointmentNavigationCardProps> = ({
             <Box display="flex" alignItems="center" gap={1}>
               <ScheduleIcon fontSize="small" color="action" />
               <Typography variant="body2">
-                {currentAppointment.service}
+                {getServiceName(currentAppointment.service)}
               </Typography>
             </Box>
             {currentAppointment.customerPhone && (
@@ -256,7 +270,7 @@ const AppointmentNavigationCard: React.FC<AppointmentNavigationCardProps> = ({
                 <strong>Cliente:</strong> {currentAppointment.customerName}
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                <strong>Serviço:</strong> {currentAppointment.service}
+                <strong>Serviço:</strong> {getServiceName(currentAppointment.service)}
               </Typography>
             </Box>
           )}
