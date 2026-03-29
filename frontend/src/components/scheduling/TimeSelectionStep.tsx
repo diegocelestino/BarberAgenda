@@ -7,6 +7,7 @@ import { useAppDispatch, useAppSelector } from '../../store/hooks';
 import { fetchAppointmentsByBarber } from '../../store/appointments/appointmentsThunks';
 import { selectBarberById } from '../../store/barbers/barbersSelectors';
 import { BarberSchedule } from '../../services/api';
+import { Appointment } from '../../services/appointmentsApi';
 
 const generateSlotsFromSchedule = (schedule: BarberSchedule): string[] => {
   const slots: string[] = [];
@@ -77,8 +78,10 @@ const TimeSelectionStep: React.FC<TimeSelectionStepProps> = ({
         })
       );
 
-      // Use the fetched appointments directly from the result
-      const fetchedAppointments = (result.payload as any[]) ?? [];
+      // Get appointments from the result payload (it's an array)
+      const fetchedAppointments = (result.payload as Appointment[]) || [];
+      
+      console.log('Fetched appointments for time slots:', fetchedAppointments.length, fetchedAppointments);
 
       // Generate time slots from barber's schedule, fallback to defaults
       const schedule: BarberSchedule = barber?.schedule ?? {
@@ -96,15 +99,20 @@ const TimeSelectionStep: React.FC<TimeSelectionStepProps> = ({
       const oneHourFromNow = new Date(now.getTime() + 60 * 60 * 1000); // 1 hour from now
       const serviceDuration = selectedService?.duration || 30;
       
+      console.log('Service duration:', serviceDuration, 'minutes');
+      console.log('Total time slots generated:', allTimes.length);
+      
       const availableSlots = allTimes.filter((timeSlot) => {
         const [hours, minutes] = timeSlot.split(':').map(Number);
-        const slotStart = new Date(selectedDate);
-        slotStart.setHours(hours, minutes, 0, 0);
+        
+        // Create slot time using the selected date
+        const slotStart = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), selectedDate.getDate(), hours, minutes, 0, 0);
         const slotStartTime = slotStart.getTime();
         const slotEndTime = slotStartTime + (serviceDuration * 60 * 1000);
 
         // Check if slot is at least 1 hour in the future
         if (slotStartTime < oneHourFromNow.getTime()) {
+          console.log(`Slot ${timeSlot} is in the past or too soon`);
           return false;
         }
 
@@ -115,16 +123,26 @@ const TimeSelectionStep: React.FC<TimeSelectionStepProps> = ({
           const appointmentStart = appointment.startTime;
           const appointmentEnd = appointment.endTime;
 
-          // Check for overlap
-          return (
-            (slotStartTime >= appointmentStart && slotStartTime < appointmentEnd) ||
-            (slotEndTime > appointmentStart && slotEndTime <= appointmentEnd) ||
-            (slotStartTime <= appointmentStart && slotEndTime >= appointmentEnd)
-          );
+          // Check for overlap: slot overlaps if it starts before appointment ends AND ends after appointment starts
+          const overlaps = slotStartTime < appointmentEnd && slotEndTime > appointmentStart;
+
+          if (overlaps) {
+            console.log(`Slot ${timeSlot} conflicts with appointment:`, {
+              appointmentStart: new Date(appointmentStart).toLocaleString(),
+              appointmentEnd: new Date(appointmentEnd).toLocaleString(),
+              slotStart: new Date(slotStartTime).toLocaleString(),
+              slotEnd: new Date(slotEndTime).toLocaleString(),
+              customer: appointment.customerName,
+            });
+          }
+
+          return overlaps;
         });
 
         return !hasConflict;
       });
+
+      console.log('Available slots after filtering:', availableSlots.length, availableSlots);
 
       setAvailableTimes(availableSlots);
       setLoading(false);

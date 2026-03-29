@@ -1,1 +1,208 @@
-[]
+[
+  {
+    "appointmentId": "appt-001",
+    "barberId": "550e8400-e29b-41d4-a716-446655440001",
+    "customerName": "Diego Santos",
+    "customerPhone": "+5511949803682",
+    "service": "Corte Masculino",
+    "startTime": 1775044800000,
+    "endTime": 1775046600000,
+    "status": "scheduled",
+    "notes": "Cliente preferencial"
+  },
+  {
+    "appointmentId": "appt-002",
+    "barberId": "550e8400-e29b-41d4-a716-446655440001",
+    "customerName": "João Silva",
+    "customerPhone": "+5511987654321",
+    "service": "Barba",
+    "startTime": 1775048400000,
+    "endTime": 1775050200000,
+    "status": "scheduled"
+  },
+  {
+    "appointmentId": "appt-003",
+    "barberId": "550e8400-e29b-41d4-a716-446655440001",
+    "customerName": "Pedro Oliveira",
+    "customerPhone": "+5511976543210",
+    "service": "Corte + Barba",
+    "startTime": 1775052000000,
+    "endTime": 1775055600000,
+    "status": "scheduled"
+  },
+  {
+    "appointmentId": "appt-004",
+    "barberId": "550e8400-e29b-41d4-a716-446655440001",
+    "customerName": "Lucas Ferreira",
+    "customerPhone": "+5511965432109",
+    "service": "Corte Masculino",
+    "startTime": 1775062800000,
+    "endTime": 1775064600000,
+    "status": "completed",
+    "notes": "Pagamento em dinheiro"
+  },
+  {
+    "appointmentId": "appt-005",
+    "barberId": "550e8400-e29b-41d4-a716-446655440001",
+    "customerName": "Rafael Costa",
+    "customerPhone": "+5511954321098",
+    "service": "Barba",
+    "startTime": 1775066400000,
+    "endTime": 1775068200000,
+    "status": "scheduled"
+  },
+  {
+    "appointmentId": "appt-006",
+    "barberId": "550e8400-e29b-41d4-a716-446655440001",
+    "customerName": "Marcos Almeida",
+    "customerPhone": "+5511943210987",
+    "service": "Corte Masculino",
+    "startTime": 1775131200000,
+    "endTime": 1775133000000,
+    "status": "scheduled"
+  },
+  {
+    "appointmentId": "appt-007",
+    "barberId": "550e8400-e29b-41d4-a716-446655440001",
+    "customerName": "André Souza",
+    "customerPhone": "+5511932109876",
+    "service": "Corte + Barba",
+    "startTime": 1775134800000,
+    "endTime": 1775138400000,
+    "status": "scheduled"
+  },
+  {
+    "appointmentId": "appt-008",
+    "barberId": "550e8400-e29b-41d4-a716-446655440001",
+    "customerName": "Bruno Lima",
+    "customerPhone": "+5511921098765",
+    "service": "Barba",
+    "startTime": 1775142000000,
+    "endTime": 1775143800000,
+    "status": "completed"
+  },
+  {
+    "appointmentId": "appt-009",
+    "barberId": "550e8400-e29b-41d4-a716-446655440001",
+    "customerName": "Thiago Martins",
+    "customerPhone": "+5511910987654",
+    "service": "Corte Masculino",
+    "startTime": 1775145600000,
+    "endTime": 1775147400000,
+    "status": "scheduled",
+    "notes": "Primeira vez no salão"
+  },
+  {
+    "appointmentId": "appt-010",
+    "barberId": "550e8400-e29b-41d4-a716-446655440001",
+    "customerName": "Gabriel Rocha",
+    "customerPhone": "+5511909876543",
+    "service": "Corte + Barba",
+    "startTime": 1775149200000,
+    "endTime": 1775152800000,
+    "status": "scheduled"
+  },
+  {
+    "appointmentId": "appt-011",
+    "barberId": "550e8400-e29b-41d4-a716-446655440001",
+    "customerName": "Felipe Cardoso",
+    "customerPhone": "+5511998765432",
+    "service": "Corte Masculino",
+    "startTime": 1775217600000,
+    "endTime": 1775219400000,
+    "status": "scheduled"
+  },
+  {
+    "appointmentId": "appt-012",
+    "barberId": "550e8400-e29b-41d4-a716-446655440001",
+    "customerName": "Rodrigo Mendes",
+    "customerPhone": "+5511987654320",
+    "service": "Barba",
+    "startTime": 1775221200000,
+    "endTime": 1775223000000,
+    "status": "cancelled",
+    "notes": "Cliente cancelou"
+  },
+  {
+    "appointmentId": "appt-013",
+    "barberId": "550e8400-e29b-41d4-a716-446655440001",
+    "customerName": "Vinicius Barbosa",
+    "customerPhone": "+5511976543219",
+    "service": "Corte + Barba",
+    "startTime": 1775224800000,
+    "endTime": 1775228400000,
+    "status": "scheduled"
+  },
+  {
+    "appointmentId": "appt-014",
+    "barberId": "550e8400-e29b-41d4-a716-446655440001",
+    "customerName": "Gustavo Pinto",
+    "customerPhone": "+5511965432108",
+    "service": "Corte Masculino",
+    "startTime": 1775232000000,
+    "endTime": 1775233800000,
+    "status": "completed"
+  },
+  {
+    "appointmentId": "appt-015",
+    "barberId": "550e8400-e29b-41d4-a716-446655440001",
+    "customerName": "Henrique Dias",
+    "customerPhone": "+5511954321097",
+    "service": "Barba",
+    "startTime": 1775235600000,
+    "endTime": 1775237400000,
+    "status": "scheduled"
+  },
+  {
+    "appointmentId": "appt-016",
+    "barberId": "550e8400-e29b-41d4-a716-446655440001",
+    "customerName": "Mateus Ribeiro",
+    "customerPhone": "+5511943210986",
+    "service": "Corte Masculino",
+    "startTime": 1775304000000,
+    "endTime": 1775305800000,
+    "status": "scheduled",
+    "notes": "Corte degradê"
+  },
+  {
+    "appointmentId": "appt-017",
+    "barberId": "550e8400-e29b-41d4-a716-446655440001",
+    "customerName": "Leonardo Araújo",
+    "customerPhone": "+5511932109875",
+    "service": "Corte + Barba",
+    "startTime": 1775307600000,
+    "endTime": 1775311200000,
+    "status": "scheduled"
+  },
+  {
+    "appointmentId": "appt-018",
+    "barberId": "550e8400-e29b-41d4-a716-446655440001",
+    "customerName": "Fernando Gomes",
+    "customerPhone": "+5511921098764",
+    "service": "Barba",
+    "startTime": 1775314800000,
+    "endTime": 1775316600000,
+    "status": "scheduled"
+  },
+  {
+    "appointmentId": "appt-019",
+    "barberId": "550e8400-e29b-41d4-a716-446655440001",
+    "customerName": "Ricardo Nunes",
+    "customerPhone": "+5511910987653",
+    "service": "Corte Masculino",
+    "startTime": 1775318400000,
+    "endTime": 1775320200000,
+    "status": "completed"
+  },
+  {
+    "appointmentId": "appt-020",
+    "barberId": "550e8400-e29b-41d4-a716-446655440001",
+    "customerName": "Caio Freitas",
+    "customerPhone": "+5511909876542",
+    "service": "Corte + Barba",
+    "startTime": 1775322000000,
+    "endTime": 1775325600000,
+    "status": "scheduled",
+    "notes": "Cliente VIP"
+  }
+]

@@ -157,10 +157,16 @@ const BarberDetails: React.FC = () => {
           </Typography>
         </Box>
 
-        <Tabs value={tabValue} onChange={(_, newValue) => setTabValue(newValue)} sx={{ mb: 3 }}>
-          <Tab label="Detalhes" />
-          <Tab label="Agenda" />
-          <Tab label="Agendamentos" />
+        <Tabs 
+          value={tabValue} 
+          onChange={(_, newValue) => setTabValue(newValue)} 
+          sx={{ mb: 3 }}
+          variant="scrollable"
+          scrollButtons="auto"
+        >
+          <Tab label="Detalhes" sx={{ minWidth: 'auto', px: 2 }} />
+          <Tab label="Expediente" sx={{ minWidth: 'auto', px: 2 }} />
+          <Tab label="Agenda" sx={{ minWidth: 'auto', px: 2 }} />
         </Tabs>
 
         <TabPanel value={tabValue} index={0}>
