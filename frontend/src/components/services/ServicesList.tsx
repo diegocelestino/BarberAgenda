@@ -83,7 +83,7 @@ const ServicesList: React.FC = () => {
   }
 
   return (
-    <Box>
+    <Box sx={{ width: '100%', maxWidth: '100%' }}>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
         <Typography variant="h5" component="h2">
           Serviços
@@ -102,58 +102,54 @@ const ServicesList: React.FC = () => {
           Nenhum serviço encontrado. Crie um para começar!
         </Alert>
       ) : (
-        <TableContainer component={Paper}>
-          <Table>
+        <TableContainer component={Paper} sx={{ width: '100%' }}>
+          <Table sx={{ width: '100%', tableLayout: 'fixed' }} size="small">
             <TableHead>
               <TableRow>
-                <TableCell>Serviço</TableCell>
-                <TableCell>Descrição</TableCell>
-                <TableCell align="right">Preço</TableCell>
-                <TableCell align="right">Duração</TableCell>
-                <TableCell align="right">Ações</TableCell>
+                <TableCell sx={{ width: '50%', px: 1 }}>Serviço</TableCell>
+                <TableCell align="right" sx={{ width: '20%', px: 1 }}>Preço</TableCell>
+                <TableCell align="right" sx={{ width: '15%', px: 1 }}>Duração</TableCell>
+                <TableCell align="center" sx={{ width: '15%', px: 1 }}>Ações</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
               {services.map((service) => (
                 <TableRow key={service.serviceId} hover>
-                  <TableCell>
-                    <Typography variant="body1" fontWeight="medium">
+                  <TableCell sx={{ width: '50%', px: 1 }}>
+                    <Typography variant="body2" fontWeight="medium" noWrap>
                       {service.name}
                     </Typography>
-                    <Typography variant="caption" color="text.secondary">
+                    <Typography variant="caption" color="text.secondary" noWrap>
                       {service.title}
                     </Typography>
                   </TableCell>
-                  <TableCell>
-                    <Typography variant="body2" color="text.secondary">
-                      {service.description || '-'}
-                    </Typography>
-                  </TableCell>
-                  <TableCell align="right">
-                    <Typography variant="body2" color="text.secondary">
+                  <TableCell align="right" sx={{ width: '20%', px: 1 }}>
+                    <Typography variant="body2" color="text.secondary" noWrap>
                       R$ {service.price}
                     </Typography>
                   </TableCell>
-                  <TableCell align="right">
-                    <Typography variant="body2" color="text.secondary">
-                      {service.duration} min
+                  <TableCell align="right" sx={{ width: '15%', px: 1 }}>
+                    <Typography variant="body2" color="text.secondary" noWrap>
+                      {service.duration}min
                     </Typography>
                   </TableCell>
-                  <TableCell align="right">
+                  <TableCell align="center" sx={{ width: '15%', px: 0.5 }}>
                     <IconButton
                       size="small"
                       onClick={() => handleEditClick(service)}
                       title="Editar serviço"
+                      sx={{ p: 0.5 }}
                     >
-                      <EditIcon />
+                      <EditIcon fontSize="small" />
                     </IconButton>
                     <IconButton
                       size="small"
                       color="error"
                       onClick={() => handleDeleteClick(service)}
                       title="Excluir serviço"
+                      sx={{ p: 0.5 }}
                     >
-                      <DeleteIcon />
+                      <DeleteIcon fontSize="small" />
                     </IconButton>
                   </TableCell>
                 </TableRow>

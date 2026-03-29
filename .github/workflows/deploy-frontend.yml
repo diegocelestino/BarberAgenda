@@ -1,3 +1,14 @@
+# Deploy Frontend Workflow
+#
+# Required GitHub Secrets:
+# - AWS_ACCESS_KEY_ID: AWS access key for deployment
+# - AWS_SECRET_ACCESS_KEY: AWS secret key for deployment
+# - WHATSAPP_NUMBER: WhatsApp number for notifications
+# - BARBERSHOP_EMAIL: Email for notifications
+# - RECAPTCHA_SITE_KEY: Google reCAPTCHA site key
+#
+# Cognito configuration is automatically fetched from CloudFormation stack
+
 name: Deploy Frontend
 
 on:
@@ -39,12 +50,26 @@ jobs:
         echo "api_url=$API_URL" >> $GITHUB_OUTPUT
         echo "✅ API URL: $API_URL"
 
+    - name: Get Cognito Configuration
+      id: get-cognito
+      run: |
+        USER_POOL_ID=$(aws cloudformation describe-stacks --stack-name BarbershopStack --query 'Stacks[0].Outputs[?OutputKey==`UserPoolId`].OutputValue' --output text)
+        USER_POOL_CLIENT_ID=$(aws cloudformation describe-stacks --stack-name BarbershopStack --query 'Stacks[0].Outputs[?OutputKey==`UserPoolClientId`].OutputValue' --output text)
+        echo "user_pool_id=$USER_POOL_ID" >> $GITHUB_OUTPUT
+        echo "user_pool_client_id=$USER_POOL_CLIENT_ID" >> $GITHUB_OUTPUT
+        echo "✅ User Pool ID: $USER_POOL_ID"
+        echo "✅ User Pool Client ID: $USER_POOL_CLIENT_ID"
+
     - name: Build React app
       run: |
         cd frontend
         npm run build
       env:
         REACT_APP_API_URL: ${{ steps.get-api-url.outputs.api_url }}
+        REACT_APP_USER_POOL_ID: ${{ steps.get-cognito.outputs.user_pool_id }}
+        REACT_APP_USER_POOL_CLIENT_ID: ${{ steps.get-cognito.outputs.user_pool_client_id }}
+        REACT_APP_AWS_REGION: sa-east-1
+        REACT_APP_ENV: production
         REACT_APP_WHATSAPP_NUMBER: ${{ secrets.WHATSAPP_NUMBER }}
         REACT_APP_BARBERSHOP_EMAIL: ${{ secrets.BARBERSHOP_EMAIL }}
         REACT_APP_RECAPTCHA_SITE_KEY: ${{ secrets.RECAPTCHA_SITE_KEY }}

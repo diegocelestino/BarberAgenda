@@ -1,3 +1,11 @@
+# Deploy Infrastructure Workflow
+#
+# Required GitHub Secrets:
+# - AWS_ACCESS_KEY_ID: AWS access key for deployment
+# - AWS_SECRET_ACCESS_KEY: AWS secret key for deployment
+# - BARBERSHOP_EMAIL: Email for notifications
+#
+
 name: Deploy Infrastructure
 
 on:
@@ -35,3 +43,7 @@ jobs:
       working-directory: infrastructure
       env:
         BARBERSHOP_EMAIL: ${{ secrets.BARBERSHOP_EMAIL }}
+
+    - name: Update Frontend Environment
+      run: npm run update-env
+      working-directory: infrastructure

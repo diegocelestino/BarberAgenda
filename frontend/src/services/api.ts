@@ -24,6 +24,13 @@ const api = axios.create({
 api.interceptors.request.use(
   (config) => {
     console.log(`📤 ${config.method?.toUpperCase()} ${config.url}`);
+    
+    // Add Authorization header if token exists
+    const accessToken = localStorage.getItem('accessToken');
+    if (accessToken) {
+      config.headers.Authorization = `Bearer ${accessToken}`;
+    }
+    
     return config;
   },
   (error) => {

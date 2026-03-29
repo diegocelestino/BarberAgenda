@@ -1,11 +1,12 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { authApi, User } from '../services/authApi';
+import { auth, CognitoUser } from '../services/auth';
 
 interface AuthContextType {
   isAuthenticated: boolean;
   login: (username: string, password: string) => Promise<boolean>;
   logout: () => void;
-  user: User | null;
+  user: CognitoUser | null;
+  accessToken: string | null;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -24,29 +25,53 @@ interface AuthProviderProps {
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<CognitoUser | null>(null);
+  const [accessToken, setAccessToken] = useState<string | null>(null);
 
   useEffect(() => {
     // Check if user is already logged in (from localStorage)
-    const storedAuth = localStorage.getItem('isAuthenticated');
+    const storedAccessToken = localStorage.getItem('accessToken');
+    const storedIdToken = localStorage.getItem('idToken');
+    const storedRefreshToken = localStorage.getItem('refreshToken');
     const storedUser = localStorage.getItem('user');
-    
-    if (storedAuth === 'true' && storedUser) {
+
+    if (storedAccessToken && storedIdToken && storedRefreshToken && storedUser) {
       setIsAuthenticated(true);
       setUser(JSON.parse(storedUser));
+      setAccessToken(storedAccessToken);
+
+      // Try to refresh the token on mount
+      refreshTokenIfNeeded(storedRefreshToken);
     }
   }, []);
 
+  const refreshTokenIfNeeded = async (refreshToken: string) => {
+    try {
+      const { accessToken: newAccessToken, idToken: newIdToken } = await auth.refreshSession(refreshToken);
+      
+      setAccessToken(newAccessToken);
+      localStorage.setItem('accessToken', newAccessToken);
+      localStorage.setItem('idToken', newIdToken);
+    } catch (error) {
+      console.error('Failed to refresh token:', error);
+      // If refresh fails, log out the user
+      logout();
+    }
+  };
+
   const login = async (username: string, password: string): Promise<boolean> => {
     try {
-      const response = await authApi.login({ username, password });
-      
+      const response = await auth.signIn(username, password);
+
       setIsAuthenticated(true);
       setUser(response.user);
-      localStorage.setItem('isAuthenticated', 'true');
+      setAccessToken(response.accessToken);
+
+      localStorage.setItem('accessToken', response.accessToken);
+      localStorage.setItem('idToken', response.idToken);
+      localStorage.setItem('refreshToken', response.refreshToken);
       localStorage.setItem('user', JSON.stringify(response.user));
-      localStorage.setItem('token', response.token);
-      
+
       return true;
     } catch (error: any) {
       console.error('Login failed:', error);
@@ -54,16 +79,24 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
-  const logout = () => {
-    setIsAuthenticated(false);
-    setUser(null);
-    localStorage.removeItem('isAuthenticated');
-    localStorage.removeItem('user');
-    localStorage.removeItem('token');
+  const logout = async () => {
+    try {
+      await auth.signOut();
+    } catch (error) {
+      console.error('Logout error:', error);
+    } finally {
+      setIsAuthenticated(false);
+      setUser(null);
+      setAccessToken(null);
+      localStorage.removeItem('accessToken');
+      localStorage.removeItem('idToken');
+      localStorage.removeItem('refreshToken');
+      localStorage.removeItem('user');
+    }
   };
 
   return (
-    <AuthContext.Provider value={{ isAuthenticated, login, logout, user }}>
+    <AuthContext.Provider value={{ isAuthenticated, login, logout, user, accessToken }}>
       {children}
     </AuthContext.Provider>
   );
