@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
 import { auth, CognitoUser } from '../services/auth';
 
 interface AuthContextType {
@@ -28,6 +28,36 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<CognitoUser | null>(null);
   const [accessToken, setAccessToken] = useState<string | null>(null);
 
+  const logout = useCallback(async () => {
+    try {
+      await auth.signOut();
+    } catch (error) {
+      console.error('Logout error:', error);
+    } finally {
+      setIsAuthenticated(false);
+      setUser(null);
+      setAccessToken(null);
+      localStorage.removeItem('accessToken');
+      localStorage.removeItem('idToken');
+      localStorage.removeItem('refreshToken');
+      localStorage.removeItem('user');
+    }
+  }, []);
+
+  const refreshTokenIfNeeded = useCallback(async (refreshToken: string) => {
+    try {
+      const { accessToken: newAccessToken, idToken: newIdToken } = await auth.refreshSession(refreshToken);
+      
+      setAccessToken(newAccessToken);
+      localStorage.setItem('accessToken', newAccessToken);
+      localStorage.setItem('idToken', newIdToken);
+    } catch (error) {
+      console.error('Failed to refresh token:', error);
+      // If refresh fails, log out the user
+      logout();
+    }
+  }, [logout]);
+
   useEffect(() => {
     // Check if user is already logged in (from localStorage)
     const storedAccessToken = localStorage.getItem('accessToken');
@@ -43,21 +73,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       // Try to refresh the token on mount
       refreshTokenIfNeeded(storedRefreshToken);
     }
-  }, []);
-
-  const refreshTokenIfNeeded = async (refreshToken: string) => {
-    try {
-      const { accessToken: newAccessToken, idToken: newIdToken } = await auth.refreshSession(refreshToken);
-      
-      setAccessToken(newAccessToken);
-      localStorage.setItem('accessToken', newAccessToken);
-      localStorage.setItem('idToken', newIdToken);
-    } catch (error) {
-      console.error('Failed to refresh token:', error);
-      // If refresh fails, log out the user
-      logout();
-    }
-  };
+  }, [refreshTokenIfNeeded]);
 
   const login = async (username: string, password: string): Promise<boolean> => {
     try {
@@ -76,22 +92,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     } catch (error: any) {
       console.error('Login failed:', error);
       return false;
-    }
-  };
-
-  const logout = async () => {
-    try {
-      await auth.signOut();
-    } catch (error) {
-      console.error('Logout error:', error);
-    } finally {
-      setIsAuthenticated(false);
-      setUser(null);
-      setAccessToken(null);
-      localStorage.removeItem('accessToken');
-      localStorage.removeItem('idToken');
-      localStorage.removeItem('refreshToken');
-      localStorage.removeItem('user');
     }
   };
 

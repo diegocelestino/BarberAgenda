@@ -1,4 +1,4 @@
-import { AppBar, Toolbar, Typography, IconButton, Button, Chip, Box } from '@mui/material';
+import { AppBar, Toolbar, Typography, IconButton, Button, Chip } from '@mui/material';
 import { Home as HomeIcon, Logout as LogoutIcon } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
