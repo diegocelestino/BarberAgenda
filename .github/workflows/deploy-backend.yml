@@ -50,7 +50,3 @@ jobs:
       working-directory: infrastructure
       env:
         BARBERSHOP_EMAIL: ${{ secrets.BARBERSHOP_EMAIL }}
-
-    - name: Update Frontend Environment
-      run: npm run update-env
-      working-directory: infrastructure
