@@ -53,8 +53,16 @@ jobs:
     - name: Get Cognito Configuration
       id: get-cognito
       run: |
-        USER_POOL_ID=$(aws cloudformation describe-stacks --stack-name BarbershopStack --query 'Stacks[0].Outputs[?OutputKey==`UserPoolId`].OutputValue' --output text)
-        USER_POOL_CLIENT_ID=$(aws cloudformation describe-stacks --stack-name BarbershopStack --query 'Stacks[0].Outputs[?OutputKey==`UserPoolClientId`].OutputValue' --output text)
+        USER_POOL_ID=$(aws cloudformation describe-stacks --stack-name BarbershopStack --query 'Stacks[0].Outputs[?OutputKey==`UserPoolId`].OutputValue' --output text --region sa-east-1)
+        USER_POOL_CLIENT_ID=$(aws cloudformation describe-stacks --stack-name BarbershopStack --query 'Stacks[0].Outputs[?OutputKey==`UserPoolClientId`].OutputValue' --output text --region sa-east-1)
+
+        if [ -z "$USER_POOL_ID" ] || [ -z "$USER_POOL_CLIENT_ID" ]; then
+          echo "❌ ERROR: Cognito configuration not found in stack outputs!"
+          echo "This means Cognito User Pool was not deployed."
+          echo "Please deploy the infrastructure with Cognito first."
+          exit 1
+        fi
+
         echo "user_pool_id=$USER_POOL_ID" >> $GITHUB_OUTPUT
         echo "user_pool_client_id=$USER_POOL_CLIENT_ID" >> $GITHUB_OUTPUT
         echo "✅ User Pool ID: $USER_POOL_ID"
