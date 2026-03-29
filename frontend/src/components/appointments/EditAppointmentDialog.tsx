@@ -9,6 +9,7 @@ import {
   MenuItem,
   Box,
   CircularProgress,
+  Alert,
 } from '@mui/material';
 import { useAppDispatch, useAppSelector } from '../../store/hooks';
 import { updateAppointment } from '../../store/appointments';
@@ -35,7 +36,9 @@ const EditAppointmentDialog: React.FC<EditAppointmentDialogProps> = ({
   const allServices = useAppSelector(selectAllServices);
   const servicesLoading = useAppSelector(selectServicesLoading);
   const barber = useAppSelector(selectSelectedBarber);
+  const appointments = useAppSelector((state) => state.appointments.appointments);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
   const [formData, setFormData] = useState({
     customerName: '',
     customerPhone: '',
@@ -75,6 +78,7 @@ const EditAppointmentDialog: React.FC<EditAppointmentDialogProps> = ({
         status: appointment.status,
         notes: appointment.notes || '',
       });
+      setError(''); // Clear error when opening dialog
     }
   }, [appointment, allServices]);
 
@@ -85,11 +89,13 @@ const EditAppointmentDialog: React.FC<EditAppointmentDialogProps> = ({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError('');
+    
     if (!appointment || !formData.serviceId) return;
 
     const selectedService = allServices.find(s => s.serviceId === formData.serviceId);
     if (!selectedService) {
-      alert('Por favor, selecione um serviço válido');
+      setError('Por favor, selecione um serviço válido');
       return;
     }
 
@@ -104,13 +110,37 @@ const EditAppointmentDialog: React.FC<EditAppointmentDialogProps> = ({
 
     // Validation: Cannot schedule in the past
     if (startTime < now && formData.status === 'scheduled') {
-      alert('Não é possível agendar um compromisso no passado');
+      setError('Não é possível agendar um compromisso no passado');
       return;
     }
 
     // Validation: Cannot complete an appointment before it happens
     if (formData.status === 'completed' && startTime > now) {
-      alert('Não é possível marcar um agendamento como concluído antes que ele aconteça');
+      setError('Não é possível marcar um agendamento como concluído antes que ele aconteça');
+      return;
+    }
+
+    // Check for conflicts with other appointments (excluding current one)
+    const hasConflict = appointments.some((apt) => {
+      // Skip the current appointment being edited
+      if (apt.appointmentId === appointment.appointmentId) return false;
+      
+      // Skip cancelled appointments
+      if (apt.status === 'cancelled') return false;
+      
+      // Skip if different barber
+      if (apt.barberId !== barberId) return false;
+      
+      // Check for time overlap
+      const aptStart = apt.startTime;
+      const aptEnd = apt.endTime;
+      
+      // Overlap occurs if: new appointment starts before existing ends AND new appointment ends after existing starts
+      return startTime < aptEnd && endTime > aptStart;
+    });
+
+    if (hasConflict) {
+      setError('Este horário conflita com outro agendamento. Por favor, escolha outro horário.');
       return;
     }
 
@@ -130,8 +160,9 @@ const EditAppointmentDialog: React.FC<EditAppointmentDialogProps> = ({
         },
       })).unwrap();
       onSuccess();
-    } catch (error) {
-      console.error('Failed to update appointment:', error);
+    } catch (err: any) {
+      console.error('Failed to update appointment:', err);
+      setError(err.message || 'Erro ao atualizar agendamento');
     } finally {
       setLoading(false);
     }
@@ -153,12 +184,26 @@ const EditAppointmentDialog: React.FC<EditAppointmentDialogProps> = ({
 
   const selectedService = allServices.find(s => s.serviceId === formData.serviceId);
 
+  // Get current time in Brazil timezone for min attribute
+  const getBrazilNowString = () => {
+    const now = new Date();
+    const brazilNow = new Date(now.toLocaleString('en-US', { timeZone: 'America/Sao_Paulo' }));
+    const year = brazilNow.getFullYear();
+    const month = String(brazilNow.getMonth() + 1).padStart(2, '0');
+    const day = String(brazilNow.getDate()).padStart(2, '0');
+    const hours = String(brazilNow.getHours()).padStart(2, '0');
+    const minutes = String(brazilNow.getMinutes()).padStart(2, '0');
+    return `${year}-${month}-${day}T${hours}:${minutes}`;
+  };
+
   return (
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
       <form onSubmit={handleSubmit}>
         <DialogTitle>Editar Agendamento</DialogTitle>
         <DialogContent>
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 1 }}>
+            {error && <Alert severity="error">{error}</Alert>}
+            
             <TextField
               label="Nome do Cliente"
               value={formData.customerName}
@@ -208,7 +253,7 @@ const EditAppointmentDialog: React.FC<EditAppointmentDialogProps> = ({
               fullWidth
               InputLabelProps={{ shrink: true }}
               inputProps={{
-                min: formData.status === 'scheduled' ? new Date().toISOString().slice(0, 16) : undefined,
+                min: formData.status === 'scheduled' ? getBrazilNowString() : undefined,
               }}
             />
 

@@ -105,8 +105,14 @@ const TimeSelectionStep: React.FC<TimeSelectionStepProps> = ({
       const availableSlots = allTimes.filter((timeSlot) => {
         const [hours, minutes] = timeSlot.split(':').map(Number);
         
-        // Create slot time using the selected date
-        const slotStart = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), selectedDate.getDate(), hours, minutes, 0, 0);
+        // Create slot time in Brazil timezone (UTC-3)
+        const year = selectedDate.getFullYear();
+        const month = String(selectedDate.getMonth() + 1).padStart(2, '0');
+        const day = String(selectedDate.getDate()).padStart(2, '0');
+        const timeStr = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+        const slotDateTimeString = `${year}-${month}-${day}T${timeStr}:00-03:00`;
+        const slotStart = new Date(slotDateTimeString);
+        
         const slotStartTime = slotStart.getTime();
         const slotEndTime = slotStartTime + (serviceDuration * 60 * 1000);
 

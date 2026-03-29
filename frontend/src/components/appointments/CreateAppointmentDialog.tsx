@@ -68,10 +68,10 @@ const CreateAppointmentDialog: React.FC<CreateAppointmentDialogProps> = ({
       return;
     }
 
-    // Parse date and time in local timezone (São Paulo)
-    const [year, month, day] = date.split('-').map(Number);
-    const [hours, minutes] = startTime.split(':').map(Number);
-    const appointmentDateTime = new Date(year, month - 1, day, hours, minutes, 0, 0);
+    // Parse date and time in Brazil timezone (UTC-3)
+    // Format: YYYY-MM-DD and HH:mm
+    const dateTimeString = `${date}T${startTime}:00-03:00`;
+    const appointmentDateTime = new Date(dateTimeString);
     
     const startDateTime = appointmentDateTime.getTime();
     const endDateTime = startDateTime + selectedService.durationMinutes * 60 * 1000;

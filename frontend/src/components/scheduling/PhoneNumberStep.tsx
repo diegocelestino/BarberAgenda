@@ -12,6 +12,17 @@ const PhoneNumberStep: React.FC<PhoneNumberStepProps> = ({ onNext, onBack, initi
   const [phoneNumber, setPhoneNumber] = useState(initialValue);
   const [error, setError] = useState('');
 
+  const formatPhoneNumber = (value: string): string => {
+    const onlyNumbers = value.replace(/\D/g, '');
+    if (onlyNumbers.length <= 2) {
+      return onlyNumbers;
+    } else if (onlyNumbers.length <= 7) {
+      return `${onlyNumbers.slice(0, 2)} ${onlyNumbers.slice(2)}`;
+    } else {
+      return `${onlyNumbers.slice(0, 2)} ${onlyNumbers.slice(2, 7)} ${onlyNumbers.slice(7, 11)}`;
+    }
+  };
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const onlyNumbers = e.target.value.replace(/\D/g, '');
     if (onlyNumbers.length > 11) {
@@ -49,12 +60,12 @@ const PhoneNumberStep: React.FC<PhoneNumberStepProps> = ({ onNext, onBack, initi
       <TextField
         fullWidth
         label="Telefone"
-        value={phoneNumber}
+        value={formatPhoneNumber(phoneNumber)}
         onChange={handleChange}
-        placeholder="11999999999"
+        placeholder="11 99999 9999"
         error={!!error}
         helperText={error}
-        inputProps={{ inputMode: 'numeric', pattern: '[0-9]*' }}
+        inputProps={{ inputMode: 'numeric' }}
         sx={{ mb: 2 }}
       />
 
