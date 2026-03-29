@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Box,
   Typography,
@@ -14,7 +15,7 @@ import {
   IconButton,
   Button,
 } from '@mui/material';
-import { Edit as EditIcon, Delete as DeleteIcon, Add as AddIcon } from '@mui/icons-material';
+import { Edit as EditIcon, Delete as DeleteIcon, Add as AddIcon, ArrowBack as ArrowBackIcon } from '@mui/icons-material';
 import { useAppDispatch, useAppSelector } from '../../store/hooks';
 import {
   fetchServices,
@@ -28,6 +29,7 @@ import EditServiceDialog from './EditServiceDialog';
 import DeleteServiceDialog from './DeleteServiceDialog';
 
 const ServicesList: React.FC = () => {
+  const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const services = useAppSelector(selectAllServices);
   const loading = useAppSelector(selectServicesLoading);
@@ -85,9 +87,14 @@ const ServicesList: React.FC = () => {
   return (
     <Box>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-        <Typography variant="h5" component="h2">
-          Serviços
-        </Typography>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+          <IconButton onClick={() => navigate('/admin')} title="Voltar">
+            <ArrowBackIcon />
+          </IconButton>
+          <Typography variant="h5" component="h2">
+            Serviços
+          </Typography>
+        </Box>
         <Button
           variant="contained"
           startIcon={<AddIcon />}

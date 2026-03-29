@@ -10,6 +10,9 @@ import MenuPage from './pages/MenuPage';
 import BarbersPage from './pages/BarbersPage';
 import ServicesPage from './pages/ServicesPage';
 import EditBarberPage from './pages/EditBarberPage';
+import EditBarberDetailsPage from './pages/EditBarberDetailsPage';
+import BarberSchedulePage from './pages/BarberSchedulePage';
+import BarberAppointmentsPage from './pages/BarberAppointmentsPage';
 
 function App() {
   return (
@@ -54,6 +57,30 @@ function App() {
                 element={
                   <ProtectedRoute>
                     <EditBarberPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/admin/barbers/:barberId/edit"
+                element={
+                  <ProtectedRoute>
+                    <EditBarberDetailsPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/admin/barbers/:barberId/schedule"
+                element={
+                  <ProtectedRoute>
+                    <BarberSchedulePage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/admin/barbers/:barberId/appointments"
+                element={
+                  <ProtectedRoute>
+                    <BarberAppointmentsPage />
                   </ProtectedRoute>
                 }
               />

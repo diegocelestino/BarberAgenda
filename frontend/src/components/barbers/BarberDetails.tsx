@@ -1,49 +1,40 @@
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   Box,
   Typography,
-  TextField,
-  Button,
   Paper,
-  Stack,
-  Chip,
   Alert,
-  Snackbar,
   CircularProgress,
   IconButton,
-  Tabs,
-  Tab,
+  Grid,
+  Card,
+  CardContent,
+  CardActionArea,
+  Button,
+  Stack,
 } from '@mui/material';
-import { Save as SaveIcon, ArrowBack as ArrowBackIcon } from '@mui/icons-material';
+import {
+  ArrowBack as ArrowBackIcon,
+  Person as PersonIcon,
+  Schedule as ScheduleIcon,
+  CalendarMonth as CalendarMonthIcon,
+} from '@mui/icons-material';
 import { useAppDispatch, useAppSelector } from '../../store/hooks';
 import {
   fetchBarberById,
-  updateBarber,
   selectSelectedBarber,
   selectBarbersLoading,
   selectBarbersError,
   clearSelectedBarber,
 } from '../../store/barbers';
-import { clearAppointments } from '../../store/appointments';
-import { fetchServices, selectAllServices, selectServicesLoading } from '../../store/services';
-import AppointmentCalendar from '../appointments/AppointmentCalendar';
-import BarberScheduleTab from './BarberScheduleTab';
-
-interface TabPanelProps {
-  children?: React.ReactNode;
-  index: number;
-  value: number;
-}
-
-function TabPanel(props: TabPanelProps) {
-  const { children, value, index, ...other } = props;
-  return (
-    <div role="tabpanel" hidden={value !== index} {...other}>
-      {value === index && <Box>{children}</Box>}
-    </div>
-  );
-}
+import { 
+  fetchAppointmentsByBarber,
+  selectAllAppointments,
+  selectAppointmentsLoading,
+  clearAppointments 
+} from '../../store/appointments';
+import AppointmentNavigationCard from '../appointments/AppointmentNavigationCard';
 
 const BarberDetails: React.FC = () => {
   const { barberId } = useParams<{ barberId: string }>();
@@ -53,24 +44,17 @@ const BarberDetails: React.FC = () => {
   const barber = useAppSelector(selectSelectedBarber);
   const loading = useAppSelector(selectBarbersLoading);
   const error = useAppSelector(selectBarbersError);
-  const services = useAppSelector(selectAllServices);
-  const servicesLoading = useAppSelector(selectServicesLoading);
-  
-  const [tabValue, setTabValue] = useState(0);
-  const [name, setName] = useState('');
-  const [selectedServiceIds, setSelectedServiceIds] = useState<string[]>([]);
-  const [rating, setRating] = useState<number>(5);
-  const [successOpen, setSuccessOpen] = useState(false);
-
-  useEffect(() => {
-    if (services.length === 0) {
-      dispatch(fetchServices());
-    }
-  }, [services.length, dispatch]);
+  const appointments = useAppSelector(selectAllAppointments);
+  const appointmentsLoading = useAppSelector(selectAppointmentsLoading);
 
   useEffect(() => {
     if (barberId) {
       dispatch(fetchBarberById(barberId));
+      
+      // Fetch appointments for the next 30 days
+      const startDate = Date.now();
+      const endDate = Date.now() + 30 * 24 * 60 * 60 * 1000;
+      dispatch(fetchAppointmentsByBarber({ barberId, params: { startDate, endDate } }));
     }
     
     return () => {
@@ -79,47 +63,10 @@ const BarberDetails: React.FC = () => {
     };
   }, [barberId, dispatch]);
 
-  useEffect(() => {
-    if (barber) {
-      setName(barber.name);
-      setSelectedServiceIds(barber.serviceIds);
-      setRating(barber.rating);
-    }
-  }, [barber]);
-
-  const handleToggleService = (serviceId: string) => {
-    setSelectedServiceIds(prev =>
-      prev.includes(serviceId)
-        ? prev.filter(id => id !== serviceId)
-        : [...prev, serviceId]
-    );
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (!name.trim() || !barberId || selectedServiceIds.length === 0) {
-      return;
-    }
-
-    try {
-      await dispatch(
-        updateBarber({
-          barberId,
-          data: {
-            name: name.trim(),
-            serviceIds: selectedServiceIds,
-            rating,
-          },
-        })
-      ).unwrap();
-
-      setSuccessOpen(true);
-      setTimeout(() => navigate('/admin/barbers'), 1500);
-    } catch (err) {
-      console.error('Failed to update barber:', err);
-    }
-  };
+  // Get all scheduled appointments sorted by time
+  const scheduledAppointments = appointments
+    .filter(apt => apt.status === 'scheduled' && apt.startTime >= Date.now())
+    .sort((a, b) => a.startTime - b.startTime);
 
   if (loading && !barber) {
     return (
@@ -145,134 +92,109 @@ const BarberDetails: React.FC = () => {
     );
   }
 
+  const menuOptions = [
+    {
+      title: 'Agenda',
+      description: 'Ver e gerenciar agendamentos',
+      icon: <CalendarMonthIcon sx={{ fontSize: 48 }} />,
+      path: `/admin/barbers/${barberId}/appointments`,
+      color: '#ed6c02',
+    },
+    {
+      title: 'Detalhes',
+      description: 'Editar informações do barbeiro',
+      icon: <PersonIcon sx={{ fontSize: 48 }} />,
+      path: `/admin/barbers/${barberId}/edit`,
+      color: '#1976d2',
+    },
+    {
+      title: 'Expediente',
+      description: 'Gerenciar horários de trabalho',
+      icon: <ScheduleIcon sx={{ fontSize: 48 }} />,
+      path: `/admin/barbers/${barberId}/schedule`,
+      color: '#2e7d32',
+    },
+  ];
+
   return (
-    <>
-      <Paper elevation={2} sx={{ p: { xs: 2, sm: 3 } }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-          <IconButton onClick={() => navigate('/admin/barbers')} sx={{ mr: 1 }}>
-            <ArrowBackIcon />
-          </IconButton>
-          <Typography variant="h5" component="h2">
-            {barber.name}
-          </Typography>
-        </Box>
+    <Paper elevation={2} sx={{ p: { xs: 2, sm: 3 } }}>
+      <Box sx={{ display: 'flex', alignItems: 'center', mb: 4 }}>
+        <IconButton onClick={() => navigate('/admin/barbers')} sx={{ mr: 1 }}>
+          <ArrowBackIcon />
+        </IconButton>
+        <Typography variant="h5" component="h2">
+          {barber.name}
+        </Typography>
+      </Box>
 
-        <Tabs 
-          value={tabValue} 
-          onChange={(_, newValue) => setTabValue(newValue)} 
-          sx={{ mb: 3 }}
-          variant="scrollable"
-          scrollButtons="auto"
-        >
-          <Tab label="Detalhes" sx={{ minWidth: 'auto', px: 2 }} />
-          <Tab label="Expediente" sx={{ minWidth: 'auto', px: 2 }} />
-          <Tab label="Agenda" sx={{ minWidth: 'auto', px: 2 }} />
-        </Tabs>
+      <Grid container spacing={3}>
+        {/* Next Appointment Card */}
+        <Grid item xs={12}>
+          <AppointmentNavigationCard
+            appointments={scheduledAppointments}
+            barberId={barberId || ''}
+            loading={appointmentsLoading}
+          />
+        </Grid>
 
-        <TabPanel value={tabValue} index={0}>
-          <Box component="form" onSubmit={handleSubmit}>
-            <Stack spacing={2.5}>
-              <TextField
-                label="Nome"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                required
-                fullWidth
-                variant="outlined"
-              />
-
-              <Box>
-                <Typography variant="subtitle2" gutterBottom>
-                  Serviços *
+        {/* Agenda Card - Full Width */}
+        <Grid item xs={12}>
+          <Card 
+            elevation={2}
+            sx={{
+              transition: 'transform 0.2s, box-shadow 0.2s',
+              '&:hover': {
+                transform: 'translateY(-4px)',
+                boxShadow: 4,
+              },
+            }}
+          >
+            <CardActionArea 
+              onClick={() => navigate(menuOptions[0].path)}
+              sx={{ p: 2 }}
+            >
+              <CardContent sx={{ textAlign: 'center' }}>
+                <Box sx={{ color: menuOptions[0].color, mb: 2 }}>
+                  {menuOptions[0].icon}
+                </Box>
+                <Typography variant="h6" component="h3" gutterBottom>
+                  {menuOptions[0].title}
                 </Typography>
-                {servicesLoading ? (
-                  <Box display="flex" alignItems="center" gap={1}>
-                    <CircularProgress size={20} />
-                    <Typography variant="body2" color="text.secondary">
-                      Carregando serviços...
-                    </Typography>
-                  </Box>
-                ) : services.length === 0 ? (
-                  <Alert severity="info">
-                    Nenhum serviço disponível. Por favor, crie serviços primeiro.
-                  </Alert>
-                ) : (
-                  <Stack direction="row" spacing={0.5} flexWrap="wrap" gap={0.5}>
-                    {services.map((service) => (
-                      <Chip
-                        key={service.serviceId}
-                        label={service.title}
-                        onClick={() => handleToggleService(service.serviceId)}
-                        color={selectedServiceIds.includes(service.serviceId) ? 'primary' : 'default'}
-                        variant={selectedServiceIds.includes(service.serviceId) ? 'filled' : 'outlined'}
-                        clickable
-                      />
-                    ))}
-                  </Stack>
-                )}
-              </Box>
+                <Typography variant="body2" color="text.secondary">
+                  {menuOptions[0].description}
+                </Typography>
+              </CardContent>
+            </CardActionArea>
+          </Card>
+        </Grid>
 
-              <TextField
-                label="Avaliação"
-                type="number"
-                value={rating}
-                onChange={(e) => setRating(parseFloat(e.target.value))}
-                inputProps={{
-                  min: 0,
-                  max: 5,
-                  step: 0.1,
-                }}
-                fullWidth
-                variant="outlined"
-              />
-
-              <Stack direction="row" spacing={2}>
-                <Button
-                  variant="outlined"
-                  onClick={() => navigate('/admin/barbers')}
-                  fullWidth
-                >
-                  Cancelar
-                </Button>
-                <Button
-                  type="submit"
-                  variant="contained"
-                  size="large"
-                  startIcon={<SaveIcon />}
-                  disabled={loading || !name.trim() || selectedServiceIds.length === 0}
-                  fullWidth
-                >
-                  {loading ? 'Salvando...' : 'Salvar Alterações'}
-                </Button>
-              </Stack>
-            </Stack>
-          </Box>
-        </TabPanel>
-
-        <TabPanel value={tabValue} index={1}>
-          <BarberScheduleTab barber={barber} />
-        </TabPanel>
-
-        <TabPanel value={tabValue} index={2}>
-          <AppointmentCalendar />
-        </TabPanel>
-      </Paper>
-
-      <Snackbar
-        open={successOpen}
-        autoHideDuration={3000}
-        onClose={() => setSuccessOpen(false)}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
-      >
-        <Alert
-          onClose={() => setSuccessOpen(false)}
-          severity="success"
-          sx={{ width: '100%' }}
-        >
-          Barbeiro atualizado com sucesso!
-        </Alert>
-      </Snackbar>
-    </>
+        {/* Detalhes and Expediente Buttons */}
+        <Grid item xs={12}>
+          <Stack direction="row" spacing={2}>
+            <Button
+              variant="outlined"
+              size="large"
+              fullWidth
+              startIcon={menuOptions[1].icon}
+              onClick={() => navigate(menuOptions[1].path)}
+              sx={{ py: 2 }}
+            >
+              {menuOptions[1].title}
+            </Button>
+            <Button
+              variant="outlined"
+              size="large"
+              fullWidth
+              startIcon={menuOptions[2].icon}
+              onClick={() => navigate(menuOptions[2].path)}
+              sx={{ py: 2 }}
+            >
+              {menuOptions[2].title}
+            </Button>
+          </Stack>
+        </Grid>
+      </Grid>
+    </Paper>
   );
 };
 

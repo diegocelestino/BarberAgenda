@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Box,
   Typography,
@@ -6,8 +7,9 @@ import {
   Alert,
   Grid,
   Button,
+  IconButton,
 } from '@mui/material';
-import { Add as AddIcon } from '@mui/icons-material';
+import { Add as AddIcon, ArrowBack as ArrowBackIcon } from '@mui/icons-material';
 import { useAppDispatch, useAppSelector } from '../../store/hooks';
 import {
   fetchBarbers,
@@ -20,6 +22,7 @@ import DeleteBarberDialog from './DeleteBarberDialog';
 import CreateBarberDialog from './CreateBarberDialog';
 
 const BarberList: React.FC = () => {
+  const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const barbers = useAppSelector(selectAllBarbers);
   const loading = useAppSelector(selectBarbersLoading);
@@ -70,9 +73,14 @@ const BarberList: React.FC = () => {
   return (
     <Box>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-        <Typography variant="h5" component="h2">
-          Barbeiros
-        </Typography>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+          <IconButton onClick={() => navigate('/admin')} title="Voltar">
+            <ArrowBackIcon />
+          </IconButton>
+          <Typography variant="h5" component="h2">
+            Barbeiros
+          </Typography>
+        </Box>
         <Button
           variant="contained"
           startIcon={<AddIcon />}
