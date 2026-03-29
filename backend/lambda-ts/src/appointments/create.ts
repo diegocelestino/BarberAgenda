@@ -18,15 +18,15 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
     const { customerName, customerPhone, service, serviceId, startTime, endTime, notes } = body;
 
     const serviceValue = service || serviceId;
-    if (!customerName || !customerPhone || !serviceValue || !startTime || !endTime) {
-      return error(400, 'customerName, customerPhone, service, startTime, and endTime are required');
+    if (!customerName || serviceValue === undefined || !startTime || !endTime) {
+      return error(400, 'customerName, service, startTime, and endTime are required');
     }
 
     const appointment = {
       barberId,
       appointmentId: randomUUID(),
       customerName,
-      customerPhone,
+      customerPhone: customerPhone || '',
       service: serviceValue,
       startTime,
       endTime,
