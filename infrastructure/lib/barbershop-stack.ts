@@ -6,6 +6,7 @@ import * as iam from 'aws-cdk-lib/aws-iam';
 import * as s3 from 'aws-cdk-lib/aws-s3';
 import * as cloudfront from 'aws-cdk-lib/aws-cloudfront';
 import * as origins from 'aws-cdk-lib/aws-cloudfront-origins';
+import * as cognito from 'aws-cdk-lib/aws-cognito';
 import { Construct } from 'constructs';
 import * as path from 'path';
 
@@ -15,6 +16,51 @@ export class BarbershopStack extends cdk.Stack {
 
     // Get email from context or environment
     const barbershopEmail = this.node.tryGetContext('barbershopEmail') || process.env.BARBERSHOP_EMAIL;
+
+    // ========================================
+    // Cognito User Pool
+    // ========================================
+
+    const userPool = new cognito.UserPool(this, 'BarbershopUserPool', {
+      userPoolName: 'barbershop-user-pool',
+      selfSignUpEnabled: false, // Only admin can create users
+      signInAliases: {
+        email: true,
+        username: true,
+      },
+      autoVerify: {
+        email: true,
+      },
+      standardAttributes: {
+        email: {
+          required: true,
+          mutable: true,
+        },
+      },
+      passwordPolicy: {
+        minLength: 8,
+        requireLowercase: true,
+        requireUppercase: true,
+        requireDigits: true,
+        requireSymbols: false,
+      },
+      accountRecovery: cognito.AccountRecovery.EMAIL_ONLY,
+      removalPolicy: cdk.RemovalPolicy.DESTROY,
+    });
+
+    const userPoolClient = new cognito.UserPoolClient(this, 'BarbershopUserPoolClient', {
+      userPool,
+      userPoolClientName: 'barbershop-web-client',
+      authFlows: {
+        userPassword: true,
+        userSrp: true,
+      },
+      generateSecret: false, // For web/mobile apps
+      preventUserExistenceErrors: true,
+      accessTokenValidity: cdk.Duration.hours(1),
+      idTokenValidity: cdk.Duration.hours(1),
+      refreshTokenValidity: cdk.Duration.days(30),
+    });
 
     // ========================================
     // DynamoDB Tables
@@ -164,48 +210,78 @@ export class BarbershopStack extends cdk.Stack {
       },
     });
 
+    // Cognito Authorizer for protected routes
+    const authorizer = new apigateway.CognitoUserPoolsAuthorizer(this, 'CognitoAuthorizer', {
+      cognitoUserPools: [userPool],
+      authorizerName: 'BarbershopAuthorizer',
+      identitySource: 'method.request.header.Authorization',
+    });
+
     const int = (fn: lambda.Function) => new apigateway.LambdaIntegration(fn);
 
     // /barbers
     const barbers = api.root.addResource('barbers');
-    barbers.addMethod('GET',  int(listBarbersFn));
-    barbers.addMethod('POST', int(createBarberFn));
+    barbers.addMethod('GET',  int(listBarbersFn)); // Public - list barbers
+    barbers.addMethod('POST', int(createBarberFn), {
+      authorizer,
+      authorizationType: apigateway.AuthorizationType.COGNITO,
+    });
 
     // /barbers/{barberId}
     const barber = barbers.addResource('{barberId}');
-    barber.addMethod('GET',    int(getBarberFn));
-    barber.addMethod('PUT',    int(updateBarberFn));
-    barber.addMethod('DELETE', int(deleteBarberFn));
+    barber.addMethod('GET',    int(getBarberFn)); // Public - get barber details
+    barber.addMethod('PUT',    int(updateBarberFn), {
+      authorizer,
+      authorizationType: apigateway.AuthorizationType.COGNITO,
+    });
+    barber.addMethod('DELETE', int(deleteBarberFn), {
+      authorizer,
+      authorizationType: apigateway.AuthorizationType.COGNITO,
+    });
 
     // /barbers/{barberId}/appointments
     const appointments = barber.addResource('appointments');
-    appointments.addMethod('GET',  int(listAppointmentsFn));
-    appointments.addMethod('POST', int(createAppointmentFn));
+    appointments.addMethod('GET',  int(listAppointmentsFn)); // Public - view appointments
+    appointments.addMethod('POST', int(createAppointmentFn)); // Public - customers can book
 
     // /barbers/{barberId}/appointments/{appointmentId}
     const appointment = appointments.addResource('{appointmentId}');
-    appointment.addMethod('GET',    int(getAppointmentFn));
-    appointment.addMethod('PUT',    int(updateAppointmentFn));
-    appointment.addMethod('DELETE', int(deleteAppointmentFn));
+    appointment.addMethod('GET',    int(getAppointmentFn)); // Public - view appointment
+    appointment.addMethod('PUT',    int(updateAppointmentFn), {
+      authorizer,
+      authorizationType: apigateway.AuthorizationType.COGNITO,
+    });
+    appointment.addMethod('DELETE', int(deleteAppointmentFn), {
+      authorizer,
+      authorizationType: apigateway.AuthorizationType.COGNITO,
+    });
 
     // /services
     const services = api.root.addResource('services');
-    services.addMethod('GET',  int(listServicesFn));
-    services.addMethod('POST', int(createServiceFn));
+    services.addMethod('GET',  int(listServicesFn)); // Public - view services
+    services.addMethod('POST', int(createServiceFn), {
+      authorizer,
+      authorizationType: apigateway.AuthorizationType.COGNITO,
+    });
 
     // /services/{serviceId}
     const service = services.addResource('{serviceId}');
-    service.addMethod('GET',    int(getServiceFn));
-    service.addMethod('PUT',    int(updateServiceFn));
-    service.addMethod('DELETE', int(deleteServiceFn));
-
-    // /auth/login
-    const auth = api.root.addResource('auth');
-    auth.addResource('login').addMethod('POST', int(loginFn));
+    service.addMethod('GET',    int(getServiceFn)); // Public - view service
+    service.addMethod('PUT',    int(updateServiceFn), {
+      authorizer,
+      authorizationType: apigateway.AuthorizationType.COGNITO,
+    });
+    service.addMethod('DELETE', int(deleteServiceFn), {
+      authorizer,
+      authorizationType: apigateway.AuthorizationType.COGNITO,
+    });
 
     // /notifications/email
     const notifications = api.root.addResource('notifications');
-    notifications.addResource('email').addMethod('POST', int(sendEmailFn));
+    notifications.addResource('email').addMethod('POST', int(sendEmailFn), {
+      authorizer,
+      authorizationType: apigateway.AuthorizationType.COGNITO,
+    });
 
     // ========================================
     // Frontend - S3 + CloudFront
@@ -244,6 +320,18 @@ export class BarbershopStack extends cdk.Stack {
       value: api.url,
       description: 'API Gateway URL',
       exportName: 'BarbershopApiUrl',
+    });
+
+    new cdk.CfnOutput(this, 'UserPoolId', {
+      value: userPool.userPoolId,
+      description: 'Cognito User Pool ID',
+      exportName: 'BarbershopUserPoolId',
+    });
+
+    new cdk.CfnOutput(this, 'UserPoolClientId', {
+      value: userPoolClient.userPoolClientId,
+      description: 'Cognito User Pool Client ID',
+      exportName: 'BarbershopUserPoolClientId',
     });
 
     new cdk.CfnOutput(this, 'BarbersTableName', { value: barbersTable.tableName });
