@@ -1,18 +1,3 @@
-# Deploy Infrastructure Workflow
-#
-# Required GitHub Secrets:
-# - AWS_ACCESS_KEY_ID: AWS access key for deployment
-# - AWS_SECRET_ACCESS_KEY: AWS secret key for deployment
-# - BARBERSHOP_EMAIL: Email for notifications
-#
-# After deployment, create admin user via AWS Console:
-# 1. Go to AWS Cognito Console (https://console.aws.amazon.com/cognito/)
-# 2. Select region: sa-east-1
-# 3. Select User Pool "barbershop-users"
-# 4. Click Users → Create user
-# 5. Set username, email, and password
-#
-
 name: Deploy Infrastructure
 
 on:

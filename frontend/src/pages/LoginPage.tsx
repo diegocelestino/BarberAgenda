@@ -8,11 +8,9 @@ import {
   Typography,
   Box,
   Alert,
-  Chip,
 } from '@mui/material';
 import { Login as LoginIcon } from '@mui/icons-material';
 import { useAuth } from '../contexts/AuthContext';
-import { auth } from '../services/auth';
 
 const LoginPage: React.FC = () => {
   const navigate = useNavigate();
@@ -32,10 +30,10 @@ const LoginPage: React.FC = () => {
       if (success) {
         navigate('/admin');
       } else {
-        setError('Usuário ou senha inválidos. Verifique suas credenciais.');
+        setError('Usuário ou senha inválidos');
       }
     } catch (err) {
-      setError('Ocorreu um erro ao fazer login. Por favor, tente novamente.');
+      setError('Ocorreu um erro. Por favor, tente novamente.');
     } finally {
       setLoading(false);
     }
@@ -57,14 +55,6 @@ const LoginPage: React.FC = () => {
             <Typography component="h1" variant="h5">
               Login Admin
             </Typography>
-            {auth.isMockMode() && (
-              <Chip 
-                label="MODO DESENVOLVIMENTO" 
-                color="warning" 
-                size="small" 
-                sx={{ mt: 1 }}
-              />
-            )}
           </Box>
 
           {error && (
@@ -105,10 +95,7 @@ const LoginPage: React.FC = () => {
             </Button>
             <Box sx={{ mt: 2, textAlign: 'center' }}>
               <Typography variant="body2" color="text.secondary">
-                {auth.isMockMode() 
-                  ? 'Credenciais de desenvolvimento: admin / admin ou demo / demo123'
-                  : 'Use suas credenciais de administrador'
-                }
+                Credenciais demo: admin / admin
               </Typography>
             </Box>
           </Box>

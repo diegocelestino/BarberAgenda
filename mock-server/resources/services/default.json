@@ -43,14 +43,5 @@
     "price": 25,
     "duration": 30,
     "durationMinutes": 30
-  },
-  {
-    "serviceId": "service-1774807537337",
-    "title": "Teste",
-    "name": "Teste",
-    "description": "teste",
-    "price": 30,
-    "duration": 30,
-    "durationMinutes": 30
   }
 ]

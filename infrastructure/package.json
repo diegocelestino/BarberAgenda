@@ -9,7 +9,8 @@
     "watch": "tsc -w",
     "test": "jest",
     "cdk": "cdk",
-    "deploy": "cdk deploy",
+    "deploy": "cdk deploy && node scripts/update-frontend-env.js",
+    "update-env": "node scripts/update-frontend-env.js",
     "seed-admin": "ts-node scripts/seed-admin-user.ts"
   },
   "devDependencies": {

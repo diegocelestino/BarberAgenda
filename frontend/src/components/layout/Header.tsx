@@ -1,8 +1,7 @@
-import { AppBar, Toolbar, Typography, IconButton, Button, Chip } from '@mui/material';
+import { AppBar, Toolbar, Typography, IconButton, Button } from '@mui/material';
 import { Home as HomeIcon, Logout as LogoutIcon } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
-import { auth } from '../../services/auth';
 
 const Header: React.FC = () => {
   const navigate = useNavigate();
@@ -27,18 +26,6 @@ const Header: React.FC = () => {
         <Typography variant="h6" component="h1" sx={{ flexGrow: 1 }}>
           Miguel Castilho Agenda
         </Typography>
-        {auth.isMockMode() && (
-          <Chip 
-            label="DEV" 
-            size="small" 
-            sx={{ 
-              mr: 2,
-              bgcolor: 'warning.main',
-              color: 'warning.contrastText',
-              fontWeight: 'bold',
-            }}
-          />
-        )}
         {isAuthenticated && (
           <Button
             color="inherit"

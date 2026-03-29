@@ -1,14 +1,3 @@
-# Deploy Frontend Workflow
-#
-# Required GitHub Secrets:
-# - AWS_ACCESS_KEY_ID: AWS access key for deployment
-# - AWS_SECRET_ACCESS_KEY: AWS secret key for deployment
-# - WHATSAPP_NUMBER: WhatsApp number for notifications
-# - BARBERSHOP_EMAIL: Email for notifications
-# - RECAPTCHA_SITE_KEY: Google reCAPTCHA site key
-#
-# Cognito configuration is automatically fetched from CloudFormation stack
-
 name: Deploy Frontend
 
 on:
@@ -46,43 +35,16 @@ jobs:
     - name: Get API URL from CloudFormation
       id: get-api-url
       run: |
-        API_URL=$(aws cloudformation describe-stacks --stack-name BarbershopStack-dev --query 'Stacks[0].Outputs[?OutputKey==`ApiUrl`].OutputValue' --output text)
+        API_URL=$(aws cloudformation describe-stacks --stack-name BarbershopStack --query 'Stacks[0].Outputs[?OutputKey==`ApiUrl`].OutputValue' --output text)
         echo "api_url=$API_URL" >> $GITHUB_OUTPUT
         echo "✅ API URL: $API_URL"
 
-    - name: Get Cognito Configuration
-      id: get-cognito
-      run: |
-        USER_POOL_ID=$(aws cloudformation describe-stacks --stack-name BarbershopStack-dev --query 'Stacks[0].Outputs[?OutputKey==`UserPoolId`].OutputValue' --output text --region sa-east-1)
-        USER_POOL_CLIENT_ID=$(aws cloudformation describe-stacks --stack-name BarbershopStack-dev --query 'Stacks[0].Outputs[?OutputKey==`UserPoolClientId`].OutputValue' --output text --region sa-east-1)
-
-        if [ -z "$USER_POOL_ID" ] || [ -z "$USER_POOL_CLIENT_ID" ]; then
-          echo "❌ ERROR: Cognito configuration not found in stack outputs!"
-          echo "This means Cognito User Pool was not deployed."
-          echo "Please deploy the infrastructure with Cognito first."
-          exit 1
-        fi
-
-        echo "user_pool_id=$USER_POOL_ID" >> $GITHUB_OUTPUT
-        echo "user_pool_client_id=$USER_POOL_CLIENT_ID" >> $GITHUB_OUTPUT
-        echo "✅ User Pool ID: $USER_POOL_ID"
-        echo "✅ User Pool Client ID: $USER_POOL_CLIENT_ID"
-
     - name: Build React app
       run: |
-        echo "🔍 Building with environment variables:"
-        echo "   REACT_APP_ENV: production"
-        echo "   REACT_APP_API_URL: $REACT_APP_API_URL"
-        echo "   REACT_APP_USER_POOL_ID: ${REACT_APP_USER_POOL_ID:0:10}..."
-        echo "   REACT_APP_USER_POOL_CLIENT_ID: ${REACT_APP_USER_POOL_CLIENT_ID:0:10}..."
         cd frontend
         npm run build
       env:
         REACT_APP_API_URL: ${{ steps.get-api-url.outputs.api_url }}
-        REACT_APP_USER_POOL_ID: ${{ steps.get-cognito.outputs.user_pool_id }}
-        REACT_APP_USER_POOL_CLIENT_ID: ${{ steps.get-cognito.outputs.user_pool_client_id }}
-        REACT_APP_AWS_REGION: sa-east-1
-        REACT_APP_ENV: production
         REACT_APP_WHATSAPP_NUMBER: ${{ secrets.WHATSAPP_NUMBER }}
         REACT_APP_BARBERSHOP_EMAIL: ${{ secrets.BARBERSHOP_EMAIL }}
         REACT_APP_RECAPTCHA_SITE_KEY: ${{ secrets.RECAPTCHA_SITE_KEY }}
@@ -90,7 +52,7 @@ jobs:
     - name: Get S3 bucket name
       id: get-bucket
       run: |
-        BUCKET_NAME=$(aws cloudformation describe-stacks --stack-name BarbershopStack-dev --query 'Stacks[0].Outputs[?OutputKey==`BucketName`].OutputValue' --output text)
+        BUCKET_NAME=$(aws cloudformation describe-stacks --stack-name BarbershopStack --query 'Stacks[0].Outputs[?OutputKey==`BucketName`].OutputValue' --output text)
         echo "bucket_name=$BUCKET_NAME" >> $GITHUB_OUTPUT
 
     - name: Deploy to S3
@@ -99,10 +61,10 @@ jobs:
 
     - name: Invalidate CloudFront cache
       run: |
-        DISTRIBUTION_ID=$(aws cloudformation describe-stacks --stack-name BarbershopStack-dev --query 'Stacks[0].Outputs[?OutputKey==`DistributionId`].OutputValue' --output text)
+        DISTRIBUTION_ID=$(aws cloudformation describe-stacks --stack-name BarbershopStack --query 'Stacks[0].Outputs[?OutputKey==`DistributionId`].OutputValue' --output text)
         aws cloudfront create-invalidation --distribution-id $DISTRIBUTION_ID --paths "/*"
 
     - name: Get CloudFront URL
       run: |
-        CLOUDFRONT_URL=$(aws cloudformation describe-stacks --stack-name BarbershopStack-dev --query 'Stacks[0].Outputs[?OutputKey==`DistributionURL`].OutputValue' --output text)
+        CLOUDFRONT_URL=$(aws cloudformation describe-stacks --stack-name BarbershopStack --query 'Stacks[0].Outputs[?OutputKey==`DistributionURL`].OutputValue' --output text)
         echo "🚀 Frontend deployed to: $CLOUDFRONT_URL"

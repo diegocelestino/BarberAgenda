@@ -5,13 +5,9 @@ import { BarbershopStack } from '../lib/barbershop-stack';
 
 const app = new cdk.App();
 
-// Get environment from context or default to 'dev'
-const environment = app.node.tryGetContext('environment') || process.env.ENVIRONMENT || 'dev';
-
-new BarbershopStack(app, `BarbershopStack-${environment}`, {
+new BarbershopStack(app, 'BarbershopStack', {
   env: {
     account: process.env.CDK_DEFAULT_ACCOUNT,
-    region: process.env.CDK_DEFAULT_REGION || 'sa-east-1',
+    region: process.env.CDK_DEFAULT_REGION,
   },
-  environment,
 });
