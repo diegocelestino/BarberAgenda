@@ -304,19 +304,19 @@ export class BarbershopStack extends cdk.Stack {
     new cdk.CfnOutput(this, 'ApiUrl', {
       value: api.url,
       description: 'API Gateway URL',
-      exportName: 'BarbershopApiUrl',
+      exportName: `BarbershopApiUrl-${environment}`,
     });
 
     new cdk.CfnOutput(this, 'UserPoolId', {
       value: userPool.userPoolId,
       description: 'Cognito User Pool ID',
-      exportName: 'BarbershopUserPoolId',
+      exportName: `BarbershopUserPoolId-${environment}`,
     });
 
     new cdk.CfnOutput(this, 'UserPoolClientId', {
       value: userPoolClient.userPoolClientId,
       description: 'Cognito User Pool Client ID',
-      exportName: 'BarbershopUserPoolClientId',
+      exportName: `BarbershopUserPoolClientId-${environment}`,
     });
 
     new cdk.CfnOutput(this, 'BarbersTableName', { value: barbersTable.tableName });
