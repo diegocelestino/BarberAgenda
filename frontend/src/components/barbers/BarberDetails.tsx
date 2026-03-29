@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   Box,
@@ -13,12 +13,15 @@ import {
   CardActionArea,
   Button,
   Stack,
+  Snackbar,
 } from '@mui/material';
 import {
   ArrowBack as ArrowBackIcon,
   Person as PersonIcon,
   Schedule as ScheduleIcon,
   CalendarMonth as CalendarMonthIcon,
+  AddCircle as AddCircleIcon,
+  Receipt as ReceiptIcon,
 } from '@mui/icons-material';
 import { useAppDispatch, useAppSelector } from '../../store/hooks';
 import {
@@ -35,6 +38,7 @@ import {
   clearAppointments 
 } from '../../store/appointments';
 import AppointmentNavigationCard from '../appointments/AppointmentNavigationCard';
+import RegisterWalkInDialog from '../appointments/RegisterWalkInDialog';
 
 const BarberDetails: React.FC = () => {
   const { barberId } = useParams<{ barberId: string }>();
@@ -46,6 +50,9 @@ const BarberDetails: React.FC = () => {
   const error = useAppSelector(selectBarbersError);
   const appointments = useAppSelector(selectAllAppointments);
   const appointmentsLoading = useAppSelector(selectAppointmentsLoading);
+
+  const [walkInDialogOpen, setWalkInDialogOpen] = useState(false);
+  const [successOpen, setSuccessOpen] = useState(false);
 
   useEffect(() => {
     if (barberId) {
@@ -67,6 +74,18 @@ const BarberDetails: React.FC = () => {
   const scheduledAppointments = appointments
     .filter(apt => apt.status === 'scheduled' && apt.startTime >= Date.now())
     .sort((a, b) => a.startTime - b.startTime);
+
+  const handleWalkInSuccess = () => {
+    setWalkInDialogOpen(false);
+    setSuccessOpen(true);
+    
+    // Refresh appointments
+    if (barberId) {
+      const startDate = Date.now();
+      const endDate = Date.now() + 30 * 24 * 60 * 60 * 1000;
+      dispatch(fetchAppointmentsByBarber({ barberId, params: { startDate, endDate } }));
+    }
+  };
 
   if (loading && !barber) {
     return (
@@ -193,7 +212,57 @@ const BarberDetails: React.FC = () => {
             </Button>
           </Stack>
         </Grid>
+
+        {/* Register Walk-In Service Button */}
+        <Grid item xs={12}>
+          <Stack direction="row" spacing={2}>
+            <Button
+              variant="outlined"
+              color="primary"
+              size="large"
+              fullWidth
+              startIcon={<ReceiptIcon />}
+              onClick={() => navigate(`/admin/barbers/${barberId}/extract`)}
+              sx={{ py: 2 }}
+            >
+              Extrato
+            </Button>
+            <Button
+              variant="contained"
+              color="secondary"
+              size="large"
+              fullWidth
+              startIcon={<AddCircleIcon />}
+              onClick={() => setWalkInDialogOpen(true)}
+              sx={{ py: 2 }}
+            >
+              Registrar Atendimento
+            </Button>
+          </Stack>
+        </Grid>
       </Grid>
+
+      <RegisterWalkInDialog
+        open={walkInDialogOpen}
+        barberId={barberId || ''}
+        onClose={() => setWalkInDialogOpen(false)}
+        onSuccess={handleWalkInSuccess}
+      />
+
+      <Snackbar
+        open={successOpen}
+        autoHideDuration={3000}
+        onClose={() => setSuccessOpen(false)}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert
+          onClose={() => setSuccessOpen(false)}
+          severity="success"
+          sx={{ width: '100%' }}
+        >
+          Atendimento registrado com sucesso!
+        </Alert>
+      </Snackbar>
     </Paper>
   );
 };

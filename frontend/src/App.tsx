@@ -13,6 +13,7 @@ import EditBarberPage from './pages/EditBarberPage';
 import EditBarberDetailsPage from './pages/EditBarberDetailsPage';
 import BarberSchedulePage from './pages/BarberSchedulePage';
 import BarberAppointmentsPage from './pages/BarberAppointmentsPage';
+import BarberExtractPage from './pages/BarberExtractPage';
 
 function App() {
   return (
@@ -81,6 +82,14 @@ function App() {
                 element={
                   <ProtectedRoute>
                     <BarberAppointmentsPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/admin/barbers/:barberId/extract"
+                element={
+                  <ProtectedRoute>
+                    <BarberExtractPage />
                   </ProtectedRoute>
                 }
               />
