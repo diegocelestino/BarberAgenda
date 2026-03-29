@@ -65,15 +65,32 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     const storedRefreshToken = localStorage.getItem('refreshToken');
     const storedUser = localStorage.getItem('user');
 
+    // Only restore session if ALL required data exists
     if (storedAccessToken && storedIdToken && storedRefreshToken && storedUser) {
-      setIsAuthenticated(true);
-      setUser(JSON.parse(storedUser));
-      setAccessToken(storedAccessToken);
+      try {
+        // Validate that user data is valid JSON
+        const parsedUser = JSON.parse(storedUser);
+        
+        setIsAuthenticated(true);
+        setUser(parsedUser);
+        setAccessToken(storedAccessToken);
 
-      // Try to refresh the token on mount
-      refreshTokenIfNeeded(storedRefreshToken);
+        // Try to refresh the token on mount
+        refreshTokenIfNeeded(storedRefreshToken);
+      } catch (error) {
+        // If parsing fails, clear everything
+        console.error('Invalid stored user data, clearing session');
+        logout();
+      }
+    } else if (storedAccessToken || storedIdToken || storedRefreshToken || storedUser) {
+      // If only some data exists (incomplete session), clear everything
+      console.warn('Incomplete session data found, clearing');
+      localStorage.removeItem('accessToken');
+      localStorage.removeItem('idToken');
+      localStorage.removeItem('refreshToken');
+      localStorage.removeItem('user');
     }
-  }, [refreshTokenIfNeeded]);
+  }, [refreshTokenIfNeeded, logout]);
 
   const login = async (username: string, password: string): Promise<boolean> => {
     try {
