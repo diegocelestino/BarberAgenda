@@ -23,16 +23,27 @@ export interface CognitoAuthResult {
 const isLocalDev = () => {
   const env = process.env.REACT_APP_ENV || process.env.NODE_ENV;
   const apiUrl = process.env.REACT_APP_API_URL || '';
+  const clientId = process.env.REACT_APP_USER_POOL_CLIENT_ID;
+  
+  // Debug logging
+  console.log('🔍 Auth Mode Detection:');
+  console.log('   REACT_APP_ENV:', env);
+  console.log('   REACT_APP_API_URL:', apiUrl);
+  console.log('   REACT_APP_USER_POOL_CLIENT_ID:', clientId ? 'SET' : 'MISSING');
   
   // Use mock auth if:
   // 1. Explicitly set to local
   // 2. API URL points to localhost
   // 3. Cognito config is missing
-  return (
+  const useMock = (
     env === 'local' ||
     apiUrl.includes('localhost') ||
-    !process.env.REACT_APP_USER_POOL_CLIENT_ID
+    !clientId
   );
+  
+  console.log('   Decision:', useMock ? 'MOCK' : 'COGNITO');
+  
+  return useMock;
 };
 
 const USE_MOCK = isLocalDev();
