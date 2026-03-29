@@ -35,6 +35,7 @@ export interface UpdateAppointmentData {
 export interface GetAppointmentsParams {
   startDate?: number;
   endDate?: number;
+  status?: string;
 }
 
 // Appointments API functions
@@ -44,6 +45,7 @@ export const appointmentsApi = {
     const queryParams = new URLSearchParams();
     if (params?.startDate) queryParams.append('startDate', params.startDate.toString());
     if (params?.endDate) queryParams.append('endDate', params.endDate.toString());
+    if (params?.status) queryParams.append('status', params.status);
     
     const url = `/barbers/${barberId}/appointments${queryParams.toString() ? `?${queryParams}` : ''}`;
     const response = await api.get(url);
