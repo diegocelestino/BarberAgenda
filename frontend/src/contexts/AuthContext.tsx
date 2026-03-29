@@ -1,11 +1,13 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { authApi, User } from '../services/authApi';
+import { cognitoService, CognitoUser, isMockAuth } from '../services/cognitoService';
 
 interface AuthContextType {
   isAuthenticated: boolean;
   login: (username: string, password: string) => Promise<boolean>;
   logout: () => void;
-  user: User | null;
+  user: CognitoUser | null;
+  getAccessToken: () => string | null;
+  isMockMode: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -24,28 +26,48 @@ interface AuthProviderProps {
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<CognitoUser | null>(null);
+  const isMockMode = isMockAuth();
 
   useEffect(() => {
-    // Check if user is already logged in (from localStorage)
-    const storedAuth = localStorage.getItem('isAuthenticated');
-    const storedUser = localStorage.getItem('user');
-    
-    if (storedAuth === 'true' && storedUser) {
-      setIsAuthenticated(true);
-      setUser(JSON.parse(storedUser));
-    }
+    // Check if user is already logged in
+    const checkAuth = async () => {
+      const tokens = localStorage.getItem('authTokens');
+      const storedUser = localStorage.getItem('user');
+      
+      if (tokens && storedUser) {
+        try {
+          // Verify token is still valid by getting current user
+          const currentUser = await cognitoService.getCurrentUser();
+          if (currentUser) {
+            setIsAuthenticated(true);
+            setUser(currentUser);
+          } else {
+            // Token expired, clear storage
+            localStorage.removeItem('authTokens');
+            localStorage.removeItem('user');
+          }
+        } catch (error) {
+          console.error('Auth check failed:', error);
+          localStorage.removeItem('authTokens');
+          localStorage.removeItem('user');
+        }
+      }
+    };
+
+    checkAuth();
   }, []);
 
   const login = async (username: string, password: string): Promise<boolean> => {
     try {
-      const response = await authApi.login({ username, password });
+      const { user: cognitoUser, tokens } = await cognitoService.login(username, password);
       
       setIsAuthenticated(true);
-      setUser(response.user);
-      localStorage.setItem('isAuthenticated', 'true');
-      localStorage.setItem('user', JSON.stringify(response.user));
-      localStorage.setItem('token', response.token);
+      setUser(cognitoUser);
+      localStorage.setItem('authTokens', JSON.stringify(tokens));
+      localStorage.setItem('user', JSON.stringify(cognitoUser));
+      
+      console.log(`✅ Logged in successfully (${isMockMode ? 'MOCK' : 'COGNITO'} mode)`);
       
       return true;
     } catch (error: any) {
@@ -54,17 +76,44 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
-  const logout = () => {
+  const logout = async () => {
+    try {
+      await cognitoService.logout();
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
+    
     setIsAuthenticated(false);
     setUser(null);
-    localStorage.removeItem('isAuthenticated');
+    localStorage.removeItem('authTokens');
     localStorage.removeItem('user');
-    localStorage.removeItem('token');
+    
+    console.log('✅ Logged out successfully');
+  };
+
+  const getAccessToken = (): string | null => {
+    const tokens = localStorage.getItem('authTokens');
+    if (!tokens) return null;
+    
+    try {
+      const { accessToken } = JSON.parse(tokens);
+      return accessToken;
+    } catch (error) {
+      return null;
+    }
   };
 
   return (
-    <AuthContext.Provider value={{ isAuthenticated, login, logout, user }}>
+    <AuthContext.Provider value={{ 
+      isAuthenticated, 
+      login, 
+      logout, 
+      user, 
+      getAccessToken,
+      isMockMode 
+    }}>
       {children}
     </AuthContext.Provider>
   );
 };
+

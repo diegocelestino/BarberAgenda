@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Container,
@@ -14,11 +14,18 @@ import { useAuth } from '../contexts/AuthContext';
 
 const LoginPage: React.FC = () => {
   const navigate = useNavigate();
-  const { login } = useAuth();
+  const { login, isMockMode, isAuthenticated } = useAuth();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+
+  // Redirect to admin if already logged in
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate('/admin');
+    }
+  }, [isAuthenticated, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -55,6 +62,11 @@ const LoginPage: React.FC = () => {
             <Typography component="h1" variant="h5">
               Login Admin
             </Typography>
+            {isMockMode && (
+              <Typography variant="caption" color="warning.main" sx={{ mt: 1 }}>
+                🔧 Modo de Desenvolvimento (Mock Auth)
+              </Typography>
+            )}
           </Box>
 
           {error && (
@@ -93,11 +105,13 @@ const LoginPage: React.FC = () => {
             >
               {loading ? 'Entrando...' : 'Entrar'}
             </Button>
-            <Box sx={{ mt: 2, textAlign: 'center' }}>
-              <Typography variant="body2" color="text.secondary">
-                Credenciais demo: admin / admin
-              </Typography>
-            </Box>
+            {isMockMode && (
+              <Box sx={{ mt: 2, textAlign: 'center' }}>
+                <Typography variant="body2" color="text.secondary">
+                  Credenciais demo: admin / admin
+                </Typography>
+              </Box>
+            )}
           </Box>
         </Paper>
       </Box>

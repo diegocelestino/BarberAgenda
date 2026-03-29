@@ -20,10 +20,22 @@ const api = axios.create({
   timeout: 10000, // 10 second timeout
 });
 
-// Request interceptor for debugging
+// Request interceptor for debugging and adding auth token
 api.interceptors.request.use(
   (config) => {
     console.log(`📤 ${config.method?.toUpperCase()} ${config.url}`);
+    
+    // Add JWT token to requests if available
+    const tokens = localStorage.getItem('authTokens');
+    if (tokens) {
+      try {
+        const { idToken } = JSON.parse(tokens);
+        config.headers.Authorization = `Bearer ${idToken}`;
+      } catch (error) {
+        console.error('Failed to parse auth tokens:', error);
+      }
+    }
+    
     return config;
   },
   (error) => {
