@@ -92,7 +92,7 @@ const BarberExtractPage: React.FC = () => {
   }, [barberId, startDate, endDate, dispatch]);
 
   // All appointments are already completed from the API
-  const completedAppointments = appointments
+  const completedAppointments = [...appointments]
     .sort((a, b) => b.startTime - a.startTime); // Most recent first
 
   const formatDateTime = (timestamp: number) => {
