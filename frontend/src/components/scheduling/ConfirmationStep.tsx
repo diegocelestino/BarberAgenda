@@ -40,6 +40,7 @@ const ConfirmationStep: React.FC<ConfirmationStepProps> = ({
   );
 
   const recaptchaSiteKey = process.env.REACT_APP_RECAPTCHA_SITE_KEY || '';
+  const isDevelopment = process.env.REACT_APP_ENV === 'local' || process.env.NODE_ENV === 'development';
 
   const handleRecaptchaChange = (token: string | null) => {
     setRecaptchaToken(token);
@@ -49,7 +50,8 @@ const ConfirmationStep: React.FC<ConfirmationStepProps> = ({
   };
 
   const handleConfirm = async () => {
-    if (!recaptchaToken) {
+    // Bypass reCAPTCHA in development mode
+    if (!isDevelopment && !recaptchaToken) {
       setError('Por favor, complete a verificação reCAPTCHA.');
       return;
     }
@@ -177,7 +179,7 @@ const ConfirmationStep: React.FC<ConfirmationStepProps> = ({
         </Alert>
       )}
 
-      {recaptchaSiteKey && (
+      {!isDevelopment && recaptchaSiteKey && (
         <Box sx={{ display: 'flex', justifyContent: 'center', mb: 2 }}>
           <ReCAPTCHA
             ref={recaptchaRef}
@@ -186,6 +188,12 @@ const ConfirmationStep: React.FC<ConfirmationStepProps> = ({
             hl="pt-BR"
           />
         </Box>
+      )}
+
+      {isDevelopment && (
+        <Alert severity="info" sx={{ mb: 2 }}>
+          🔧 Modo de Desenvolvimento - reCAPTCHA desabilitado
+        </Alert>
       )}
 
       <Box sx={{ display: 'flex', gap: 2 }}>
@@ -201,7 +209,7 @@ const ConfirmationStep: React.FC<ConfirmationStepProps> = ({
           variant="contained"
           onClick={handleConfirm}
           fullWidth
-          disabled={loading || !recaptchaToken}
+          disabled={loading || (!isDevelopment && !recaptchaToken)}
           startIcon={loading ? <CircularProgress size={20} /> : null}
         >
           {loading ? 'Agendando...' : 'Confirmar Agendamento'}
