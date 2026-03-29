@@ -18,7 +18,7 @@ export class BarbershopStack extends cdk.Stack {
     const barbershopEmail = this.node.tryGetContext('barbershopEmail') || process.env.BARBERSHOP_EMAIL;
 
     // ========================================
-    // Cognito User Pool
+    // Cognito User Pool - Updated 2026
     // ========================================
 
     const userPool = new cognito.UserPool(this, 'BarbershopUserPool', {

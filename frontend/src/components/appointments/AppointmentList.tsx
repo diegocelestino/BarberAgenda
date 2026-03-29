@@ -40,6 +40,19 @@ const AppointmentList: React.FC<AppointmentListProps> = ({ appointments, barberI
     return service ? service.title : serviceId;
   };
 
+  const getStatusLabel = (status: string): string => {
+    switch (status) {
+      case 'scheduled':
+        return 'Agendado';
+      case 'completed':
+        return 'Concluído';
+      case 'cancelled':
+        return 'Cancelado';
+      default:
+        return status;
+    }
+  };
+
   const handleDeleteClick = (appointmentId: string) => {
     setSelectedAppointmentId(appointmentId);
     setDeleteDialogOpen(true);
@@ -120,7 +133,7 @@ const AppointmentList: React.FC<AppointmentListProps> = ({ appointments, barberI
                       {appointment.customerName}
                     </Typography>
                     <Chip
-                      label={appointment.status}
+                      label={getStatusLabel(appointment.status)}
                       size="small"
                       color={getStatusColor(appointment.status)}
                     />
