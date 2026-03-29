@@ -140,7 +140,7 @@ const BarberDetails: React.FC = () => {
   if (!barber) {
     return (
       <Alert severity="warning" sx={{ mb: 2 }}>
-        Barber not found
+        Barbeiro não encontrado
       </Alert>
     );
   }
@@ -158,16 +158,16 @@ const BarberDetails: React.FC = () => {
         </Box>
 
         <Tabs value={tabValue} onChange={(_, newValue) => setTabValue(newValue)} sx={{ mb: 3 }}>
-          <Tab label="Details" />
-          <Tab label="Schedule" />
-          <Tab label="Appointments" />
+          <Tab label="Detalhes" />
+          <Tab label="Agenda" />
+          <Tab label="Agendamentos" />
         </Tabs>
 
         <TabPanel value={tabValue} index={0}>
           <Box component="form" onSubmit={handleSubmit}>
             <Stack spacing={2.5}>
               <TextField
-                label="Name"
+                label="Nome"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 required
@@ -177,18 +177,18 @@ const BarberDetails: React.FC = () => {
 
               <Box>
                 <Typography variant="subtitle2" gutterBottom>
-                  Services *
+                  Serviços *
                 </Typography>
                 {servicesLoading ? (
                   <Box display="flex" alignItems="center" gap={1}>
                     <CircularProgress size={20} />
                     <Typography variant="body2" color="text.secondary">
-                      Loading services...
+                      Carregando serviços...
                     </Typography>
                   </Box>
                 ) : services.length === 0 ? (
                   <Alert severity="info">
-                    No services available. Please create services first.
+                    Nenhum serviço disponível. Por favor, crie serviços primeiro.
                   </Alert>
                 ) : (
                   <Stack direction="row" spacing={0.5} flexWrap="wrap" gap={0.5}>
@@ -207,7 +207,7 @@ const BarberDetails: React.FC = () => {
               </Box>
 
               <TextField
-                label="Rating"
+                label="Avaliação"
                 type="number"
                 value={rating}
                 onChange={(e) => setRating(parseFloat(e.target.value))}
@@ -226,7 +226,7 @@ const BarberDetails: React.FC = () => {
                   onClick={() => navigate('/admin/barbers')}
                   fullWidth
                 >
-                  Cancel
+                  Cancelar
                 </Button>
                 <Button
                   type="submit"
@@ -236,7 +236,7 @@ const BarberDetails: React.FC = () => {
                   disabled={loading || !name.trim() || selectedServiceIds.length === 0}
                   fullWidth
                 >
-                  {loading ? 'Saving...' : 'Save Changes'}
+                  {loading ? 'Salvando...' : 'Salvar Alterações'}
                 </Button>
               </Stack>
             </Stack>
@@ -263,7 +263,7 @@ const BarberDetails: React.FC = () => {
           severity="success"
           sx={{ width: '100%' }}
         >
-          Barber updated successfully!
+          Barbeiro atualizado com sucesso!
         </Alert>
       </Snackbar>
     </>

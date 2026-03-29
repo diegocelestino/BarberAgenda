@@ -66,11 +66,11 @@ const AppointmentCalendar: React.FC = () => {
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
         <Box>
           <Typography variant="h5" component="h2" gutterBottom>
-            Appointments
+            Agendamentos
           </Typography>
           <Stack direction="row" spacing={1}>
-            <Chip label={`${scheduledCount} Scheduled`} color="primary" size="small" />
-            <Chip label={`${completedCount} Completed`} color="success" size="small" />
+            <Chip label={`${scheduledCount} Agendados`} color="primary" size="small" />
+            <Chip label={`${completedCount} Concluídos`} color="success" size="small" />
           </Stack>
         </Box>
         <Button
@@ -78,13 +78,13 @@ const AppointmentCalendar: React.FC = () => {
           startIcon={<AddIcon />}
           onClick={() => setCreateDialogOpen(true)}
         >
-          New
+          Novo
         </Button>
       </Box>
 
       {appointments.length === 0 ? (
         <Alert severity="info">
-          No appointments scheduled. Click "New" to create one.
+          Nenhum agendamento encontrado. Clique em "Novo" para criar um.
         </Alert>
       ) : (
         <AppointmentList appointments={appointments} barberId={barberId || ''} />

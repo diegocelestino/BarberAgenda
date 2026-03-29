@@ -87,7 +87,7 @@ const EditAppointmentDialog: React.FC<EditAppointmentDialogProps> = ({
 
     const selectedService = allServices.find(s => s.serviceId === formData.serviceId);
     if (!selectedService) {
-      alert('Please select a valid service');
+      alert('Por favor, selecione um serviço válido');
       return;
     }
 
@@ -104,13 +104,13 @@ const EditAppointmentDialog: React.FC<EditAppointmentDialogProps> = ({
 
     // Validation: Cannot schedule in the past
     if (startTime < now && formData.status === 'scheduled') {
-      alert('Cannot schedule an appointment in the past');
+      alert('Não é possível agendar um compromisso no passado');
       return;
     }
 
     // Validation: Cannot complete an appointment before it happens
     if (formData.status === 'completed' && startTime > now) {
-      alert('Cannot mark an appointment as completed before it happens');
+      alert('Não é possível marcar um agendamento como concluído antes que ele aconteça');
       return;
     }
 
@@ -156,11 +156,11 @@ const EditAppointmentDialog: React.FC<EditAppointmentDialogProps> = ({
   return (
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
       <form onSubmit={handleSubmit}>
-        <DialogTitle>Edit Appointment</DialogTitle>
+        <DialogTitle>Editar Agendamento</DialogTitle>
         <DialogContent>
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 1 }}>
             <TextField
-              label="Customer Name"
+              label="Nome do Cliente"
               value={formData.customerName}
               onChange={(e) => handleChange('customerName', e.target.value)}
               required
@@ -168,7 +168,7 @@ const EditAppointmentDialog: React.FC<EditAppointmentDialogProps> = ({
             />
 
             <TextField
-              label="Customer Phone"
+              label="Telefone do Cliente"
               value={formData.customerPhone}
               onChange={(e) => handleChange('customerPhone', e.target.value)}
               fullWidth
@@ -176,20 +176,20 @@ const EditAppointmentDialog: React.FC<EditAppointmentDialogProps> = ({
 
             <TextField
               select
-              label="Service"
+              label="Serviço"
               value={formData.serviceId}
               onChange={(e) => handleChange('serviceId', e.target.value)}
               required
               fullWidth
               disabled={servicesLoading}
-              helperText={selectedService ? `Duration: ${selectedService.durationMinutes} minutes` : ''}
+              helperText={selectedService ? `Duração: ${selectedService.durationMinutes} minutos` : ''}
             >
               {servicesLoading ? (
                 <MenuItem disabled>
-                  <CircularProgress size={20} /> Loading services...
+                  <CircularProgress size={20} /> Carregando serviços...
                 </MenuItem>
               ) : availableServices.length === 0 ? (
-                <MenuItem disabled>No services available for this barber</MenuItem>
+                <MenuItem disabled>Nenhum serviço disponível para este barbeiro</MenuItem>
               ) : (
                 availableServices.map((service) => (
                   <MenuItem key={service.serviceId} value={service.serviceId}>
@@ -200,7 +200,7 @@ const EditAppointmentDialog: React.FC<EditAppointmentDialogProps> = ({
             </TextField>
 
             <TextField
-              label="Start Time"
+              label="Horário de Início"
               type="datetime-local"
               value={formData.startTime}
               onChange={(e) => handleChange('startTime', e.target.value)}
@@ -221,16 +221,16 @@ const EditAppointmentDialog: React.FC<EditAppointmentDialogProps> = ({
               fullWidth
             >
               <MenuItem value="scheduled" disabled={isAppointmentInPast()}>
-                Scheduled
+                Agendado
               </MenuItem>
               <MenuItem value="completed" disabled={isAppointmentInFuture()}>
-                Completed
+                Concluído
               </MenuItem>
-              <MenuItem value="cancelled">Cancelled</MenuItem>
+              <MenuItem value="cancelled">Cancelado</MenuItem>
             </TextField>
 
             <TextField
-              label="Notes"
+              label="Notas"
               value={formData.notes}
               onChange={(e) => handleChange('notes', e.target.value)}
               multiline
@@ -241,7 +241,7 @@ const EditAppointmentDialog: React.FC<EditAppointmentDialogProps> = ({
         </DialogContent>
         <DialogActions>
           <Button onClick={onClose} disabled={loading}>
-            Cancel
+            Cancelar
           </Button>
           <Button
             type="submit"
@@ -249,7 +249,7 @@ const EditAppointmentDialog: React.FC<EditAppointmentDialogProps> = ({
             disabled={loading}
             startIcon={loading ? <CircularProgress size={20} /> : null}
           >
-            Save Changes
+            Salvar Alterações
           </Button>
         </DialogActions>
       </form>

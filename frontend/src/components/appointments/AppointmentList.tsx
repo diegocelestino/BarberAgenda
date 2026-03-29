@@ -56,7 +56,7 @@ const AppointmentList: React.FC<AppointmentListProps> = ({ appointments, barberI
   const handleMarkComplete = async (appointmentId: string, startTime: number) => {
     // Validate that appointment has started
     if (startTime > Date.now()) {
-      alert('Cannot mark an appointment as completed before it happens');
+      alert('Não é possível marcar um agendamento como concluído antes que ele aconteça');
       return;
     }
 
@@ -68,7 +68,7 @@ const AppointmentList: React.FC<AppointmentListProps> = ({ appointments, barberI
   };
 
   const formatTime = (timestamp: number) => {
-    return new Date(timestamp).toLocaleString('en-US', {
+    return new Date(timestamp).toLocaleString('pt-BR', {
       month: 'short',
       day: 'numeric',
       hour: 'numeric',
@@ -134,7 +134,7 @@ const AppointmentList: React.FC<AppointmentListProps> = ({ appointments, barberI
                     )}
                     {appointment.notes && (
                       <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-                        Note: {appointment.notes}
+                        Nota: {appointment.notes}
                       </Typography>
                     )}
                   </Box>
@@ -148,7 +148,7 @@ const AppointmentList: React.FC<AppointmentListProps> = ({ appointments, barberI
                       size="small"
                       color="success"
                       onClick={() => handleMarkComplete(appointment.appointmentId, appointment.startTime)}
-                      title="Mark as completed"
+                      title="Marcar como concluído"
                     >
                       <CheckCircleIcon />
                     </IconButton>
@@ -157,7 +157,7 @@ const AppointmentList: React.FC<AppointmentListProps> = ({ appointments, barberI
                     edge="end"
                     size="small"
                     onClick={() => handleEditClick(appointment)}
-                    title="Edit appointment"
+                    title="Editar agendamento"
                   >
                     <EditIcon />
                   </IconButton>

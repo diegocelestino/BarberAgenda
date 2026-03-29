@@ -107,7 +107,6 @@ const ServicesList: React.FC = () => {
             <TableHead>
               <TableRow>
                 <TableCell>Serviço</TableCell>
-                <TableCell>Descrição</TableCell>
                 <TableCell align="right">Preço</TableCell>
                 <TableCell align="right">Duração</TableCell>
                 <TableCell align="right">Ações</TableCell>
@@ -122,11 +121,6 @@ const ServicesList: React.FC = () => {
                     </Typography>
                     <Typography variant="caption" color="text.secondary">
                       {service.title}
-                    </Typography>
-                  </TableCell>
-                  <TableCell>
-                    <Typography variant="body2" color="text.secondary">
-                      {service.description || '-'}
                     </Typography>
                   </TableCell>
                   <TableCell align="right">

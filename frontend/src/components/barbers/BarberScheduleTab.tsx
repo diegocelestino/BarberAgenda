@@ -8,7 +8,7 @@ import { useAppDispatch, useAppSelector } from '../../store/hooks';
 import { updateBarber, selectBarbersLoading } from '../../store/barbers';
 import { BarberSchedule, Barber } from '../../services/api';
 
-const DAY_LABELS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+const DAY_LABELS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
 
 const DEFAULT_SCHEDULE: BarberSchedule = {
   openTime: '09:00',
@@ -47,7 +47,7 @@ const BarberScheduleTab: React.FC<Props> = ({ barber }) => {
       <Box component="form" onSubmit={handleSubmit}>
         <Stack spacing={3}>
           <Box>
-            <Typography variant="subtitle2" gutterBottom>Working Days</Typography>
+            <Typography variant="subtitle2" gutterBottom>Dias de Trabalho</Typography>
             <ToggleButtonGroup
               value={schedule.workDays}
               onChange={(_, newDays) => handleChange('workDays', newDays)}
@@ -63,7 +63,7 @@ const BarberScheduleTab: React.FC<Props> = ({ barber }) => {
 
           <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
             <TextField
-              label="Open Time"
+              label="Horário de Abertura"
               type="time"
               value={schedule.openTime}
               onChange={(e) => handleChange('openTime', e.target.value)}
@@ -71,7 +71,7 @@ const BarberScheduleTab: React.FC<Props> = ({ barber }) => {
               fullWidth
             />
             <TextField
-              label="Close Time"
+              label="Horário de Fechamento"
               type="time"
               value={schedule.closeTime}
               onChange={(e) => handleChange('closeTime', e.target.value)}
@@ -82,7 +82,7 @@ const BarberScheduleTab: React.FC<Props> = ({ barber }) => {
 
           <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
             <TextField
-              label="Lunch Start"
+              label="Início do Almoço"
               type="time"
               value={schedule.lunchStart}
               onChange={(e) => handleChange('lunchStart', e.target.value)}
@@ -90,7 +90,7 @@ const BarberScheduleTab: React.FC<Props> = ({ barber }) => {
               fullWidth
             />
             <TextField
-              label="Lunch End"
+              label="Fim do Almoço"
               type="time"
               value={schedule.lunchEnd}
               onChange={(e) => handleChange('lunchEnd', e.target.value)}
@@ -100,7 +100,7 @@ const BarberScheduleTab: React.FC<Props> = ({ barber }) => {
           </Stack>
 
           <TextField
-            label="Slot Interval (minutes)"
+            label="Intervalo de Horários (minutos)"
             type="number"
             value={schedule.slotInterval}
             onChange={(e) => handleChange('slotInterval', parseInt(e.target.value))}
@@ -115,7 +115,7 @@ const BarberScheduleTab: React.FC<Props> = ({ barber }) => {
             disabled={loading || schedule.workDays.length === 0}
             fullWidth
           >
-            {loading ? 'Saving...' : 'Save Schedule'}
+            {loading ? 'Salvando...' : 'Salvar Agenda'}
           </Button>
         </Stack>
       </Box>
@@ -127,7 +127,7 @@ const BarberScheduleTab: React.FC<Props> = ({ barber }) => {
         anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
       >
         <Alert onClose={() => setSuccessOpen(false)} severity="success" sx={{ width: '100%' }}>
-          Schedule saved successfully!
+          Agenda salva com sucesso!
         </Alert>
       </Snackbar>
     </>

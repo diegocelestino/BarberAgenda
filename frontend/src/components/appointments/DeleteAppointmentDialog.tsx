@@ -35,16 +35,16 @@ const DeleteAppointmentDialog: React.FC<DeleteAppointmentDialogProps> = ({
 
   return (
     <Dialog open={open} onClose={onCancel}>
-      <DialogTitle>Delete Appointment</DialogTitle>
+      <DialogTitle>Excluir Agendamento</DialogTitle>
       <DialogContent>
         <DialogContentText>
-          Are you sure you want to delete this appointment? This action cannot be undone.
+          Tem certeza que deseja excluir este agendamento? Esta ação não pode ser desfeita.
         </DialogContentText>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onCancel}>Cancel</Button>
+        <Button onClick={onCancel}>Cancelar</Button>
         <Button onClick={handleConfirm} color="error" variant="contained">
-          Delete
+          Excluir
         </Button>
       </DialogActions>
     </Dialog>
