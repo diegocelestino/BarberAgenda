@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Box, Typography, Button, Grid, Chip, CircularProgress } from '@mui/material';
 import { AccessTime as TimeIcon } from '@mui/icons-material';
 import { format, startOfDay, endOfDay } from 'date-fns';
@@ -60,8 +60,7 @@ const TimeSelectionStep: React.FC<TimeSelectionStepProps> = ({
 
   const barber = useAppSelector((state) => selectBarberById(state, barberId));
 
-  useEffect(() => {
-    const loadAvailableTimes = async () => {
+  const loadAvailableTimes = useCallback(async () => {
       try {
         setLoading(true);
         console.log('=== Starting loadAvailableTimes ===');
@@ -166,10 +165,11 @@ const TimeSelectionStep: React.FC<TimeSelectionStepProps> = ({
         console.error('Error in loadAvailableTimes:', error);
         setLoading(false);
       }
-    };
+  }, [dispatch, selectedDate, barberId, serviceId, selectedService, barber?.schedule]);
 
+  useEffect(() => {
     loadAvailableTimes();
-  }, [selectedDate, barberId, serviceId, selectedService?.duration, selectedService?.durationMinutes, barber?.schedule]);
+  }, [loadAvailableTimes]);
 
   const handleNext = () => {
     if (time) {
