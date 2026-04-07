@@ -1,47 +1,82 @@
 [
   {
-    "serviceId": "service-1",
-    "title": "Haircut",
-    "name": "Haircut",
-    "description": "Professional haircut with styling",
-    "price": 30,
-    "duration": 30,
-    "durationMinutes": 30
-  },
-  {
-    "serviceId": "service-2",
-    "title": "Beard Trim",
-    "name": "Beard Trim",
-    "description": "Precision beard trimming and shaping",
-    "price": 20,
-    "duration": 20,
-    "durationMinutes": 20
-  },
-  {
-    "serviceId": "service-3",
-    "title": "Haircut + Beard",
-    "name": "Haircut + Beard",
-    "description": "Complete grooming package",
-    "price": 45,
-    "duration": 45,
-    "durationMinutes": 45
-  },
-  {
-    "serviceId": "service-4",
-    "title": "Hair Coloring",
-    "name": "Hair Coloring",
-    "description": "Professional hair coloring service",
+    "durationMinutes": 30,
+    "createdAt": 1774665955567,
+    "serviceId": "0d969102-ddf1-4256-b890-68536c0b581a",
     "price": 60,
-    "duration": 90,
-    "durationMinutes": 90
+    "description": "",
+    "duration": 30,
+    "name": "Progressiva ",
+    "title": "Progressiva "
   },
   {
-    "serviceId": "service-5",
-    "title": "Shave",
-    "name": "Shave",
-    "description": "Traditional hot towel shave",
-    "price": 25,
+    "durationMinutes": 30,
+    "createdAt": 1774665445518,
+    "serviceId": "5d0791eb-06e6-4dab-8918-7aef0dacfb4b",
+    "price": 40,
+    "description": "",
     "duration": 30,
-    "durationMinutes": 30
+    "name": "Corte ",
+    "title": "Corte "
+  },
+  {
+    "durationMinutes": 40,
+    "createdAt": 1774665564217,
+    "serviceId": "6ff97218-4ef0-4ff6-92d0-e19c3a4789b8",
+    "price": 75,
+    "description": "",
+    "duration": 40,
+    "name": "Corte + Barba",
+    "title": "Corte + Barba"
+  },
+  {
+    "durationMinutes": 45,
+    "createdAt": 1775570790912,
+    "serviceId": "ec53b00a-4fbe-4c62-94e7-99deb5377801",
+    "price": 85,
+    "description": "",
+    "duration": 45,
+    "name": "Corte + Barba + Sobrancelha ",
+    "title": "Corte + Barba + Sobrancelha "
+  },
+  {
+    "durationMinutes": 40,
+    "createdAt": 1775570758358,
+    "serviceId": "a24bbd2f-2cc8-4fc7-84d6-d8e18380e6a2",
+    "price": 70,
+    "description": "",
+    "duration": 40,
+    "name": "Corte + Relaxamento ",
+    "title": "Corte + Relaxamento "
+  },
+  {
+    "durationMinutes": 5,
+    "createdAt": 1774665917452,
+    "serviceId": "0f7fa71e-cf1f-48ca-95f0-a3e4c09c9c2b",
+    "price": 20,
+    "description": "",
+    "duration": 5,
+    "name": "Sobrancelha ",
+    "title": "Sobrancelha "
+  },
+  {
+    "durationMinutes": 10,
+    "createdAt": 1774665478016,
+    "serviceId": "da18da28-4af3-4571-9c82-11c953e6d0c4",
+    "price": 35,
+    "description": "",
+    "duration": 10,
+    "name": "Barba ",
+    "title": "Barba "
+  },
+  {
+    "durationMinutes": 10,
+    "createdAt": 1774666169372,
+    "serviceId": "35c05858-8adc-4070-a348-feaf4f7d79bc",
+    "price": 30,
+    "description": "",
+    "duration": 10,
+    "name": "Relaxamento ",
+    "title": "Relaxamento "
   }
 ]

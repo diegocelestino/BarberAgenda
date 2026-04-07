@@ -83,14 +83,16 @@ const TimeSelectionStep: React.FC<TimeSelectionStepProps> = ({
 
   const loadAvailableTimes = useCallback(async () => {
       try {
+        console.log('=== [1/10] Starting loadAvailableTimes ===');
         setLoading(true);
-        console.log('=== Starting loadAvailableTimes ===');
+        console.log('=== [2/10] Loading state set to true ===');
         
         // Fetch appointments for the selected date
         const dayStart = startOfDay(selectedDate).getTime();
         const dayEnd = endOfDay(selectedDate).getTime();
-        console.log('Date range:', { dayStart, dayEnd, selectedDate });
+        console.log('=== [3/10] Date range calculated ===', { dayStart, dayEnd, selectedDate: selectedDate.toISOString() });
         
+        console.log('=== [4/10] About to dispatch fetchAppointmentsByBarber ===');
         const result = await dispatch(
           fetchAppointmentsByBarber({
             barberId,
@@ -101,14 +103,120 @@ const TimeSelectionStep: React.FC<TimeSelectionStepProps> = ({
           })
         );
 
-        console.log('Dispatch result:', result);
+        console.log('=== [5/10] Dispatch completed ===', { 
+          type: result.type, 
+          payloadType: typeof result.payload,
+          payloadIsArray: Array.isArray(result.payload),
+          payloadLength: Array.isArray(result.payload) ? result.payload.length : 'N/A'
+        });
 
         // Get appointments from the result payload (it's an array)
         const fetchedAppointments = (result.payload as Appointment[]) || [];
         
-        console.log('Fetched appointments for time slots:', fetchedAppointments.length, fetchedAppointments);
+        console.log('=== [6/10] Appointments extracted ===', {
+          count: fetchedAppointments.length,
+          appointments: fetchedAppointments
+        });
+
+        // Validate and clean appointments data
+        console.log('=== Validating appointments data ===');
+        const validAppointments = fetchedAppointments.filter((appointment: any) => {
+          // Skip cancelled appointments
+          if (appointment.status === 'cancelled') {
+            console.log('Skipping cancelled appointment:', appointment.appointmentId);
+            return false;
+          }
+
+          // Validate appointment has required time fields
+          if (!appointment.startTime || !appointment.endTime) {
+            console.warn('⚠️ Appointment missing time fields:', appointment);
+            return false;
+          }
+
+          // Check for invalid time ranges (endTime before startTime)
+          if (appointment.endTime < appointment.startTime) {
+            console.warn('⚠️ Appointment has invalid time range (end before start):', {
+              appointmentId: appointment.appointmentId,
+              startTime: new Date(appointment.startTime).toISOString(),
+              endTime: new Date(appointment.endTime).toISOString()
+            });
+            return false;
+          }
+
+          return true;
+        });
+
+        console.log('Valid appointments after filtering:', {
+          original: fetchedAppointments.length,
+          valid: validAppointments.length,
+          filtered: fetchedAppointments.length - validAppointments.length
+        });
+
+        // Merge overlapping appointments (handle walk-ins registered back-to-back)
+        console.log('=== Merging overlapping appointments ===');
+        const mergedAppointments: any[] = [];
+        
+        validAppointments.forEach((appointment: any) => {
+          // Check if this appointment overlaps with any already merged appointment
+          let merged = false;
+          
+          for (let i = 0; i < mergedAppointments.length; i++) {
+            const existing = mergedAppointments[i];
+            
+            // Check for overlap: appointments overlap if one starts before the other ends
+            const overlaps = 
+              (appointment.startTime < existing.endTime && appointment.endTime > existing.startTime);
+            
+            if (overlaps) {
+              console.log('Merging overlapping appointments:', {
+                existing: {
+                  id: existing.appointmentId,
+                  start: new Date(existing.startTime).toLocaleString(),
+                  end: new Date(existing.endTime).toLocaleString()
+                },
+                new: {
+                  id: appointment.appointmentId,
+                  start: new Date(appointment.startTime).toLocaleString(),
+                  end: new Date(appointment.endTime).toLocaleString()
+                }
+              });
+              
+              // Merge by extending the time range
+              mergedAppointments[i] = {
+                ...existing,
+                startTime: Math.min(existing.startTime, appointment.startTime),
+                endTime: Math.max(existing.endTime, appointment.endTime),
+                customerName: `${existing.customerName} + ${appointment.customerName}`,
+                appointmentId: `${existing.appointmentId}+${appointment.appointmentId}`,
+                merged: true
+              };
+              
+              merged = true;
+              break;
+            }
+          }
+          
+          if (!merged) {
+            mergedAppointments.push({ ...appointment });
+          }
+        });
+
+        console.log('Appointments after merging:', {
+          before: validAppointments.length,
+          after: mergedAppointments.length,
+          merged: validAppointments.length - mergedAppointments.length
+        });
+
+        // Use merged appointments for conflict checking
+        const appointmentsForConflictCheck = mergedAppointments;
+
+        console.log('=== [6/10] Appointments extracted ===', {
+          count: fetchedAppointments.length,
+          appointments: fetchedAppointments
+        });
 
         // Generate time slots from barber's schedule, fallback to defaults
+        console.log('=== [7/10] About to generate time slots ===');
         console.log('Barber object:', barber);
         console.log('Barber schedule:', barber?.schedule);
         
@@ -122,27 +230,42 @@ const TimeSelectionStep: React.FC<TimeSelectionStepProps> = ({
         };
         console.log('Using schedule:', schedule);
         
+        console.log('=== [8/10] Calling generateSlotsFromSchedule ===');
         const allTimes = generateSlotsFromSchedule(schedule);
-        console.log('Generated time slots:', allTimes.length, allTimes);
+        console.log('=== [9/10] Time slots generated ===', { count: allTimes.length, slots: allTimes });
         
         if (allTimes.length === 0) {
-          console.error('No time slots generated! Check barber schedule configuration.');
+          console.error('❌ No time slots generated! Check barber schedule configuration.');
           setAvailableTimes([]);
           setLoading(false);
+          console.log('=== [10/10] FINISHED (no slots) ===');
           return;
         }
 
         // Filter out times that conflict with existing appointments or are in the past
+        console.log('=== Starting slot filtering ===');
         const now = new Date();
         const oneHourFromNow = new Date(now.getTime() + 60 * 60 * 1000); // 1 hour from now
         const serviceDuration = selectedService?.durationMinutes || selectedService?.duration || 30;
         
-        console.log('Service duration:', serviceDuration, 'minutes');
-        console.log('Selected service:', selectedService);
-        console.log('Now:', now.toISOString());
-        console.log('One hour from now:', oneHourFromNow.toISOString());
+        console.log('Filter parameters:', {
+          serviceDuration,
+          selectedService,
+          now: now.toISOString(),
+          oneHourFromNow: oneHourFromNow.toISOString(),
+          totalSlotsToFilter: allTimes.length
+        });
+        
+        let slotsChecked = 0;
+        let slotsPastOrTooSoon = 0;
+        let slotsWithConflicts = 0;
         
         const availableSlots = allTimes.filter((timeSlot) => {
+          slotsChecked++;
+          if (slotsChecked % 10 === 0) {
+            console.log(`Filtering progress: ${slotsChecked}/${allTimes.length} slots checked`);
+          }
+          
           const [hours, minutes] = timeSlot.split(':').map(Number);
           
           // Create slot time in Brazil timezone (UTC-3)
@@ -158,12 +281,12 @@ const TimeSelectionStep: React.FC<TimeSelectionStepProps> = ({
 
           // Check if slot is at least 1 hour in the future
           if (slotStartTime < oneHourFromNow.getTime()) {
+            slotsPastOrTooSoon++;
             return false;
           }
 
           // Check if this slot conflicts with any existing appointment
-          const hasConflict = fetchedAppointments.some((appointment: any) => {
-            if (appointment.status === 'cancelled') return false;
+          const hasConflict = appointmentsForConflictCheck.some((appointment: any) => {
             
             const appointmentStart = appointment.startTime;
             const appointmentEnd = appointment.endTime;
@@ -184,16 +307,28 @@ const TimeSelectionStep: React.FC<TimeSelectionStepProps> = ({
             return overlaps;
           });
 
+          if (hasConflict) {
+            slotsWithConflicts++;
+          }
+
           return !hasConflict;
         });
 
-        console.log('Available slots after filtering:', availableSlots.length, availableSlots);
+        console.log('=== Filtering complete ===', {
+          totalSlots: allTimes.length,
+          slotsChecked,
+          slotsPastOrTooSoon,
+          slotsWithConflicts,
+          availableSlots: availableSlots.length,
+          slots: availableSlots
+        });
 
         setAvailableTimes(availableSlots);
-        console.log('=== Finished loadAvailableTimes, setting loading to false ===');
+        console.log('=== [10/10] FINISHED - Setting loading to false ===');
         setLoading(false);
       } catch (error) {
-        console.error('Error in loadAvailableTimes:', error);
+        console.error('❌ ERROR in loadAvailableTimes:', error);
+        console.error('Error stack:', error instanceof Error ? error.stack : 'No stack trace');
         setLoading(false);
       }
   }, [dispatch, selectedDate, barberId, selectedService, barber]);
