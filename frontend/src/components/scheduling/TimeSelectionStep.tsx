@@ -165,7 +165,7 @@ const TimeSelectionStep: React.FC<TimeSelectionStepProps> = ({
         console.error('Error in loadAvailableTimes:', error);
         setLoading(false);
       }
-  }, [dispatch, selectedDate, barberId, serviceId, selectedService, barber?.schedule]);
+  }, [dispatch, selectedDate, barberId, selectedService, barber?.schedule]);
 
   useEffect(() => {
     loadAvailableTimes();
