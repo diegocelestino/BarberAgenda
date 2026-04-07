@@ -62,100 +62,114 @@ const TimeSelectionStep: React.FC<TimeSelectionStepProps> = ({
 
   useEffect(() => {
     const loadAvailableTimes = async () => {
-      setLoading(true);
-      
-      // Fetch appointments for the selected date
-      const dayStart = startOfDay(selectedDate).getTime();
-      const dayEnd = endOfDay(selectedDate).getTime();
-      
-      const result = await dispatch(
-        fetchAppointmentsByBarber({
-          barberId,
-          params: {
-            startDate: dayStart,
-            endDate: dayEnd,
-          },
-        })
-      );
-
-      // Get appointments from the result payload (it's an array)
-      const fetchedAppointments = (result.payload as Appointment[]) || [];
-      
-      console.log('Fetched appointments for time slots:', fetchedAppointments.length, fetchedAppointments);
-
-      // Generate time slots from barber's schedule, fallback to defaults
-      const schedule: BarberSchedule = barber?.schedule ?? {
-        openTime: '09:00',
-        closeTime: '18:00',
-        lunchStart: '12:00',
-        lunchEnd: '13:00',
-        workDays: [1, 2, 3, 4, 5, 6],
-        slotInterval: 30,
-      };
-      const allTimes = generateSlotsFromSchedule(schedule);
-
-      // Filter out times that conflict with existing appointments or are in the past
-      const now = new Date();
-      const oneHourFromNow = new Date(now.getTime() + 60 * 60 * 1000); // 1 hour from now
-      const serviceDuration = selectedService?.duration || 30;
-      
-      console.log('Service duration:', serviceDuration, 'minutes');
-      console.log('Total time slots generated:', allTimes.length);
-      
-      const availableSlots = allTimes.filter((timeSlot) => {
-        const [hours, minutes] = timeSlot.split(':').map(Number);
+      try {
+        setLoading(true);
+        console.log('=== Starting loadAvailableTimes ===');
         
-        // Create slot time in Brazil timezone (UTC-3)
-        const year = selectedDate.getFullYear();
-        const month = String(selectedDate.getMonth() + 1).padStart(2, '0');
-        const day = String(selectedDate.getDate()).padStart(2, '0');
-        const timeStr = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
-        const slotDateTimeString = `${year}-${month}-${day}T${timeStr}:00-03:00`;
-        const slotStart = new Date(slotDateTimeString);
+        // Fetch appointments for the selected date
+        const dayStart = startOfDay(selectedDate).getTime();
+        const dayEnd = endOfDay(selectedDate).getTime();
+        console.log('Date range:', { dayStart, dayEnd, selectedDate });
         
-        const slotStartTime = slotStart.getTime();
-        const slotEndTime = slotStartTime + (serviceDuration * 60 * 1000);
+        const result = await dispatch(
+          fetchAppointmentsByBarber({
+            barberId,
+            params: {
+              startDate: dayStart,
+              endDate: dayEnd,
+            },
+          })
+        );
 
-        // Check if slot is at least 1 hour in the future
-        if (slotStartTime < oneHourFromNow.getTime()) {
-          console.log(`Slot ${timeSlot} is in the past or too soon`);
-          return false;
-        }
+        console.log('Dispatch result:', result);
 
-        // Check if this slot conflicts with any existing appointment
-        const hasConflict = fetchedAppointments.some((appointment: any) => {
-          if (appointment.status === 'cancelled') return false;
+        // Get appointments from the result payload (it's an array)
+        const fetchedAppointments = (result.payload as Appointment[]) || [];
+        
+        console.log('Fetched appointments for time slots:', fetchedAppointments.length, fetchedAppointments);
+
+        // Generate time slots from barber's schedule, fallback to defaults
+        const schedule: BarberSchedule = barber?.schedule ?? {
+          openTime: '09:00',
+          closeTime: '18:00',
+          lunchStart: '12:00',
+          lunchEnd: '13:00',
+          workDays: [1, 2, 3, 4, 5, 6],
+          slotInterval: 30,
+        };
+        console.log('Barber schedule:', schedule);
+        
+        const allTimes = generateSlotsFromSchedule(schedule);
+        console.log('Generated time slots:', allTimes.length, allTimes);
+
+        // Filter out times that conflict with existing appointments or are in the past
+        const now = new Date();
+        const oneHourFromNow = new Date(now.getTime() + 60 * 60 * 1000); // 1 hour from now
+        const serviceDuration = selectedService?.durationMinutes || selectedService?.duration || 30;
+        
+        console.log('Service duration:', serviceDuration, 'minutes');
+        console.log('Selected service:', selectedService);
+        console.log('Now:', now.toISOString());
+        console.log('One hour from now:', oneHourFromNow.toISOString());
+        
+        const availableSlots = allTimes.filter((timeSlot) => {
+          const [hours, minutes] = timeSlot.split(':').map(Number);
           
-          const appointmentStart = appointment.startTime;
-          const appointmentEnd = appointment.endTime;
+          // Create slot time in Brazil timezone (UTC-3)
+          const year = selectedDate.getFullYear();
+          const month = String(selectedDate.getMonth() + 1).padStart(2, '0');
+          const day = String(selectedDate.getDate()).padStart(2, '0');
+          const timeStr = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+          const slotDateTimeString = `${year}-${month}-${day}T${timeStr}:00-03:00`;
+          const slotStart = new Date(slotDateTimeString);
+          
+          const slotStartTime = slotStart.getTime();
+          const slotEndTime = slotStartTime + (serviceDuration * 60 * 1000);
 
-          // Check for overlap: slot overlaps if it starts before appointment ends AND ends after appointment starts
-          const overlaps = slotStartTime < appointmentEnd && slotEndTime > appointmentStart;
-
-          if (overlaps) {
-            console.log(`Slot ${timeSlot} conflicts with appointment:`, {
-              appointmentStart: new Date(appointmentStart).toLocaleString(),
-              appointmentEnd: new Date(appointmentEnd).toLocaleString(),
-              slotStart: new Date(slotStartTime).toLocaleString(),
-              slotEnd: new Date(slotEndTime).toLocaleString(),
-              customer: appointment.customerName,
-            });
+          // Check if slot is at least 1 hour in the future
+          if (slotStartTime < oneHourFromNow.getTime()) {
+            return false;
           }
 
-          return overlaps;
+          // Check if this slot conflicts with any existing appointment
+          const hasConflict = fetchedAppointments.some((appointment: any) => {
+            if (appointment.status === 'cancelled') return false;
+            
+            const appointmentStart = appointment.startTime;
+            const appointmentEnd = appointment.endTime;
+
+            // Check for overlap: slot overlaps if it starts before appointment ends AND ends after appointment starts
+            const overlaps = slotStartTime < appointmentEnd && slotEndTime > appointmentStart;
+
+            if (overlaps) {
+              console.log(`Slot ${timeSlot} conflicts with appointment:`, {
+                appointmentStart: new Date(appointmentStart).toLocaleString(),
+                appointmentEnd: new Date(appointmentEnd).toLocaleString(),
+                slotStart: new Date(slotStartTime).toLocaleString(),
+                slotEnd: new Date(slotEndTime).toLocaleString(),
+                customer: appointment.customerName,
+              });
+            }
+
+            return overlaps;
+          });
+
+          return !hasConflict;
         });
 
-        return !hasConflict;
-      });
+        console.log('Available slots after filtering:', availableSlots.length, availableSlots);
 
-      console.log('Available slots after filtering:', availableSlots.length, availableSlots);
-
-      setAvailableTimes(availableSlots);
-      setLoading(false);
+        setAvailableTimes(availableSlots);
+        console.log('=== Finished loadAvailableTimes, setting loading to false ===');
+        setLoading(false);
+      } catch (error) {
+        console.error('Error in loadAvailableTimes:', error);
+        setLoading(false);
+      }
     };
 
     loadAvailableTimes();
-  }, [selectedDate, barberId, serviceId, selectedService?.duration, barber?.schedule]);
+  }, [selectedDate, barberId, serviceId, selectedService?.duration, selectedService?.durationMinutes, barber?.schedule]);
 
   const handleNext = () => {
     if (time) {
