@@ -10,25 +10,46 @@ import { BarberSchedule } from '../../services/api';
 import { Appointment } from '../../services/appointmentsApi';
 
 const generateSlotsFromSchedule = (schedule: BarberSchedule): string[] => {
-  const slots: string[] = [];
-  const [openH, openM] = schedule.openTime.split(':').map(Number);
-  const [closeH, closeM] = schedule.closeTime.split(':').map(Number);
-  const [lunchStartH, lunchStartM] = schedule.lunchStart.split(':').map(Number);
-  const [lunchEndH, lunchEndM] = schedule.lunchEnd.split(':').map(Number);
+  try {
+    const slots: string[] = [];
+    
+    // Validate schedule has all required properties
+    if (!schedule.openTime || !schedule.closeTime || !schedule.lunchStart || !schedule.lunchEnd) {
+      console.error('Invalid schedule - missing required time properties:', schedule);
+      return [];
+    }
+    
+    const [openH, openM] = schedule.openTime.split(':').map(Number);
+    const [closeH, closeM] = schedule.closeTime.split(':').map(Number);
+    const [lunchStartH, lunchStartM] = schedule.lunchStart.split(':').map(Number);
+    const [lunchEndH, lunchEndM] = schedule.lunchEnd.split(':').map(Number);
 
-  const startMinutes = openH * 60 + openM;
-  const endMinutes = closeH * 60 + closeM;
-  const lunchStart = lunchStartH * 60 + lunchStartM;
-  const lunchEnd = lunchEndH * 60 + lunchEndM;
+    // Validate parsed numbers
+    if (isNaN(openH) || isNaN(openM) || isNaN(closeH) || isNaN(closeM) || 
+        isNaN(lunchStartH) || isNaN(lunchStartM) || isNaN(lunchEndH) || isNaN(lunchEndM)) {
+      console.error('Invalid schedule - could not parse time values:', schedule);
+      return [];
+    }
 
-  for (let m = startMinutes; m < endMinutes; m += schedule.slotInterval) {
-    // Skip lunch break slots
-    if (m >= lunchStart && m < lunchEnd) continue;
-    const h = Math.floor(m / 60);
-    const min = m % 60;
-    slots.push(`${h.toString().padStart(2, '0')}:${min.toString().padStart(2, '0')}`);
+    const startMinutes = openH * 60 + openM;
+    const endMinutes = closeH * 60 + closeM;
+    const lunchStart = lunchStartH * 60 + lunchStartM;
+    const lunchEnd = lunchEndH * 60 + lunchEndM;
+
+    const slotInterval = schedule.slotInterval || 30;
+
+    for (let m = startMinutes; m < endMinutes; m += slotInterval) {
+      // Skip lunch break slots
+      if (m >= lunchStart && m < lunchEnd) continue;
+      const h = Math.floor(m / 60);
+      const min = m % 60;
+      slots.push(`${h.toString().padStart(2, '0')}:${min.toString().padStart(2, '0')}`);
+    }
+    return slots;
+  } catch (error) {
+    console.error('Error generating slots from schedule:', error, schedule);
+    return [];
   }
-  return slots;
 };
 
 interface TimeSelectionStepProps {
@@ -88,6 +109,9 @@ const TimeSelectionStep: React.FC<TimeSelectionStepProps> = ({
         console.log('Fetched appointments for time slots:', fetchedAppointments.length, fetchedAppointments);
 
         // Generate time slots from barber's schedule, fallback to defaults
+        console.log('Barber object:', barber);
+        console.log('Barber schedule:', barber?.schedule);
+        
         const schedule: BarberSchedule = barber?.schedule ?? {
           openTime: '09:00',
           closeTime: '18:00',
@@ -96,10 +120,17 @@ const TimeSelectionStep: React.FC<TimeSelectionStepProps> = ({
           workDays: [1, 2, 3, 4, 5, 6],
           slotInterval: 30,
         };
-        console.log('Barber schedule:', schedule);
+        console.log('Using schedule:', schedule);
         
         const allTimes = generateSlotsFromSchedule(schedule);
         console.log('Generated time slots:', allTimes.length, allTimes);
+        
+        if (allTimes.length === 0) {
+          console.error('No time slots generated! Check barber schedule configuration.');
+          setAvailableTimes([]);
+          setLoading(false);
+          return;
+        }
 
         // Filter out times that conflict with existing appointments or are in the past
         const now = new Date();
@@ -165,7 +196,7 @@ const TimeSelectionStep: React.FC<TimeSelectionStepProps> = ({
         console.error('Error in loadAvailableTimes:', error);
         setLoading(false);
       }
-  }, [dispatch, selectedDate, barberId, selectedService, barber?.schedule]);
+  }, [dispatch, selectedDate, barberId, selectedService, barber]);
 
   useEffect(() => {
     loadAvailableTimes();
