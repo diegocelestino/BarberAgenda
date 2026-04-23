@@ -13,9 +13,8 @@ import {
 } from '@mui/material';
 import { useAppDispatch, useAppSelector } from '../../store/hooks';
 import { updateAppointment } from '../../store/appointments';
-import { fetchServices, selectAllServices, selectServicesLoading } from '../../store/services';
-import { selectSelectedBarber } from '../../store/barbers';
 import { Appointment } from '../../services/appointmentsApi';
+import { barberApi } from '../../services/api';
 
 interface EditAppointmentDialogProps {
   open: boolean;
@@ -33,12 +32,11 @@ const EditAppointmentDialog: React.FC<EditAppointmentDialogProps> = ({
   onSuccess,
 }) => {
   const dispatch = useAppDispatch();
-  const allServices = useAppSelector(selectAllServices);
-  const servicesLoading = useAppSelector(selectServicesLoading);
-  const barber = useAppSelector(selectSelectedBarber);
   const appointments = useAppSelector((state) => state.appointments.appointments);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [availableServices, setAvailableServices] = useState<any[]>([]);
+  const [servicesLoading, setServicesLoading] = useState(false);
   const [formData, setFormData] = useState({
     customerName: '',
     customerPhone: '',
@@ -49,10 +47,22 @@ const EditAppointmentDialog: React.FC<EditAppointmentDialogProps> = ({
   });
 
   useEffect(() => {
-    if (open && allServices.length === 0) {
-      dispatch(fetchServices());
-    }
-  }, [open, allServices.length, dispatch]);
+    const loadServices = async () => {
+      if (!open) return;
+      
+      try {
+        setServicesLoading(true);
+        const services = await barberApi.getServices(barberId);
+        setAvailableServices(services);
+      } catch (err) {
+        console.error('Error loading services:', err);
+      } finally {
+        setServicesLoading(false);
+      }
+    };
+
+    loadServices();
+  }, [open, barberId]);
 
   useEffect(() => {
     if (appointment) {
@@ -80,12 +90,7 @@ const EditAppointmentDialog: React.FC<EditAppointmentDialogProps> = ({
       });
       setError(''); // Clear error when opening dialog
     }
-  }, [appointment, allServices]);
-
-  // Filter services to only show those offered by the barber
-  const availableServices = barber
-    ? allServices.filter(service => barber.serviceIds.includes(service.serviceId))
-    : [];
+  }, [appointment]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -93,9 +98,15 @@ const EditAppointmentDialog: React.FC<EditAppointmentDialogProps> = ({
     
     if (!appointment || !formData.serviceId) return;
 
-    const selectedService = allServices.find(s => s.serviceId === formData.serviceId);
+    const selectedService = availableServices.find(s => s.serviceId === formData.serviceId);
     if (!selectedService) {
       setError('Por favor, selecione um serviço válido');
+      return;
+    }
+
+    const serviceDuration = selectedService.durationMinutes || selectedService.duration;
+    if (!serviceDuration) {
+      setError('Serviço inválido - duração não encontrada');
       return;
     }
 
@@ -105,7 +116,7 @@ const EditAppointmentDialog: React.FC<EditAppointmentDialogProps> = ({
     const appointmentDateTime = new Date(dateTimeString);
     
     const startTime = appointmentDateTime.getTime();
-    const endTime = startTime + selectedService.durationMinutes * 60 * 1000;
+    const endTime = startTime + serviceDuration * 60 * 1000;
     const now = Date.now();
 
     // Validation: Cannot schedule in the past
@@ -182,7 +193,7 @@ const EditAppointmentDialog: React.FC<EditAppointmentDialogProps> = ({
     return appointment.startTime < Date.now();
   };
 
-  const selectedService = allServices.find(s => s.serviceId === formData.serviceId);
+  const selectedService = availableServices.find(s => s.serviceId === formData.serviceId);
 
   // Get current time in Brazil timezone for min attribute
   const getBrazilNowString = () => {
@@ -227,7 +238,7 @@ const EditAppointmentDialog: React.FC<EditAppointmentDialogProps> = ({
               required
               fullWidth
               disabled={servicesLoading}
-              helperText={selectedService ? `Duração: ${selectedService.durationMinutes} minutos` : ''}
+              helperText={selectedService ? `Duração: ${selectedService.durationMinutes || selectedService.duration} minutos` : ''}
             >
               {servicesLoading ? (
                 <MenuItem disabled>
@@ -238,7 +249,7 @@ const EditAppointmentDialog: React.FC<EditAppointmentDialogProps> = ({
               ) : (
                 availableServices.map((service) => (
                   <MenuItem key={service.serviceId} value={service.serviceId}>
-                    {service.title}
+                    {service.title || service.name}
                   </MenuItem>
                 ))
               )}

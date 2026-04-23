@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import {
   Card,
   CardContent,
@@ -12,9 +12,7 @@ import {
 } from '@mui/material';
 import { Delete as DeleteIcon } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
-import { Barber } from '../../services/api';
-import { useAppDispatch, useAppSelector } from '../../store/hooks';
-import { fetchServices, selectAllServices } from '../../store/services';
+import { Barber, barberApi } from '../../services/api';
 
 interface BarberCardProps {
   barber: Barber;
@@ -23,14 +21,20 @@ interface BarberCardProps {
 
 const BarberCard: React.FC<BarberCardProps> = ({ barber, onDelete }) => {
   const navigate = useNavigate();
-  const dispatch = useAppDispatch();
-  const services = useAppSelector(selectAllServices);
+  const [services, setServices] = useState<any[]>([]);
 
   useEffect(() => {
-    if (services.length === 0) {
-      dispatch(fetchServices());
-    }
-  }, [services.length, dispatch]);
+    const loadServices = async () => {
+      try {
+        const barberServices = await barberApi.getServices(barber.barberId);
+        setServices(barberServices);
+      } catch (err) {
+        console.error('Error loading services:', err);
+      }
+    };
+
+    loadServices();
+  }, [barber.barberId]);
 
   const handleDeleteClick = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -38,9 +42,7 @@ const BarberCard: React.FC<BarberCardProps> = ({ barber, onDelete }) => {
   };
 
   const getServiceNames = () => {
-    return barber.serviceIds
-      .map(id => services.find(s => s.serviceId === id)?.title)
-      .filter(Boolean);
+    return services.map(s => s.title || s.name).filter(Boolean);
   };
 
   return (

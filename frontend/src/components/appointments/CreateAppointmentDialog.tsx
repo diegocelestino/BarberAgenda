@@ -13,8 +13,7 @@ import {
 } from '@mui/material';
 import { useAppDispatch, useAppSelector } from '../../store/hooks';
 import { createAppointment, selectAppointmentsLoading, selectAppointmentsError } from '../../store/appointments';
-import { fetchServices, selectAllServices, selectServicesLoading } from '../../store/services';
-import { selectSelectedBarber } from '../../store/barbers';
+import { barberApi } from '../../services/api';
 
 interface CreateAppointmentDialogProps {
   open: boolean;
@@ -32,9 +31,6 @@ const CreateAppointmentDialog: React.FC<CreateAppointmentDialogProps> = ({
   const dispatch = useAppDispatch();
   const loading = useAppSelector(selectAppointmentsLoading);
   const error = useAppSelector(selectAppointmentsError);
-  const allServices = useAppSelector(selectAllServices);
-  const servicesLoading = useAppSelector(selectServicesLoading);
-  const barber = useAppSelector(selectSelectedBarber);
 
   const [customerName, setCustomerName] = useState('');
   const [customerPhone, setCustomerPhone] = useState('');
@@ -42,21 +38,33 @@ const CreateAppointmentDialog: React.FC<CreateAppointmentDialogProps> = ({
   const [startTime, setStartTime] = useState('');
   const [selectedServiceId, setSelectedServiceId] = useState('');
   const [notes, setNotes] = useState('');
+  const [availableServices, setAvailableServices] = useState<any[]>([]);
+  const [servicesLoading, setServicesLoading] = useState(false);
+  const [servicesError, setServicesError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (open && allServices.length === 0) {
-      dispatch(fetchServices());
-    }
-  }, [open, allServices.length, dispatch]);
+    const loadServices = async () => {
+      if (!open) return;
+      
+      try {
+        setServicesLoading(true);
+        setServicesError(null);
+        const services = await barberApi.getServices(barberId);
+        setAvailableServices(services);
+      } catch (err) {
+        console.error('Error loading services:', err);
+        setServicesError('Failed to load services');
+      } finally {
+        setServicesLoading(false);
+      }
+    };
+
+    loadServices();
+  }, [open, barberId]);
 
   const getSelectedService = () => {
-    return allServices.find(s => s.serviceId === selectedServiceId);
+    return availableServices.find(s => s.serviceId === selectedServiceId);
   };
-
-  // Filter services to only show those offered by the barber
-  const availableServices = barber
-    ? allServices.filter(service => barber.serviceIds.includes(service.serviceId))
-    : [];
 
   const handleSubmit = async () => {
     if (!customerName || !date || !startTime || !selectedServiceId) {
@@ -68,13 +76,18 @@ const CreateAppointmentDialog: React.FC<CreateAppointmentDialogProps> = ({
       return;
     }
 
+    const serviceDuration = selectedService.durationMinutes || selectedService.duration;
+    if (!serviceDuration) {
+      return;
+    }
+
     // Parse date and time in Brazil timezone (UTC-3)
     // Format: YYYY-MM-DD and HH:mm
     const dateTimeString = `${date}T${startTime}:00-03:00`;
     const appointmentDateTime = new Date(dateTimeString);
     
     const startDateTime = appointmentDateTime.getTime();
-    const endDateTime = startDateTime + selectedService.durationMinutes * 60 * 1000;
+    const endDateTime = startDateTime + serviceDuration * 60 * 1000;
     const now = Date.now();
 
     // Validation: Cannot schedule in the past
@@ -136,6 +149,7 @@ const CreateAppointmentDialog: React.FC<CreateAppointmentDialogProps> = ({
       <DialogContent>
         <Stack spacing={2} sx={{ mt: 1 }}>
           {error && <Alert severity="error">{error}</Alert>}
+          {servicesError && <Alert severity="error">{servicesError}</Alert>}
           
           <TextField
             label="Customer Name"
@@ -160,7 +174,7 @@ const CreateAppointmentDialog: React.FC<CreateAppointmentDialogProps> = ({
             required
             fullWidth
             disabled={servicesLoading}
-            helperText={selectedService ? `Duration: ${selectedService.durationMinutes} minutes` : ''}
+            helperText={selectedService ? `Duration: ${selectedService.durationMinutes || selectedService.duration} minutes` : ''}
           >
             {servicesLoading ? (
               <MenuItem disabled>
@@ -171,7 +185,7 @@ const CreateAppointmentDialog: React.FC<CreateAppointmentDialogProps> = ({
             ) : (
               availableServices.map((service) => (
                 <MenuItem key={service.serviceId} value={service.serviceId}>
-                  {service.title}
+                  {service.title || service.name}
                 </MenuItem>
               ))
             )}
