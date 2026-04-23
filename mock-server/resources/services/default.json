@@ -78,5 +78,14 @@
     "duration": 10,
     "name": "Relaxamento ",
     "title": "Relaxamento "
+  },
+  {
+    "serviceId": "service-1776984893971",
+    "title": "TESTE",
+    "name": "Teste",
+    "description": "",
+    "price": 60,
+    "duration": 30,
+    "durationMinutes": 30
   }
 ]

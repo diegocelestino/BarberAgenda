@@ -144,6 +144,12 @@ export const barberApi = {
     });
     return response.data;
   },
+
+  // Get services for a specific barber (pre-filtered)
+  getServices: async (barberId: string): Promise<any[]> => {
+    const response = await api.get(`/barbers/${barberId}/services`);
+    return response.data.services;
+  },
 };
 
 export default api;

@@ -93,34 +93,32 @@ const BarberExtractPage: React.FC = () => {
 
   useEffect(() => {
     if (barberId && startDate && endDate) {
-      loadExtract();
+      const loadData = async () => {
+        try {
+          setExtractLoading(true);
+          setExtractError(null);
+
+          // Parse dates in Brazil timezone (UTC-3)
+          const startDateObj = new Date(startDate + 'T00:00:00-03:00');
+          const endDateObj = new Date(endDate + 'T23:59:59-03:00');
+          
+          const start = startDateObj.getTime();
+          const end = endDateObj.getTime();
+
+          // Fetch extract from backend
+          const data = await barberApi.getExtract(barberId, start, end);
+          setExtractData(data);
+        } catch (err) {
+          console.error('Error loading extract:', err);
+          setExtractError('Erro ao carregar extrato. Por favor, tente novamente.');
+        } finally {
+          setExtractLoading(false);
+        }
+      };
+
+      loadData();
     }
   }, [barberId, startDate, endDate]);
-
-  const loadExtract = async () => {
-    if (!barberId) return;
-
-    try {
-      setExtractLoading(true);
-      setExtractError(null);
-
-      // Parse dates in Brazil timezone (UTC-3)
-      const startDateObj = new Date(startDate + 'T00:00:00-03:00');
-      const endDateObj = new Date(endDate + 'T23:59:59-03:00');
-      
-      const start = startDateObj.getTime();
-      const end = endDateObj.getTime();
-
-      // Fetch extract from backend
-      const data = await barberApi.getExtract(barberId, start, end);
-      setExtractData(data);
-    } catch (err) {
-      console.error('Error loading extract:', err);
-      setExtractError('Erro ao carregar extrato. Por favor, tente novamente.');
-    } finally {
-      setExtractLoading(false);
-    }
-  };
 
   const formatDateTime = (timestamp: number) => {
     const date = new Date(timestamp);

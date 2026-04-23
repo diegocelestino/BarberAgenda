@@ -447,6 +447,28 @@ const getExtract = (req, res) => {
   }
 };
 
+// Get services for a specific barber (filtered by barber's serviceIds)
+const getBarberServices = (req, res) => {
+  const { barberId } = req.params;
+  console.log(`GET /barbers/${barberId}/services`);
+  
+  // Find barber
+  const barber = barbers.find(b => b.barberId === barberId);
+  if (!barber) {
+    return res.status(404).json({ error: 'Barber not found' });
+  }
+  
+  // Load all services
+  const allServices = loadServices();
+  
+  // Filter services by barber's serviceIds
+  const barberServices = allServices.filter(service => 
+    barber.serviceIds && barber.serviceIds.includes(service.serviceId)
+  );
+  
+  res.json({ services: barberServices });
+};
+
 module.exports = {
   getAllBarbers,
   getBarberById,
@@ -455,4 +477,5 @@ module.exports = {
   deleteBarber,
   getAvailableSlots,
   getExtract,
+  getBarberServices,
 };

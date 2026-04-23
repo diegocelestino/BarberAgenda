@@ -1,9 +1,7 @@
-import { useEffect, useMemo } from 'react';
+import { useEffect, useState } from 'react';
 import { Box, Typography, Card, CardContent, CardActionArea, Grid, CircularProgress, Chip, Button } from '@mui/material';
 import { MiscellaneousServices as ServicesIcon } from '@mui/icons-material';
-import { useAppDispatch, useAppSelector } from '../../store/hooks';
-import { fetchServices } from '../../store/services/servicesThunks';
-import { selectAllServices, selectServicesLoading } from '../../store/services/servicesSelectors';
+import { barberApi } from '../../services/api';
 
 interface ServiceSelectionStepProps {
   onNext: (serviceId: string) => void;
@@ -13,29 +11,42 @@ interface ServiceSelectionStepProps {
 }
 
 const ServiceSelectionStep: React.FC<ServiceSelectionStepProps> = ({ onNext, onBack, selectedServiceId, barberId }) => {
-  const dispatch = useAppDispatch();
-  const allServices = useAppSelector(selectAllServices);
-  const loading = useAppSelector(selectServicesLoading);
-  
-  // Get the selected barber
-  const barber = useAppSelector((state) => 
-    state.barbers.barbers.find(b => b.barberId === barberId)
-  );
-
-  // Filter services based on barber's serviceIds
-  const services = useMemo(() => {
-    if (!barber || !barber.serviceIds) return allServices;
-    return allServices.filter(service => barber.serviceIds.includes(service.serviceId));
-  }, [allServices, barber]);
+  const [services, setServices] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    dispatch(fetchServices());
-  }, [dispatch]);
+    const loadServices = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        // Fetch pre-filtered services from backend
+        const barberServices = await barberApi.getServices(barberId);
+        setServices(barberServices);
+      } catch (err) {
+        console.error('Error loading services:', err);
+        setError('Erro ao carregar serviços');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadServices();
+  }, [barberId]);
 
   if (loading) {
     return (
       <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
         <CircularProgress />
+      </Box>
+    );
+  }
+
+  if (error) {
+    return (
+      <Box>
+        <Typography color="error">{error}</Typography>
+        <Button onClick={onBack}>Voltar</Button>
       </Box>
     );
   }
@@ -75,12 +86,12 @@ const ServiceSelectionStep: React.FC<ServiceSelectionStepProps> = ({ onNext, onB
                   )}
                   <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
                     <Chip
-                      label={`$${service.price}`}
+                      label={`R$ ${service.price}`}
                       color="primary"
                       size="small"
                     />
                     <Chip
-                      label={`${service.duration} min`}
+                      label={`${service.duration || service.durationMinutes} min`}
                       variant="outlined"
                       size="small"
                     />
