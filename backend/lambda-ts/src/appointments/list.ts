@@ -17,6 +17,8 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
     const startDate = event.queryStringParameters?.startDate;
     const endDate = event.queryStringParameters?.endDate;
     const status = event.queryStringParameters?.status;
+    const sortBy = event.queryStringParameters?.sortBy || 'startTime';
+    const sortOrder = event.queryStringParameters?.sortOrder || 'asc';
 
     const result = await dynamo.send(new QueryCommand({
       TableName: tableName,
@@ -45,8 +47,25 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
       items = items.filter(item => statusList.includes(item.status));
     }
     
-    // Sort by start time
-    items.sort((a, b) => a.startTime - b.startTime);
+    // Sort based on parameters
+    items.sort((a, b) => {
+      let comparison = 0;
+      
+      switch (sortBy) {
+        case 'customerName':
+          comparison = (a.customerName || '').localeCompare(b.customerName || '');
+          break;
+        case 'status':
+          comparison = (a.status || '').localeCompare(b.status || '');
+          break;
+        case 'startTime':
+        default:
+          comparison = (a.startTime || 0) - (b.startTime || 0);
+          break;
+      }
+      
+      return sortOrder === 'desc' ? -comparison : comparison;
+    });
     
     return ok({ appointments: items });
   } catch (err) {

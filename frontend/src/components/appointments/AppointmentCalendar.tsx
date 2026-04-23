@@ -69,7 +69,16 @@ const AppointmentCalendar: React.FC = () => {
         endDate = Date.now() + 365 * 24 * 60 * 60 * 1000; // Next year
       }
       
-      dispatch(fetchAppointmentsByBarber({ barberId, params: { startDate, endDate } }));
+      // Fetch all appointments (no status filter) sorted by time
+      dispatch(fetchAppointmentsByBarber({ 
+        barberId, 
+        params: { 
+          startDate, 
+          endDate,
+          sortBy: 'startTime',
+          sortOrder: 'asc'
+        } 
+      }));
     }
   }, [barberId, dispatch, filter]);
 

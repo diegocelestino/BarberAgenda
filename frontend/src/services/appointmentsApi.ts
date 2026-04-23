@@ -36,6 +36,8 @@ export interface GetAppointmentsParams {
   startDate?: number;
   endDate?: number;
   status?: string;
+  sortBy?: 'startTime' | 'customerName' | 'status';
+  sortOrder?: 'asc' | 'desc';
 }
 
 // Appointments API functions
@@ -46,6 +48,8 @@ export const appointmentsApi = {
     if (params?.startDate) queryParams.append('startDate', params.startDate.toString());
     if (params?.endDate) queryParams.append('endDate', params.endDate.toString());
     if (params?.status) queryParams.append('status', params.status);
+    if (params?.sortBy) queryParams.append('sortBy', params.sortBy);
+    if (params?.sortOrder) queryParams.append('sortOrder', params.sortOrder);
     
     const url = `/barbers/${barberId}/appointments${queryParams.toString() ? `?${queryParams}` : ''}`;
     const response = await api.get(url);

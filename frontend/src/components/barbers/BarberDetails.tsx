@@ -58,10 +58,19 @@ const BarberDetails: React.FC = () => {
     if (barberId) {
       dispatch(fetchBarberById(barberId));
       
-      // Fetch appointments for the next 30 days
+      // Fetch only scheduled appointments for the next 30 days, sorted by time ascending
       const startDate = Date.now();
       const endDate = Date.now() + 30 * 24 * 60 * 60 * 1000;
-      dispatch(fetchAppointmentsByBarber({ barberId, params: { startDate, endDate } }));
+      dispatch(fetchAppointmentsByBarber({ 
+        barberId, 
+        params: { 
+          startDate, 
+          endDate, 
+          status: 'scheduled',
+          sortBy: 'startTime',
+          sortOrder: 'asc'
+        } 
+      }));
     }
     
     return () => {
@@ -70,10 +79,8 @@ const BarberDetails: React.FC = () => {
     };
   }, [barberId, dispatch]);
 
-  // Get all scheduled appointments sorted by time
-  const scheduledAppointments = appointments
-    .filter(apt => apt.status === 'scheduled' && apt.startTime >= Date.now())
-    .sort((a, b) => a.startTime - b.startTime);
+  // Backend already returns filtered and sorted appointments
+  const scheduledAppointments = appointments;
 
   const handleWalkInSuccess = () => {
     setWalkInDialogOpen(false);
@@ -83,7 +90,16 @@ const BarberDetails: React.FC = () => {
     if (barberId) {
       const startDate = Date.now();
       const endDate = Date.now() + 30 * 24 * 60 * 60 * 1000;
-      dispatch(fetchAppointmentsByBarber({ barberId, params: { startDate, endDate } }));
+      dispatch(fetchAppointmentsByBarber({ 
+        barberId, 
+        params: { 
+          startDate, 
+          endDate, 
+          status: 'scheduled',
+          sortBy: 'startTime',
+          sortOrder: 'asc'
+        } 
+      }));
     }
   };
 
@@ -92,7 +108,16 @@ const BarberDetails: React.FC = () => {
     if (barberId) {
       const startDate = Date.now();
       const endDate = Date.now() + 30 * 24 * 60 * 60 * 1000;
-      dispatch(fetchAppointmentsByBarber({ barberId, params: { startDate, endDate } }));
+      dispatch(fetchAppointmentsByBarber({ 
+        barberId, 
+        params: { 
+          startDate, 
+          endDate, 
+          status: 'scheduled',
+          sortBy: 'startTime',
+          sortOrder: 'asc'
+        } 
+      }));
     }
   };
 

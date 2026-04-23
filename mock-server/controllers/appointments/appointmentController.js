@@ -32,9 +32,9 @@ let appointments = loadAppointments();
 // Get appointments for a barber
 const getAppointmentsByBarber = (req, res) => {
   const { barberId } = req.params;
-  const { startDate, endDate, status } = req.query;
+  const { startDate, endDate, status, sortBy = 'startTime', sortOrder = 'asc' } = req.query;
   
-  console.log(`GET /barbers/${barberId}/appointments`, { startDate, endDate, status });
+  console.log(`GET /barbers/${barberId}/appointments`, { startDate, endDate, status, sortBy, sortOrder });
   
   let filtered = appointments.filter(a => a.barberId === barberId);
   
@@ -52,8 +52,25 @@ const getAppointmentsByBarber = (req, res) => {
     filtered = filtered.filter(a => statusList.includes(a.status));
   }
   
-  // Sort by start time
-  filtered.sort((a, b) => a.startTime - b.startTime);
+  // Sort based on parameters
+  filtered.sort((a, b) => {
+    let comparison = 0;
+    
+    switch (sortBy) {
+      case 'customerName':
+        comparison = a.customerName.localeCompare(b.customerName);
+        break;
+      case 'status':
+        comparison = a.status.localeCompare(b.status);
+        break;
+      case 'startTime':
+      default:
+        comparison = a.startTime - b.startTime;
+        break;
+    }
+    
+    return sortOrder === 'desc' ? -comparison : comparison;
+  });
   
   res.json({ appointments: filtered });
 };
