@@ -29,6 +29,7 @@ The server will run on `http://localhost:3001`
 - `GET /barbers` - Get all barbers
 - `GET /barbers/:barberId` - Get single barber
 - `GET /barbers/:barberId/available-slots?date=YYYY-MM-DD&duration=30` - Get available time slots
+- `GET /barbers/:barberId/extract?startDate=TIMESTAMP&endDate=TIMESTAMP&format=json|pdf` - Get appointment extract/report
 - `POST /barbers` - Create new barber
 - `PUT /barbers/:barberId` - Update barber
 - `DELETE /barbers/:barberId` - Delete barber

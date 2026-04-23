@@ -136,6 +136,14 @@ export const barberApi = {
     });
     return response.data.slots;
   },
+
+  // Get barber extract/report
+  getExtract: async (barberId: string, startDate: number, endDate: number): Promise<any> => {
+    const response = await api.get(`/barbers/${barberId}/extract`, {
+      params: { startDate, endDate, format: 'json' },
+    });
+    return response.data;
+  },
 };
 
 export default api;

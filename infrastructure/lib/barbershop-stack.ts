@@ -139,6 +139,13 @@ export class BarbershopStack extends cdk.Stack {
       APPOINTMENTS_TABLE: appointmentsTable.tableName,
     });
 
+    // Extract function needs access to barbers, appointments, and services tables
+    const extractFn = makeFn('ExtractFunction', 'dist/barbers/extract.handler', {
+      BARBERS_TABLE: barbersTable.tableName,
+      APPOINTMENTS_TABLE: appointmentsTable.tableName,
+      SERVICES_TABLE: servicesTable.tableName,
+    });
+
     barbersTable.grantReadData(listBarbersFn);
     barbersTable.grantReadData(getBarberFn);
     barbersTable.grantReadWriteData(createBarberFn);
@@ -146,6 +153,9 @@ export class BarbershopStack extends cdk.Stack {
     barbersTable.grantReadWriteData(deleteBarberFn);
     barbersTable.grantReadData(availableSlotsFn);
     appointmentsTable.grantReadData(availableSlotsFn);
+    barbersTable.grantReadData(extractFn);
+    appointmentsTable.grantReadData(extractFn);
+    servicesTable.grantReadData(extractFn);
 
     // ========================================
     // Service functions
@@ -250,6 +260,10 @@ export class BarbershopStack extends cdk.Stack {
     // /barbers/{barberId}/available-slots
     const availableSlots = barber.addResource('available-slots');
     availableSlots.addMethod('GET', int(availableSlotsFn)); // Public - check availability
+
+    // /barbers/{barberId}/extract
+    const extract = barber.addResource('extract');
+    extract.addMethod('GET', int(extractFn)); // Public - view extract/report
 
     // /barbers/{barberId}/appointments
     const appointments = barber.addResource('appointments');

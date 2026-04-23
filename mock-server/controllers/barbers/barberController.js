@@ -290,6 +290,163 @@ const getAvailableSlots = (req, res) => {
   });
 };
 
+// Load services data
+const loadServices = () => {
+  try {
+    const dataPath = path.join(__dirname, '../../resources', 'services', 'default.json');
+    const data = fs.readFileSync(dataPath, 'utf8');
+    return JSON.parse(data);
+  } catch (error) {
+    console.error('Error loading services data:', error);
+    return [];
+  }
+};
+
+// Get barber extract/report
+const getExtract = (req, res) => {
+  const { barberId } = req.params;
+  const { startDate, endDate, format = 'json' } = req.query;
+  
+  console.log(`GET /barbers/${barberId}/extract`, { startDate, endDate, format });
+  
+  // Validate required parameters
+  if (!startDate || !endDate) {
+    return res.status(400).json({ error: 'startDate and endDate parameters are required (timestamps)' });
+  }
+  
+  // Find barber
+  const barber = barbers.find(b => b.barberId === barberId);
+  if (!barber) {
+    return res.status(404).json({ error: 'Barber not found' });
+  }
+  
+  // Load appointments and services
+  const appointments = loadAppointments();
+  const services = loadServices();
+  
+  // Filter completed appointments in date range
+  const start = parseInt(startDate);
+  const end = parseInt(endDate);
+  
+  const completedAppointments = appointments.filter(apt => 
+    apt.barberId === barberId &&
+    apt.status === 'completed' &&
+    apt.startTime >= start &&
+    apt.startTime <= end
+  ).sort((a, b) => b.startTime - a.startTime); // Most recent first
+  
+  // Calculate totals and aggregations
+  let totalRevenue = 0;
+  const byService = {};
+  
+  completedAppointments.forEach(apt => {
+    const service = services.find(s => s.serviceId === apt.service);
+    const price = service ? service.price : 0;
+    const serviceName = service ? service.title : apt.service;
+    
+    totalRevenue += price;
+    
+    if (!byService[apt.service]) {
+      byService[apt.service] = {
+        serviceId: apt.service,
+        serviceName,
+        count: 0,
+        revenue: 0,
+      };
+    }
+    
+    byService[apt.service].count++;
+    byService[apt.service].revenue += price;
+  });
+  
+  const summary = {
+    totalRevenue,
+    totalAppointments: completedAppointments.length,
+    byService: Object.values(byService),
+  };
+  
+  // Format response based on requested format
+  if (format === 'pdf') {
+    // Generate PDF
+    const PDFDocument = require('pdfkit');
+    const doc = new PDFDocument();
+    
+    // Set response headers for PDF
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename=extrato_${barber.name}_${startDate}_${endDate}.pdf`);
+    
+    // Pipe PDF to response
+    doc.pipe(res);
+    
+    // Title
+    doc.fontSize(18).text('Extrato de Atendimentos', { align: 'left' });
+    doc.moveDown();
+    
+    // Barber info
+    doc.fontSize(12);
+    doc.text(`Barbeiro: ${barber.name}`);
+    doc.text(`Período: ${new Date(start).toLocaleDateString('pt-BR')} - ${new Date(end).toLocaleDateString('pt-BR')}`);
+    doc.moveDown();
+    
+    // Summary
+    doc.fontSize(14).text('Resumo', { underline: true });
+    doc.fontSize(12);
+    doc.text(`Total de atendimentos: ${summary.totalAppointments}`);
+    doc.text(`Receita total: R$ ${summary.totalRevenue.toFixed(2)}`);
+    doc.moveDown();
+    
+    // By service
+    if (summary.byService.length > 0) {
+      doc.fontSize(14).text('Por Serviço', { underline: true });
+      doc.fontSize(10);
+      summary.byService.forEach(s => {
+        doc.text(`${s.serviceName}: ${s.count} atendimentos - R$ ${s.revenue.toFixed(2)}`);
+      });
+      doc.moveDown();
+    }
+    
+    // Appointments list
+    doc.fontSize(14).text('Atendimentos', { underline: true });
+    doc.fontSize(9);
+    
+    completedAppointments.forEach(apt => {
+      const service = services.find(s => s.serviceId === apt.service);
+      const price = service ? service.price : 0;
+      const serviceName = service ? service.title : apt.service;
+      const date = new Date(apt.startTime);
+      
+      doc.text(
+        `${date.toLocaleDateString('pt-BR')} ${date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })} - ` +
+        `${apt.customerName} - ${serviceName} - R$ ${price.toFixed(2)}`
+      );
+    });
+    
+    // Finalize PDF
+    doc.end();
+  } else {
+    // Return JSON
+    res.json({
+      barber: {
+        barberId: barber.barberId,
+        name: barber.name,
+      },
+      period: {
+        startDate: start,
+        endDate: end,
+      },
+      summary,
+      appointments: completedAppointments.map(apt => {
+        const service = services.find(s => s.serviceId === apt.service);
+        return {
+          ...apt,
+          serviceName: service ? service.title : apt.service,
+          servicePrice: service ? service.price : 0,
+        };
+      }),
+    });
+  }
+};
+
 module.exports = {
   getAllBarbers,
   getBarberById,
@@ -297,4 +454,5 @@ module.exports = {
   updateBarber,
   deleteBarber,
   getAvailableSlots,
+  getExtract,
 };

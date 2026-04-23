@@ -19,9 +19,7 @@ import {
   Stack,
   Button,
 } from '@mui/material';
-import { ArrowBack as ArrowBackIcon, PictureAsPdf as PdfIcon } from '@mui/icons-material';
-import jsPDF from 'jspdf';
-import autoTable from 'jspdf-autotable';
+import { ArrowBack as ArrowBackIcon, Download as DownloadIcon } from '@mui/icons-material';
 import { useAppDispatch, useAppSelector } from '../store/hooks';
 import {
   fetchBarberById,
@@ -30,13 +28,37 @@ import {
   selectBarbersError,
   clearSelectedBarber,
 } from '../store/barbers';
-import {
-  fetchAppointmentsByBarber,
-  selectAllAppointments,
-  selectAppointmentsLoading,
-  clearAppointments,
-} from '../store/appointments';
-import { fetchServices, selectAllServices } from '../store/services';
+import { barberApi } from '../services/api';
+
+interface ExtractData {
+  barber: {
+    barberId: string;
+    name: string;
+  };
+  period: {
+    startDate: number;
+    endDate: number;
+  };
+  summary: {
+    totalRevenue: number;
+    totalAppointments: number;
+    byService: Array<{
+      serviceId: string;
+      serviceName: string;
+      count: number;
+      revenue: number;
+    }>;
+  };
+  appointments: Array<{
+    appointmentId: string;
+    customerName: string;
+    customerPhone?: string;
+    startTime: number;
+    serviceName: string;
+    servicePrice: number;
+    notes?: string;
+  }>;
+}
 
 const BarberExtractPage: React.FC = () => {
   const { barberId } = useParams<{ barberId: string }>();
@@ -46,9 +68,6 @@ const BarberExtractPage: React.FC = () => {
   const barber = useAppSelector(selectSelectedBarber);
   const loading = useAppSelector(selectBarbersLoading);
   const error = useAppSelector(selectBarbersError);
-  const appointments = useAppSelector(selectAllAppointments);
-  const appointmentsLoading = useAppSelector(selectAppointmentsLoading);
-  const services = useAppSelector(selectAllServices);
 
   const [startDate, setStartDate] = useState(() => {
     return new Date().toISOString().split('T')[0]; // Today
@@ -58,42 +77,50 @@ const BarberExtractPage: React.FC = () => {
     return new Date().toISOString().split('T')[0]; // Today
   });
 
+  const [extractData, setExtractData] = useState<ExtractData | null>(null);
+  const [extractLoading, setExtractLoading] = useState(false);
+  const [extractError, setExtractError] = useState<string | null>(null);
+
   useEffect(() => {
     if (barberId) {
       dispatch(fetchBarberById(barberId));
-      dispatch(fetchServices()); // Fetch services for price calculation
     }
     
     return () => {
       dispatch(clearSelectedBarber());
-      dispatch(clearAppointments());
     };
   }, [barberId, dispatch]);
 
   useEffect(() => {
     if (barberId && startDate && endDate) {
+      loadExtract();
+    }
+  }, [barberId, startDate, endDate]);
+
+  const loadExtract = async () => {
+    if (!barberId) return;
+
+    try {
+      setExtractLoading(true);
+      setExtractError(null);
+
       // Parse dates in Brazil timezone (UTC-3)
       const startDateObj = new Date(startDate + 'T00:00:00-03:00');
       const endDateObj = new Date(endDate + 'T23:59:59-03:00');
       
       const start = startDateObj.getTime();
       const end = endDateObj.getTime();
-      
-      // Fetch only completed appointments
-      dispatch(fetchAppointmentsByBarber({ 
-        barberId, 
-        params: { 
-          startDate: start, 
-          endDate: end,
-          status: 'completed' // Only fetch completed appointments
-        } 
-      }));
-    }
-  }, [barberId, startDate, endDate, dispatch]);
 
-  // All appointments are already completed from the API
-  const completedAppointments = [...appointments]
-    .sort((a, b) => b.startTime - a.startTime); // Most recent first
+      // Fetch extract from backend
+      const data = await barberApi.getExtract(barberId, start, end);
+      setExtractData(data);
+    } catch (err) {
+      console.error('Error loading extract:', err);
+      setExtractError('Erro ao carregar extrato. Por favor, tente novamente.');
+    } finally {
+      setExtractLoading(false);
+    }
+  };
 
   const formatDateTime = (timestamp: number) => {
     const date = new Date(timestamp);
@@ -103,69 +130,27 @@ const BarberExtractPage: React.FC = () => {
     };
   };
 
-  const getServicePrice = (serviceId: string): number => {
-    const service = services.find(s => s.serviceId === serviceId);
-    return service ? service.price : 0;
-  };
+  const handleDownloadPDF = async () => {
+    if (!barberId || !extractData) return;
 
-  const getServiceName = (serviceId: string): string => {
-    const service = services.find(s => s.serviceId === serviceId);
-    return service ? service.title : serviceId;
-  };
+    try {
+      // Parse dates in Brazil timezone (UTC-3)
+      const startDateObj = new Date(startDate + 'T00:00:00-03:00');
+      const endDateObj = new Date(endDate + 'T23:59:59-03:00');
+      
+      const start = startDateObj.getTime();
+      const end = endDateObj.getTime();
 
-  const calculateTotal = () => {
-    return completedAppointments.reduce((total, apt) => {
-      return total + getServicePrice(apt.service);
-    }, 0);
-  };
-
-  const exportToPDF = () => {
-    const doc = new jsPDF();
-    
-    // Title
-    doc.setFontSize(18);
-    doc.text('Extrato de Atendimentos', 14, 20);
-    
-    // Barber info
-    doc.setFontSize(12);
-    doc.text(`Barbeiro: ${barber?.name}`, 14, 30);
-    doc.text(`Período: ${new Date(startDate).toLocaleDateString('pt-BR')} - ${new Date(endDate).toLocaleDateString('pt-BR')}`, 14, 37);
-    
-    // Table data
-    const tableData = completedAppointments.map(apt => {
-      const { date, time } = formatDateTime(apt.startTime);
-      const price = getServicePrice(apt.service);
-      const serviceName = getServiceName(apt.service);
-      return [
-        date,
-        time,
-        apt.customerName,
-        serviceName,
-        `R$ ${price.toFixed(2)}`,
-        apt.notes || '-',
-      ];
-    });
-    
-    // Generate table
-    autoTable(doc, {
-      startY: 45,
-      head: [['Data', 'Hora', 'Cliente', 'Serviço', 'Valor', 'Observações']],
-      body: tableData,
-      theme: 'grid',
-      styles: { fontSize: 9 },
-      headStyles: { fillColor: [25, 118, 210] },
-    });
-    
-    // Total
-    const finalY = (doc as any).lastAutoTable.finalY || 45;
-    doc.setFontSize(14);
-    doc.setFont('helvetica', 'bold');
-    doc.text(`Total: R$ ${calculateTotal().toFixed(2)}`, 14, finalY + 10);
-    doc.text(`Quantidade de atendimentos: ${completedAppointments.length}`, 14, finalY + 17);
-    
-    // Save
-    const fileName = `extrato_${barber?.name}_${startDate}_${endDate}.pdf`;
-    doc.save(fileName);
+      // Call backend API with format=pdf
+      const apiUrl = process.env.REACT_APP_API_URL;
+      const url = `${apiUrl}/barbers/${barberId}/extract?startDate=${start}&endDate=${end}&format=pdf`;
+      
+      // Open in new tab to download
+      window.open(url, '_blank');
+    } catch (err) {
+      console.error('Error downloading PDF:', err);
+      alert('Erro ao baixar PDF. Por favor, tente novamente.');
+    }
   };
 
   if (loading && !barber) {
@@ -206,12 +191,12 @@ const BarberExtractPage: React.FC = () => {
           </Box>
           <Button
             variant="contained"
-            color="error"
-            startIcon={<PdfIcon />}
-            onClick={exportToPDF}
-            disabled={completedAppointments.length === 0}
+            color="primary"
+            startIcon={<DownloadIcon />}
+            onClick={handleDownloadPDF}
+            disabled={!extractData || extractData.summary.totalAppointments === 0}
           >
-            Exportar PDF
+            Baixar PDF
           </Button>
         </Box>
 
@@ -234,11 +219,21 @@ const BarberExtractPage: React.FC = () => {
           />
         </Stack>
 
-        {appointmentsLoading ? (
+        {extractError && (
+          <Alert severity="error" sx={{ mb: 2 }}>
+            {extractError}
+          </Alert>
+        )}
+
+        {extractLoading ? (
           <Box display="flex" justifyContent="center" alignItems="center" py={4}>
             <CircularProgress />
           </Box>
-        ) : completedAppointments.length === 0 ? (
+        ) : !extractData ? (
+          <Alert severity="info">
+            Selecione um período para visualizar o extrato.
+          </Alert>
+        ) : extractData.summary.totalAppointments === 0 ? (
           <Alert severity="info">
             Nenhum atendimento concluído encontrado no período selecionado.
           </Alert>
@@ -246,12 +241,31 @@ const BarberExtractPage: React.FC = () => {
           <>
             <Box sx={{ mb: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <Typography variant="body2" color="text.secondary">
-                Total de atendimentos: {completedAppointments.length}
+                Total de atendimentos: {extractData.summary.totalAppointments}
               </Typography>
               <Typography variant="h6" color="primary">
-                Total: R$ {calculateTotal().toFixed(2)}
+                Total: R$ {extractData.summary.totalRevenue.toFixed(2)}
               </Typography>
             </Box>
+
+            {extractData.summary.byService.length > 0 && (
+              <Box sx={{ mb: 3 }}>
+                <Typography variant="subtitle1" gutterBottom>
+                  Por Serviço:
+                </Typography>
+                <Stack direction="row" spacing={1} flexWrap="wrap" gap={1}>
+                  {extractData.summary.byService.map((service) => (
+                    <Chip
+                      key={service.serviceId}
+                      label={`${service.serviceName}: ${service.count}x - R$ ${service.revenue.toFixed(2)}`}
+                      color="primary"
+                      variant="outlined"
+                    />
+                  ))}
+                </Stack>
+              </Box>
+            )}
+
             <TableContainer>
               <Table>
                 <TableHead>
@@ -266,10 +280,8 @@ const BarberExtractPage: React.FC = () => {
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {completedAppointments.map((appointment) => {
+                  {extractData.appointments.map((appointment) => {
                     const { date, time } = formatDateTime(appointment.startTime);
-                    const price = getServicePrice(appointment.service);
-                    const serviceName = getServiceName(appointment.service);
                     return (
                       <TableRow key={appointment.appointmentId} hover>
                         <TableCell>{date}</TableCell>
@@ -280,11 +292,11 @@ const BarberExtractPage: React.FC = () => {
                           </Typography>
                         </TableCell>
                         <TableCell>
-                          <Chip label={serviceName} size="small" color="success" />
+                          <Chip label={appointment.serviceName} size="small" color="success" />
                         </TableCell>
                         <TableCell>
                           <Typography variant="body2" fontWeight="medium">
-                            R$ {price.toFixed(2)}
+                            R$ {appointment.servicePrice.toFixed(2)}
                           </Typography>
                         </TableCell>
                         <TableCell>
