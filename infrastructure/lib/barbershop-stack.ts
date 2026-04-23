@@ -132,12 +132,20 @@ export class BarbershopStack extends cdk.Stack {
     const createBarberFn   = makeFn('CreateBarberFunction',  'dist/barbers/create.handler', barberEnv);
     const updateBarberFn   = makeFn('UpdateBarberFunction',  'dist/barbers/update.handler', barberEnv);
     const deleteBarberFn   = makeFn('DeleteBarberFunction',  'dist/barbers/delete.handler', barberEnv);
+    
+    // Available slots function needs access to both barbers and appointments tables
+    const availableSlotsFn = makeFn('AvailableSlotsFunction', 'dist/barbers/availableSlots.handler', {
+      BARBERS_TABLE: barbersTable.tableName,
+      APPOINTMENTS_TABLE: appointmentsTable.tableName,
+    });
 
     barbersTable.grantReadData(listBarbersFn);
     barbersTable.grantReadData(getBarberFn);
     barbersTable.grantReadWriteData(createBarberFn);
     barbersTable.grantReadWriteData(updateBarberFn);
     barbersTable.grantReadWriteData(deleteBarberFn);
+    barbersTable.grantReadData(availableSlotsFn);
+    appointmentsTable.grantReadData(availableSlotsFn);
 
     // ========================================
     // Service functions
@@ -238,6 +246,10 @@ export class BarbershopStack extends cdk.Stack {
       authorizer,
       authorizationType: apigateway.AuthorizationType.COGNITO,
     });
+
+    // /barbers/{barberId}/available-slots
+    const availableSlots = barber.addResource('available-slots');
+    availableSlots.addMethod('GET', int(availableSlotsFn)); // Public - check availability
 
     // /barbers/{barberId}/appointments
     const appointments = barber.addResource('appointments');

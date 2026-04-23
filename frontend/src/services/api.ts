@@ -128,6 +128,14 @@ export const barberApi = {
   delete: async (barberId: string): Promise<void> => {
     await api.delete(`/barbers/${barberId}`);
   },
+
+  // Get available time slots for a barber on a specific date
+  getAvailableSlots: async (barberId: string, date: string, duration: number): Promise<string[]> => {
+    const response = await api.get(`/barbers/${barberId}/available-slots`, {
+      params: { date, duration },
+    });
+    return response.data.slots;
+  },
 };
 
 export default api;

@@ -183,10 +183,16 @@ const deleteAppointment = (req, res) => {
   res.status(204).send();
 };
 
+// Export function to get in-memory appointments (for use by other controllers)
+const getAppointmentsInMemory = () => {
+  return appointments;
+};
+
 module.exports = {
   getAppointmentsByBarber,
   getAppointmentById,
   createAppointment,
   updateAppointment,
   deleteAppointment,
+  getAppointmentsInMemory,
 };

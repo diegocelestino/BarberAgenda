@@ -25,11 +25,28 @@ The server will run on `http://localhost:3001`
 
 ## Endpoints
 
+### Barbers
 - `GET /barbers` - Get all barbers
 - `GET /barbers/:barberId` - Get single barber
+- `GET /barbers/:barberId/available-slots?date=YYYY-MM-DD&duration=30` - Get available time slots
 - `POST /barbers` - Create new barber
 - `PUT /barbers/:barberId` - Update barber
 - `DELETE /barbers/:barberId` - Delete barber
+
+### Appointments
+- `GET /barbers/:barberId/appointments` - Get appointments for a barber
+- `POST /barbers/:barberId/appointments` - Create appointment
+- `PUT /barbers/:barberId/appointments/:appointmentId` - Update appointment
+- `DELETE /barbers/:barberId/appointments/:appointmentId` - Delete appointment
+
+### Services
+- `GET /services` - Get all services
+- `POST /services` - Create service
+- `PUT /services/:serviceId` - Update service
+- `DELETE /services/:serviceId` - Delete service
+
+### Auth
+- `POST /auth/login` - Login (mock authentication)
 
 ## Usage with Frontend
 
