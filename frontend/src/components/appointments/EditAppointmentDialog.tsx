@@ -15,6 +15,14 @@ import { useAppDispatch, useAppSelector } from '../../store/hooks';
 import { updateAppointment } from '../../store/appointments';
 import { Appointment } from '../../services/appointmentsApi';
 import { barberApi } from '../../services/api';
+import { 
+  formatDateTimeLocal, 
+  parseDateTimeLocal, 
+  addMinutes, 
+  isPast, 
+  isFuture, 
+  getCurrentDateTimeLocal 
+} from '../../utils/dateTime';
 
 interface EditAppointmentDialogProps {
   open: boolean;
@@ -66,29 +74,18 @@ const EditAppointmentDialog: React.FC<EditAppointmentDialogProps> = ({
 
   useEffect(() => {
     if (appointment) {
-      // Service is already stored as ID, use it directly
-      
-      // Convert timestamp to Brazil timezone (UTC-3) for display
-      const appointmentDate = new Date(appointment.startTime);
-      
-      // Format in Brazil timezone for datetime-local input
-      const brazilDate = new Date(appointmentDate.toLocaleString('en-US', { timeZone: 'America/Sao_Paulo' }));
-      const year = brazilDate.getFullYear();
-      const month = String(brazilDate.getMonth() + 1).padStart(2, '0');
-      const day = String(brazilDate.getDate()).padStart(2, '0');
-      const hours = String(brazilDate.getHours()).padStart(2, '0');
-      const minutes = String(brazilDate.getMinutes()).padStart(2, '0');
-      const localDateTimeString = `${year}-${month}-${day}T${hours}:${minutes}`;
+      // Format timestamp for datetime-local input using centralized utility
+      const localDateTimeString = formatDateTimeLocal(appointment.startTime);
       
       setFormData({
         customerName: appointment.customerName,
         customerPhone: appointment.customerPhone || '',
-        serviceId: appointment.service, // Service is already an ID
+        serviceId: appointment.service,
         startTime: localDateTimeString,
         status: appointment.status,
         notes: appointment.notes || '',
       });
-      setError(''); // Clear error when opening dialog
+      setError('');
     }
   }, [appointment]);
 
@@ -110,23 +107,18 @@ const EditAppointmentDialog: React.FC<EditAppointmentDialogProps> = ({
       return;
     }
 
-    // Parse datetime as Brazil timezone (UTC-3)
-    // formData.startTime is in format "YYYY-MM-DDTHH:mm"
-    const dateTimeString = formData.startTime + ':00-03:00'; // Add seconds and Brazil timezone
-    const appointmentDateTime = new Date(dateTimeString);
-    
-    const startTime = appointmentDateTime.getTime();
-    const endTime = startTime + serviceDuration * 60 * 1000;
-    const now = Date.now();
+    // Parse datetime using centralized utility
+    const startTime = parseDateTimeLocal(formData.startTime);
+    const endTime = addMinutes(startTime, serviceDuration);
 
     // Validation: Cannot schedule in the past
-    if (startTime < now && formData.status === 'scheduled') {
+    if (isPast(startTime) && formData.status === 'scheduled') {
       setError('Não é possível agendar um compromisso no passado');
       return;
     }
 
     // Validation: Cannot complete an appointment before it happens
-    if (formData.status === 'completed' && startTime > now) {
+    if (formData.status === 'completed' && isFuture(startTime)) {
       setError('Não é possível marcar um agendamento como concluído antes que ele aconteça');
       return;
     }
@@ -185,27 +177,15 @@ const EditAppointmentDialog: React.FC<EditAppointmentDialogProps> = ({
 
   const isAppointmentInFuture = () => {
     if (!appointment) return false;
-    return appointment.startTime > Date.now();
+    return isFuture(appointment.startTime);
   };
 
   const isAppointmentInPast = () => {
     if (!appointment) return false;
-    return appointment.startTime < Date.now();
+    return isPast(appointment.startTime);
   };
 
   const selectedService = availableServices.find(s => s.serviceId === formData.serviceId);
-
-  // Get current time in Brazil timezone for min attribute
-  const getBrazilNowString = () => {
-    const now = new Date();
-    const brazilNow = new Date(now.toLocaleString('en-US', { timeZone: 'America/Sao_Paulo' }));
-    const year = brazilNow.getFullYear();
-    const month = String(brazilNow.getMonth() + 1).padStart(2, '0');
-    const day = String(brazilNow.getDate()).padStart(2, '0');
-    const hours = String(brazilNow.getHours()).padStart(2, '0');
-    const minutes = String(brazilNow.getMinutes()).padStart(2, '0');
-    return `${year}-${month}-${day}T${hours}:${minutes}`;
-  };
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
@@ -264,7 +244,7 @@ const EditAppointmentDialog: React.FC<EditAppointmentDialogProps> = ({
               fullWidth
               InputLabelProps={{ shrink: true }}
               inputProps={{
-                min: formData.status === 'scheduled' ? getBrazilNowString() : undefined,
+                min: formData.status === 'scheduled' ? getCurrentDateTimeLocal() : undefined,
               }}
             />
 

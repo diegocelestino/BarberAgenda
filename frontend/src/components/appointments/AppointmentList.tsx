@@ -21,6 +21,7 @@ import { updateAppointment } from '../../store/appointments';
 import { selectAllServices } from '../../store/services';
 import DeleteAppointmentDialog from './DeleteAppointmentDialog';
 import EditAppointmentDialog from './EditAppointmentDialog';
+import { formatShortDateTime, formatDuration, isPast } from '../../utils/dateTime';
 
 interface AppointmentListProps {
   appointments: Appointment[];
@@ -75,7 +76,7 @@ const AppointmentList: React.FC<AppointmentListProps> = ({ appointments, barberI
 
   const handleMarkComplete = async (appointmentId: string, startTime: number) => {
     // Validate that appointment has started
-    if (startTime > Date.now()) {
+    if (!isPast(startTime)) {
       alert('Não é possível marcar um agendamento como concluído antes que ele aconteça');
       return;
     }
@@ -85,20 +86,6 @@ const AppointmentList: React.FC<AppointmentListProps> = ({ appointments, barberI
       appointmentId,
       data: { status: 'completed' },
     }));
-  };
-
-  const formatTime = (timestamp: number) => {
-    return new Date(timestamp).toLocaleString('pt-BR', {
-      month: 'short',
-      day: 'numeric',
-      hour: 'numeric',
-      minute: '2-digit',
-    });
-  };
-
-  const formatDuration = (start: number, end: number) => {
-    const minutes = Math.round((end - start) / (1000 * 60));
-    return `${minutes} min`;
   };
 
   const getStatusColor = (status: string) => {
@@ -142,7 +129,7 @@ const AppointmentList: React.FC<AppointmentListProps> = ({ appointments, barberI
                 secondary={
                   <Box>
                     <Typography variant="body2" color="text.secondary">
-                      {formatTime(appointment.startTime)} • {formatDuration(appointment.startTime, appointment.endTime)}
+                      {formatShortDateTime(appointment.startTime)} • {formatDuration(appointment.startTime, appointment.endTime)}
                     </Typography>
                     <Typography variant="body2" color="text.secondary">
                       {getServiceName(appointment.service)}
@@ -162,7 +149,7 @@ const AppointmentList: React.FC<AppointmentListProps> = ({ appointments, barberI
               />
               <ListItemSecondaryAction>
                 <Box sx={{ display: 'flex', gap: 0.5 }}>
-                  {appointment.status === 'scheduled' && appointment.startTime <= Date.now() && (
+                  {appointment.status === 'scheduled' && isPast(appointment.startTime) && (
                     <IconButton
                       edge="end"
                       size="small"

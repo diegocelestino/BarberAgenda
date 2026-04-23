@@ -39,6 +39,7 @@ import {
 } from '../../store/appointments';
 import AppointmentNavigationCard from '../appointments/AppointmentNavigationCard';
 import RegisterWalkInDialog from '../appointments/RegisterWalkInDialog';
+import { now, addDays } from '../../utils/dateTime';
 
 const BarberDetails: React.FC = () => {
   const { barberId } = useParams<{ barberId: string }>();
@@ -59,8 +60,8 @@ const BarberDetails: React.FC = () => {
       dispatch(fetchBarberById(barberId));
       
       // Fetch only scheduled appointments for the next 30 days, sorted by time ascending
-      const startDate = Date.now();
-      const endDate = Date.now() + 30 * 24 * 60 * 60 * 1000;
+      const startDate = now();
+      const endDate = addDays(now(), 30);
       dispatch(fetchAppointmentsByBarber({ 
         barberId, 
         params: { 
@@ -88,8 +89,8 @@ const BarberDetails: React.FC = () => {
     
     // Refresh appointments
     if (barberId) {
-      const startDate = Date.now();
-      const endDate = Date.now() + 30 * 24 * 60 * 60 * 1000;
+      const startDate = now();
+      const endDate = addDays(now(), 30);
       dispatch(fetchAppointmentsByBarber({ 
         barberId, 
         params: { 
@@ -106,8 +107,8 @@ const BarberDetails: React.FC = () => {
   const handleAppointmentUpdate = () => {
     // Refresh appointments after completing one
     if (barberId) {
-      const startDate = Date.now();
-      const endDate = Date.now() + 30 * 24 * 60 * 60 * 1000;
+      const startDate = now();
+      const endDate = addDays(now(), 30);
       dispatch(fetchAppointmentsByBarber({ 
         barberId, 
         params: { 

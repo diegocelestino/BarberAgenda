@@ -30,6 +30,7 @@ import { updateAppointment } from '../../store/appointments';
 import { selectAllServices } from '../../store/services';
 import { Appointment } from '../../services/appointmentsApi';
 import EditAppointmentDialog from './EditAppointmentDialog';
+import { formatLongDate, formatTime } from '../../utils/dateTime';
 
 interface AppointmentNavigationCardProps {
   appointments: Appointment[];
@@ -129,14 +130,6 @@ const AppointmentNavigationCard: React.FC<AppointmentNavigationCardProps> = ({
     }
   };
 
-  const formatDateTime = (timestamp: number) => {
-    const date = new Date(timestamp);
-    return {
-      date: date.toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'long' }),
-      time: date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
-    };
-  };
-
   if (loading) {
     return (
       <Card elevation={2}>
@@ -205,7 +198,7 @@ const AppointmentNavigationCard: React.FC<AppointmentNavigationCardProps> = ({
             <Box display="flex" alignItems="center" gap={1}>
               <AccessTimeIcon fontSize="small" color="action" />
               <Typography variant="body2">
-                {formatDateTime(currentAppointment.startTime).date} às {formatDateTime(currentAppointment.startTime).time}
+                {formatLongDate(currentAppointment.startTime)} às {formatTime(currentAppointment.startTime)}
               </Typography>
             </Box>
             <Box display="flex" alignItems="center" gap={1}>

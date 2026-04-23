@@ -22,26 +22,9 @@ import {
 } from '../../store/appointments';
 import AppointmentList from './AppointmentList';
 import CreateAppointmentDialog from './CreateAppointmentDialog';
+import { now, getWeekBounds, addDays } from '../../utils/dateTime';
 
 type FilterType = 'thisWeek' | 'next';
-
-const getWeekBounds = (date: Date) => {
-  // Week starts on Sunday (0) and ends on Saturday (6)
-  const current = new Date(date);
-  const dayOfWeek = current.getDay();
-  
-  // Start of week (Sunday at 00:00:00)
-  const startOfWeek = new Date(current);
-  startOfWeek.setDate(current.getDate() - dayOfWeek);
-  startOfWeek.setHours(0, 0, 0, 0);
-  
-  // End of week (Saturday at 23:59:59)
-  const endOfWeek = new Date(startOfWeek);
-  endOfWeek.setDate(startOfWeek.getDate() + 6);
-  endOfWeek.setHours(23, 59, 59, 999);
-  
-  return { startOfWeek, endOfWeek };
-};
 
 const AppointmentCalendar: React.FC = () => {
   const { barberId } = useParams<{ barberId: string }>();
@@ -54,19 +37,19 @@ const AppointmentCalendar: React.FC = () => {
 
   useEffect(() => {
     if (barberId) {
-      const now = new Date();
-      const { startOfWeek, endOfWeek } = getWeekBounds(now);
+      const nowTimestamp = now();
+      const { startOfWeek, endOfWeek } = getWeekBounds(nowTimestamp);
       
       let startDate: number;
       let endDate: number;
       
       if (filter === 'thisWeek') {
-        startDate = startOfWeek.getTime();
-        endDate = endOfWeek.getTime();
+        startDate = startOfWeek;
+        endDate = endOfWeek;
       } else {
         // 'next' - all appointments after this week
-        startDate = endOfWeek.getTime() + 1;
-        endDate = Date.now() + 365 * 24 * 60 * 60 * 1000; // Next year
+        startDate = endOfWeek + 1;
+        endDate = addDays(nowTimestamp, 365); // Next year
       }
       
       // Fetch all appointments (no status filter) sorted by time

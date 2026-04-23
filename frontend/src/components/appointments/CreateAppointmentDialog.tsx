@@ -14,6 +14,7 @@ import {
 import { useAppDispatch, useAppSelector } from '../../store/hooks';
 import { createAppointment, selectAppointmentsLoading, selectAppointmentsError } from '../../store/appointments';
 import { barberApi } from '../../services/api';
+import { parseDateTime, addMinutes, isPast, getTodayDateString } from '../../utils/dateTime';
 
 interface CreateAppointmentDialogProps {
   open: boolean;
@@ -81,17 +82,12 @@ const CreateAppointmentDialog: React.FC<CreateAppointmentDialogProps> = ({
       return;
     }
 
-    // Parse date and time in Brazil timezone (UTC-3)
-    // Format: YYYY-MM-DD and HH:mm
-    const dateTimeString = `${date}T${startTime}:00-03:00`;
-    const appointmentDateTime = new Date(dateTimeString);
-    
-    const startDateTime = appointmentDateTime.getTime();
-    const endDateTime = startDateTime + serviceDuration * 60 * 1000;
-    const now = Date.now();
+    // Parse date and time using centralized utility
+    const startDateTime = parseDateTime(date, startTime);
+    const endDateTime = addMinutes(startDateTime, serviceDuration);
 
     // Validation: Cannot schedule in the past
-    if (startDateTime < now) {
+    if (isPast(startDateTime)) {
       alert('Cannot schedule an appointment in the past');
       return;
     }
@@ -200,7 +196,7 @@ const CreateAppointmentDialog: React.FC<CreateAppointmentDialogProps> = ({
             fullWidth
             InputLabelProps={{ shrink: true }}
             inputProps={{
-              min: new Date().toISOString().split('T')[0],
+              min: getTodayDateString(),
             }}
           />
 

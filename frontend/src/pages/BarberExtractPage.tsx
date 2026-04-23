@@ -28,6 +28,7 @@ import {
   selectBarbersError,
   clearSelectedBarber,
 } from '../store/barbers';
+import { parseDate, endOfDay, formatFullDate, formatTime, getTodayDateString } from '../utils/dateTime';
 import { barberApi } from '../services/api';
 
 interface ExtractData {
@@ -70,11 +71,11 @@ const BarberExtractPage: React.FC = () => {
   const error = useAppSelector(selectBarbersError);
 
   const [startDate, setStartDate] = useState(() => {
-    return new Date().toISOString().split('T')[0]; // Today
+    return getTodayDateString();
   });
 
   const [endDate, setEndDate] = useState(() => {
-    return new Date().toISOString().split('T')[0]; // Today
+    return getTodayDateString();
   });
 
   const [extractData, setExtractData] = useState<ExtractData | null>(null);
@@ -98,12 +99,9 @@ const BarberExtractPage: React.FC = () => {
           setExtractLoading(true);
           setExtractError(null);
 
-          // Parse dates in Brazil timezone (UTC-3)
-          const startDateObj = new Date(startDate + 'T00:00:00-03:00');
-          const endDateObj = new Date(endDate + 'T23:59:59-03:00');
-          
-          const start = startDateObj.getTime();
-          const end = endDateObj.getTime();
+          // Parse dates using centralized utility
+          const start = parseDate(startDate);
+          const end = endOfDay(parseDate(endDate));
 
           // Fetch extract from backend
           const data = await barberApi.getExtract(barberId, start, end);
@@ -121,10 +119,9 @@ const BarberExtractPage: React.FC = () => {
   }, [barberId, startDate, endDate]);
 
   const formatDateTime = (timestamp: number) => {
-    const date = new Date(timestamp);
     return {
-      date: date.toLocaleDateString('pt-BR'),
-      time: date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
+      date: formatFullDate(timestamp),
+      time: formatTime(timestamp),
     };
   };
 
@@ -132,12 +129,9 @@ const BarberExtractPage: React.FC = () => {
     if (!barberId || !extractData) return;
 
     try {
-      // Parse dates in Brazil timezone (UTC-3)
-      const startDateObj = new Date(startDate + 'T00:00:00-03:00');
-      const endDateObj = new Date(endDate + 'T23:59:59-03:00');
-      
-      const start = startDateObj.getTime();
-      const end = endDateObj.getTime();
+      // Parse dates using centralized utility
+      const start = parseDate(startDate);
+      const end = endOfDay(parseDate(endDate));
 
       // Call backend API with format=pdf
       const apiUrl = process.env.REACT_APP_API_URL;
