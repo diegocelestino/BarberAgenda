@@ -22,6 +22,7 @@ interface AppointmentData {
   date: Date | null;
   time: string;
   name: string;
+  selectedService?: any; // Store the full service object
 }
 
 const PublicHomePage: React.FC = () => {
@@ -83,8 +84,8 @@ const PublicHomePage: React.FC = () => {
     handleNext();
   };
 
-  const handleServiceSelect = (serviceId: string) => {
-    setAppointmentData((prev) => ({ ...prev, serviceId }));
+  const handleServiceSelect = (serviceId: string, service: any) => {
+    setAppointmentData((prev) => ({ ...prev, serviceId, selectedService: service }));
     handleNext();
   };
 
@@ -348,6 +349,7 @@ const PublicHomePage: React.FC = () => {
               date={appointmentData.date}
               time={appointmentData.time}
               name={appointmentData.name}
+              service={appointmentData.selectedService}
             />
           )}
 

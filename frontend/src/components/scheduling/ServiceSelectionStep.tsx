@@ -4,7 +4,7 @@ import { MiscellaneousServices as ServicesIcon } from '@mui/icons-material';
 import { barberApi } from '../../services/api';
 
 interface ServiceSelectionStepProps {
-  onNext: (serviceId: string) => void;
+  onNext: (serviceId: string, service: any) => void;
   onBack: () => void;
   selectedServiceId?: string;
   barberId: string;
@@ -74,7 +74,7 @@ const ServiceSelectionStep: React.FC<ServiceSelectionStepProps> = ({ onNext, onB
                 borderColor: 'primary.main',
               }}
             >
-              <CardActionArea onClick={() => onNext(service.serviceId)}>
+              <CardActionArea onClick={() => onNext(service.serviceId, service)}>
                 <CardContent>
                   <Typography variant="h6" color="text.primary" gutterBottom>
                     {service.name}

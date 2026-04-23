@@ -15,6 +15,7 @@ interface ConfirmationStepProps {
   date: Date;
   time: string;
   name: string;
+  service?: any; // Add service as optional prop
 }
 
 const ConfirmationStep: React.FC<ConfirmationStepProps> = ({
@@ -26,6 +27,7 @@ const ConfirmationStep: React.FC<ConfirmationStepProps> = ({
   date,
   time,
   name,
+  service: serviceProp, // Rename to avoid conflict
 }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -35,9 +37,12 @@ const ConfirmationStep: React.FC<ConfirmationStepProps> = ({
   const barber = useAppSelector((state) => 
     state.barbers.barbers.find(b => b.barberId === barberId)
   );
-  const service = useAppSelector((state) => 
+  
+  // Use prop service if available, otherwise fallback to Redux
+  const serviceFromRedux = useAppSelector((state) => 
     state.services.services.find(s => s.serviceId === serviceId)
   );
+  const service = serviceProp || serviceFromRedux;
 
   const recaptchaSiteKey = process.env.REACT_APP_RECAPTCHA_SITE_KEY || '';
   const isDevelopment = process.env.REACT_APP_ENV === 'local' || process.env.NODE_ENV === 'development';
@@ -135,10 +140,10 @@ const ConfirmationStep: React.FC<ConfirmationStepProps> = ({
                 Serviço
               </Typography>
               <Typography variant="body1" color="text.primary">
-                {service?.name || 'Desconhecido'}
+                {service?.title || service?.name || 'Desconhecido'}
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                R$ {service?.price} • {service?.duration} min
+                R$ {service?.price} • {service?.duration || service?.durationMinutes} min
               </Typography>
             </Box>
           </Box>
