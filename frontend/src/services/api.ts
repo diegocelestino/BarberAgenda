@@ -1,4 +1,14 @@
 import axios from 'axios';
+import { performanceMonitor } from '../utils/performance';
+
+// Extend axios config to include metadata for performance tracking
+declare module 'axios' {
+  export interface AxiosRequestConfig {
+    metadata?: {
+      startTime: number;
+    };
+  }
+}
 
 const API_URL = process.env.REACT_APP_API_URL;
 const ENV = process.env.REACT_APP_ENV || process.env.NODE_ENV;
@@ -25,6 +35,9 @@ api.interceptors.request.use(
   (config) => {
     console.log(`📤 ${config.method?.toUpperCase()} ${config.url}`);
     
+    // Store request start time for performance tracking
+    config.metadata = { startTime: performance.now() };
+    
     // Add JWT token to requests if available
     const tokens = localStorage.getItem('authTokens');
     if (tokens) {
@@ -44,16 +57,33 @@ api.interceptors.request.use(
   }
 );
 
-// Response interceptor for debugging
+// Response interceptor for debugging and performance tracking
 api.interceptors.response.use(
   (response) => {
     console.log(`✅ ${response.config.method?.toUpperCase()} ${response.config.url} - ${response.status}`);
+    
+    // Track API call performance
+    const startTime = response.config.metadata?.startTime;
+    if (startTime) {
+      const duration = performance.now() - startTime;
+      const endpoint = response.config.url || 'unknown';
+      performanceMonitor.measureApiCall(endpoint, duration, response.status);
+    }
+    
     return response;
   },
   (error) => {
     if (error.response) {
       console.error(`❌ ${error.config?.method?.toUpperCase()} ${error.config?.url} - ${error.response.status}`);
       console.error('Response data:', error.response.data);
+      
+      // Track failed API calls
+      const startTime = error.config?.metadata?.startTime;
+      if (startTime) {
+        const duration = performance.now() - startTime;
+        const endpoint = error.config?.url || 'unknown';
+        performanceMonitor.measureApiCall(endpoint, duration, error.response.status);
+      }
     } else if (error.request) {
       console.error('❌ No response received:', error.message);
     } else {

@@ -5,6 +5,7 @@ import './index.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
 import { store } from './store/store';
+import { performanceMonitor } from './utils/performance';
 
 const root = ReactDOM.createRoot(
   document.getElementById('root') as HTMLElement
@@ -17,7 +18,21 @@ root.render(
   </React.StrictMode>
 );
 
-// If you want to start measuring performance in your app, pass a function
-// to log results (for example: reportWebVitals(console.log))
-// or send to an analytics endpoint. Learn more: https://bit.ly/CRA-vitals
-reportWebVitals();
+// Initialize performance monitoring
+performanceMonitor.measurePageLoad();
+
+// Report Web Vitals
+reportWebVitals((metric) => {
+  // Log Web Vitals
+  console.log(`📊 Web Vital: ${metric.name} = ${metric.value.toFixed(2)}`);
+  
+  // In production, send to analytics service
+  // Example: analytics.track('web_vital', metric);
+});
+
+// Log performance summary after 10 seconds (development only)
+if (process.env.NODE_ENV === 'development') {
+  setTimeout(() => {
+    performanceMonitor.logSummary();
+  }, 10000);
+}
