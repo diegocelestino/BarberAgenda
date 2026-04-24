@@ -5,6 +5,7 @@ import {
   UpdateAppointmentData,
   GetAppointmentsParams,
 } from '../../services/appointmentsApi';
+import { getErrorMessage } from '../../utils/errorHandler';
 
 // Fetch appointments by barber
 export const fetchAppointmentsByBarber = createAsyncThunk(
@@ -13,7 +14,7 @@ export const fetchAppointmentsByBarber = createAsyncThunk(
     try {
       return await appointmentsApi.getByBarber(barberId, params);
     } catch (error: any) {
-      return rejectWithValue(error.response?.data?.error || 'Failed to fetch appointments');
+      return rejectWithValue(getErrorMessage(error));
     }
   }
 );
@@ -25,7 +26,7 @@ export const fetchAppointmentById = createAsyncThunk(
     try {
       return await appointmentsApi.getById(barberId, appointmentId);
     } catch (error: any) {
-      return rejectWithValue(error.response?.data?.error || 'Failed to fetch appointment');
+      return rejectWithValue(getErrorMessage(error));
     }
   }
 );
@@ -37,7 +38,7 @@ export const createAppointment = createAsyncThunk(
     try {
       return await appointmentsApi.create(barberId, data);
     } catch (error: any) {
-      return rejectWithValue(error.response?.data?.error || 'Failed to create appointment');
+      return rejectWithValue(getErrorMessage(error));
     }
   }
 );
@@ -52,7 +53,7 @@ export const updateAppointment = createAsyncThunk(
     try {
       return await appointmentsApi.update(barberId, appointmentId, data);
     } catch (error: any) {
-      return rejectWithValue(error.response?.data?.error || 'Failed to update appointment');
+      return rejectWithValue(getErrorMessage(error));
     }
   }
 );
@@ -65,7 +66,7 @@ export const deleteAppointment = createAsyncThunk(
       await appointmentsApi.delete(barberId, appointmentId);
       return appointmentId;
     } catch (error: any) {
-      return rejectWithValue(error.response?.data?.error || 'Failed to delete appointment');
+      return rejectWithValue(getErrorMessage(error));
     }
   }
 );

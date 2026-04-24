@@ -1,5 +1,6 @@
 import { createAsyncThunk } from '@reduxjs/toolkit';
 import { barberApi, CreateBarberData, UpdateBarberData } from '../../services/api';
+import { getErrorMessage } from '../../utils/errorHandler';
 
 // Fetch all barbers
 export const fetchBarbers = createAsyncThunk(
@@ -8,7 +9,7 @@ export const fetchBarbers = createAsyncThunk(
     try {
       return await barberApi.getAll();
     } catch (error: any) {
-      return rejectWithValue(error.response?.data?.message || 'Failed to fetch barbers');
+      return rejectWithValue(getErrorMessage(error));
     }
   }
 );
@@ -20,7 +21,7 @@ export const fetchBarberById = createAsyncThunk(
     try {
       return await barberApi.getById(barberId);
     } catch (error: any) {
-      return rejectWithValue(error.response?.data?.message || 'Failed to fetch barber');
+      return rejectWithValue(getErrorMessage(error));
     }
   }
 );
@@ -32,7 +33,7 @@ export const createBarber = createAsyncThunk(
     try {
       return await barberApi.create(data);
     } catch (error: any) {
-      return rejectWithValue(error.response?.data?.message || 'Failed to create barber');
+      return rejectWithValue(getErrorMessage(error));
     }
   }
 );
@@ -44,7 +45,7 @@ export const updateBarber = createAsyncThunk(
     try {
       return await barberApi.update(barberId, data);
     } catch (error: any) {
-      return rejectWithValue(error.response?.data?.message || 'Failed to update barber');
+      return rejectWithValue(getErrorMessage(error));
     }
   }
 );
@@ -57,7 +58,7 @@ export const deleteBarber = createAsyncThunk(
       await barberApi.delete(barberId);
       return barberId;
     } catch (error: any) {
-      return rejectWithValue(error.response?.data?.message || 'Failed to delete barber');
+      return rejectWithValue(getErrorMessage(error));
     }
   }
 );

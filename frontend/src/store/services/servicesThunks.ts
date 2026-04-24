@@ -4,6 +4,7 @@ import {
   CreateServiceData,
   UpdateServiceData,
 } from '../../services/servicesApi';
+import { getErrorMessage } from '../../utils/errorHandler';
 
 // Fetch all services
 export const fetchServices = createAsyncThunk(
@@ -12,7 +13,7 @@ export const fetchServices = createAsyncThunk(
     try {
       return await servicesApi.getAll();
     } catch (error: any) {
-      return rejectWithValue(error.response?.data?.error || 'Failed to fetch services');
+      return rejectWithValue(getErrorMessage(error));
     }
   }
 );
@@ -24,7 +25,7 @@ export const fetchServiceById = createAsyncThunk(
     try {
       return await servicesApi.getById(serviceId);
     } catch (error: any) {
-      return rejectWithValue(error.response?.data?.error || 'Failed to fetch service');
+      return rejectWithValue(getErrorMessage(error));
     }
   }
 );
@@ -36,7 +37,7 @@ export const createService = createAsyncThunk(
     try {
       return await servicesApi.create(data);
     } catch (error: any) {
-      return rejectWithValue(error.response?.data?.error || 'Failed to create service');
+      return rejectWithValue(getErrorMessage(error));
     }
   }
 );
@@ -51,7 +52,7 @@ export const updateService = createAsyncThunk(
     try {
       return await servicesApi.update(serviceId, data);
     } catch (error: any) {
-      return rejectWithValue(error.response?.data?.error || 'Failed to update service');
+      return rejectWithValue(getErrorMessage(error));
     }
   }
 );
@@ -64,7 +65,7 @@ export const deleteService = createAsyncThunk(
       await servicesApi.delete(serviceId);
       return serviceId;
     } catch (error: any) {
-      return rejectWithValue(error.response?.data?.error || 'Failed to delete service');
+      return rejectWithValue(getErrorMessage(error));
     }
   }
 );
