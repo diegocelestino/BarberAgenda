@@ -1,10 +1,12 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Box, Typography, Button, Grid, Chip, CircularProgress, Alert } from '@mui/material';
-import { AccessTime as TimeIcon } from '@mui/icons-material';
+import { Alert, Button, Col, Row, Spin, Tag, Typography, theme } from 'antd';
+import { ClockCircleOutlined } from '@ant-design/icons';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useAppSelector } from '../../store/hooks';
 import { barberApi } from '../../services/api';
+
+const { Title, Text } = Typography;
 
 interface TimeSelectionStepProps {
   onNext: (time: string) => void;
@@ -16,20 +18,15 @@ interface TimeSelectionStepProps {
 }
 
 const TimeSelectionStep: React.FC<TimeSelectionStepProps> = ({
-  onNext,
-  onBack,
-  selectedDate,
-  barberId,
-  serviceId,
-  selectedTime,
+  onNext, onBack, selectedDate, barberId, serviceId, selectedTime,
 }) => {
+  const { token } = theme.useToken();
   const [time, setTime] = useState<string | null>(selectedTime || null);
   const [availableTimes, setAvailableTimes] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Get the selected service duration
-  const selectedService = useAppSelector((state) => 
+  const selectedService = useAppSelector((state) =>
     state.services.services.find(s => s.serviceId === serviceId)
   );
 
@@ -37,22 +34,12 @@ const TimeSelectionStep: React.FC<TimeSelectionStepProps> = ({
     try {
       setLoading(true);
       setError(null);
-      
       const serviceDuration = selectedService?.durationMinutes || selectedService?.duration || 30;
-      
-      // Format date as YYYY-MM-DD
       const year = selectedDate.getFullYear();
       const month = String(selectedDate.getMonth() + 1).padStart(2, '0');
       const day = String(selectedDate.getDate()).padStart(2, '0');
       const dateString = `${year}-${month}-${day}`;
-      
-      console.log('Fetching available slots:', { barberId, dateString, serviceDuration });
-      
-      // Call backend API to get available slots
       const slots = await barberApi.getAvailableSlots(barberId, dateString, serviceDuration);
-      
-      console.log('Received available slots:', slots);
-      
       setAvailableTimes(slots);
     } catch (err) {
       console.error('Error loading available times:', err);
@@ -68,97 +55,59 @@ const TimeSelectionStep: React.FC<TimeSelectionStepProps> = ({
   }, [loadAvailableTimes]);
 
   const handleNext = () => {
-    if (time) {
-      onNext(time);
-    }
+    if (time) onNext(time);
   };
 
   if (loading) {
-    return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
-        <CircularProgress />
-      </Box>
-    );
+    return <div style={{ display: 'flex', justifyContent: 'center', padding: '32px 0' }}><Spin size="large" /></div>;
   }
 
   return (
-    <Box>
-      <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-        <TimeIcon sx={{ fontSize: { xs: 32, sm: 40 }, color: 'primary.main', mr: 2 }} />
-        <Typography variant="h5" color="text.primary" sx={{ fontSize: { xs: '1.25rem', sm: '1.5rem' } }}>
-          Escolha um Horário
-        </Typography>
-      </Box>
+    <div>
+      <div style={{ display: 'flex', alignItems: 'center', marginBottom: 16 }}>
+        <ClockCircleOutlined style={{ fontSize: 32, color: token.colorPrimary, marginRight: 16 }} />
+        <Title level={4} style={{ margin: 0 }}>Escolha um Horário</Title>
+      </div>
 
-      <Typography variant="body1" color="text.secondary" sx={{ mb: 1, fontSize: { xs: '0.875rem', sm: '1rem' } }}>
+      <Text type="secondary" style={{ display: 'block', marginBottom: 8 }}>
         Horários disponíveis para {format(selectedDate, "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
-      </Typography>
+      </Text>
 
-      <Typography variant="body2" color="text.secondary" sx={{ mb: 2, fontSize: { xs: '0.75rem', sm: '0.875rem' } }}>
-        {availableTimes.length > 0 
-          ? 'Selecione o horário de sua preferência' 
+      <Text type="secondary" style={{ display: 'block', marginBottom: 16, fontSize: 13 }}>
+        {availableTimes.length > 0
+          ? 'Selecione o horário de sua preferência'
           : 'Não há horários disponíveis para esta data. Por favor, selecione outra data.'}
-      </Typography>
+      </Text>
 
-      {error && (
-        <Alert severity="error" sx={{ mb: 2 }}>
-          {error}
-        </Alert>
-      )}
+      {error && <Alert type="error" message={error} showIcon style={{ marginBottom: 16 }} />}
 
       {availableTimes.length > 0 ? (
-        <Box sx={{ mb: 2, maxHeight: 300, overflowY: 'auto' }}>
-          <Grid container spacing={1}>
+        <div style={{ marginBottom: 16, maxHeight: 300, overflowY: 'auto' }}>
+          <Row gutter={[8, 8]}>
             {availableTimes.map((timeSlot) => (
-              <Grid item xs={4} sm={3} key={timeSlot}>
-                <Chip
-                  label={timeSlot}
+              <Col xs={8} sm={6} key={timeSlot}>
+                <Tag
+                  color={time === timeSlot ? 'gold' : undefined}
                   onClick={() => setTime(timeSlot)}
-                  color={time === timeSlot ? 'primary' : 'default'}
-                  variant={time === timeSlot ? 'filled' : 'outlined'}
-                  sx={{ 
-                    width: '100%', 
-                    cursor: 'pointer',
-                    fontSize: { xs: '0.75rem', sm: '0.875rem' },
-                    height: { xs: 28, sm: 32 },
-                  }}
-                />
-              </Grid>
+                  style={{ width: '100%', textAlign: 'center', cursor: 'pointer', padding: '4px 0', fontSize: 13 }}
+                >
+                  {timeSlot}
+                </Tag>
+              </Col>
             ))}
-          </Grid>
-        </Box>
+          </Row>
+        </div>
       ) : (
-        <Box sx={{ 
-          mb: 2, 
-          p: 2, 
-          textAlign: 'center',
-          bgcolor: 'background.default',
-          borderRadius: 2,
-        }}>
-          <Typography variant="body1" color="text.secondary">
-            Todos os horários estão reservados para esta data
-          </Typography>
-        </Box>
+        <div style={{ marginBottom: 16, padding: 16, textAlign: 'center', borderRadius: 8, background: 'rgba(255,255,255,0.04)' }}>
+          <Text type="secondary">Todos os horários estão reservados para esta data</Text>
+        </div>
       )}
 
-      <Box sx={{ display: 'flex', gap: 2 }}>
-        <Button
-          variant="outlined"
-          onClick={onBack}
-          fullWidth
-        >
-          Voltar
-        </Button>
-        <Button
-          variant="contained"
-          onClick={handleNext}
-          fullWidth
-          disabled={!time}
-        >
-          Próximo
-        </Button>
-      </Box>
-    </Box>
+      <div style={{ display: 'flex', gap: 16 }}>
+        <Button block onClick={onBack}>Voltar</Button>
+        <Button block type="primary" onClick={handleNext} disabled={!time}>Próximo</Button>
+      </div>
+    </div>
   );
 };
 

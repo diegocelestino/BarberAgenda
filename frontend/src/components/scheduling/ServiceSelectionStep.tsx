@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react';
-import { Box, Typography, Card, CardContent, CardActionArea, Grid, CircularProgress, Chip, Button } from '@mui/material';
-import { MiscellaneousServices as ServicesIcon } from '@mui/icons-material';
+import { Button, Card, Col, Row, Spin, Tag, Typography, theme } from 'antd';
+import { ToolOutlined } from '@ant-design/icons';
 import { barberApi } from '../../services/api';
+
+const { Title, Text } = Typography;
 
 interface ServiceSelectionStepProps {
   onNext: (serviceId: string, service: any) => void;
@@ -11,6 +13,7 @@ interface ServiceSelectionStepProps {
 }
 
 const ServiceSelectionStep: React.FC<ServiceSelectionStepProps> = ({ onNext, onBack, selectedServiceId, barberId }) => {
+  const { token } = theme.useToken();
   const [services, setServices] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -20,7 +23,6 @@ const ServiceSelectionStep: React.FC<ServiceSelectionStepProps> = ({ onNext, onB
       try {
         setLoading(true);
         setError(null);
-        // Fetch pre-filtered services from backend
         const barberServices = await barberApi.getServices(barberId);
         setServices(barberServices);
       } catch (err) {
@@ -30,85 +32,61 @@ const ServiceSelectionStep: React.FC<ServiceSelectionStepProps> = ({ onNext, onB
         setLoading(false);
       }
     };
-
     loadServices();
   }, [barberId]);
 
   if (loading) {
-    return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
-        <CircularProgress />
-      </Box>
-    );
+    return <div style={{ display: 'flex', justifyContent: 'center', padding: '32px 0' }}><Spin size="large" /></div>;
   }
 
   if (error) {
     return (
-      <Box>
-        <Typography color="error">{error}</Typography>
+      <div>
+        <Text type="danger">{error}</Text>
         <Button onClick={onBack}>Voltar</Button>
-      </Box>
+      </div>
     );
   }
 
   return (
-    <Box>
-      <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-        <ServicesIcon sx={{ fontSize: { xs: 32, sm: 40 }, color: 'primary.main', mr: 2 }} />
-        <Typography variant="h5" color="text.primary" sx={{ fontSize: { xs: '1.25rem', sm: '1.5rem' } }}>
-          Escolha um Serviço
-        </Typography>
-      </Box>
+    <div>
+      <div style={{ display: 'flex', alignItems: 'center', marginBottom: 16 }}>
+        <ToolOutlined style={{ fontSize: 32, color: token.colorPrimary, marginRight: 16 }} />
+        <Title level={4} style={{ margin: 0 }}>Escolha um Serviço</Title>
+      </div>
 
-      <Typography variant="body1" color="text.secondary" sx={{ mb: 2, fontSize: { xs: '0.875rem', sm: '1rem' } }}>
+      <Text type="secondary" style={{ display: 'block', marginBottom: 16 }}>
         Qual serviço você deseja?
-      </Typography>
+      </Text>
 
-      <Grid container spacing={2}>
+      <Row gutter={[16, 16]}>
         {services.map((service) => (
-          <Grid item xs={12} sm={6} key={service.serviceId}>
+          <Col xs={24} sm={12} key={service.serviceId}>
             <Card
-              sx={{
-                bgcolor: selectedServiceId === service.serviceId ? 'primary.dark' : 'background.paper',
-                border: selectedServiceId === service.serviceId ? 2 : 0,
-                borderColor: 'primary.main',
+              hoverable
+              onClick={() => onNext(service.serviceId, service)}
+              style={{
+                borderColor: selectedServiceId === service.serviceId ? token.colorPrimary : undefined,
+                borderWidth: selectedServiceId === service.serviceId ? 2 : 1,
               }}
             >
-              <CardActionArea onClick={() => onNext(service.serviceId, service)}>
-                <CardContent>
-                  <Typography variant="h6" color="text.primary" gutterBottom>
-                    {service.name}
-                  </Typography>
-                  {service.description && (
-                    <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                      {service.description}
-                    </Typography>
-                  )}
-                  <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-                    <Chip
-                      label={`R$ ${service.price}`}
-                      color="primary"
-                      size="small"
-                    />
-                    <Chip
-                      label={`${service.duration || service.durationMinutes} min`}
-                      variant="outlined"
-                      size="small"
-                    />
-                  </Box>
-                </CardContent>
-              </CardActionArea>
+              <Title level={5} style={{ margin: 0, marginBottom: 4 }}>{service.name}</Title>
+              {service.description && (
+                <Text type="secondary" style={{ display: 'block', marginBottom: 12 }}>{service.description}</Text>
+              )}
+              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                <Tag color="gold">R$ {service.price}</Tag>
+                <Tag>{service.duration || service.durationMinutes} min</Tag>
+              </div>
             </Card>
-          </Grid>
+          </Col>
         ))}
-      </Grid>
+      </Row>
 
-      <Box sx={{ display: 'flex', gap: 2, mt: 2 }}>
-        <Button variant="outlined" onClick={onBack} fullWidth>
-          Voltar
-        </Button>
-      </Box>
-    </Box>
+      <div style={{ display: 'flex', gap: 16, marginTop: 16 }}>
+        <Button block onClick={onBack}>Voltar</Button>
+      </div>
+    </div>
   );
 };
 

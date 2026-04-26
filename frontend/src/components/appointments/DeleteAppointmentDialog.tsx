@@ -1,11 +1,4 @@
-import {
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogContentText,
-  DialogActions,
-  Button,
-} from '@mui/material';
+import { Modal } from 'antd';
 import { useAppDispatch } from '../../store/hooks';
 import { deleteAppointment } from '../../store/appointments';
 
@@ -17,13 +10,7 @@ interface DeleteAppointmentDialogProps {
   onCancel: () => void;
 }
 
-const DeleteAppointmentDialog: React.FC<DeleteAppointmentDialogProps> = ({
-  open,
-  barberId,
-  appointmentId,
-  onConfirm,
-  onCancel,
-}) => {
+const DeleteAppointmentDialog: React.FC<DeleteAppointmentDialogProps> = ({ open, barberId, appointmentId, onConfirm, onCancel }) => {
   const dispatch = useAppDispatch();
 
   const handleConfirm = async () => {
@@ -34,20 +21,10 @@ const DeleteAppointmentDialog: React.FC<DeleteAppointmentDialogProps> = ({
   };
 
   return (
-    <Dialog open={open} onClose={onCancel}>
-      <DialogTitle>Excluir Agendamento</DialogTitle>
-      <DialogContent>
-        <DialogContentText>
-          Tem certeza que deseja excluir este agendamento? Esta ação não pode ser desfeita.
-        </DialogContentText>
-      </DialogContent>
-      <DialogActions>
-        <Button onClick={onCancel}>Cancelar</Button>
-        <Button onClick={handleConfirm} color="error" variant="contained">
-          Excluir
-        </Button>
-      </DialogActions>
-    </Dialog>
+    <Modal title="Excluir Agendamento" open={open} onCancel={onCancel} onOk={handleConfirm}
+      okText="Excluir" okButtonProps={{ danger: true }} cancelText="Cancelar">
+      Tem certeza que deseja excluir este agendamento? Esta ação não pode ser desfeita.
+    </Modal>
   );
 };
 

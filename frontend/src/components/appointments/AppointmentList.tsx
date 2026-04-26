@@ -1,20 +1,6 @@
 import { useState } from 'react';
-import {
-  List,
-  ListItem,
-  ListItemText,
-  ListItemSecondaryAction,
-  IconButton,
-  Chip,
-  Box,
-  Typography,
-  Divider,
-} from '@mui/material';
-import {
-  Delete as DeleteIcon,
-  Edit as EditIcon,
-  CheckCircle as CheckCircleIcon,
-} from '@mui/icons-material';
+import { Button, List, Tag, Typography, theme } from 'antd';
+import { DeleteOutlined, EditOutlined, CheckCircleOutlined } from '@ant-design/icons';
 import { Appointment } from '../../services/appointmentsApi';
 import { useAppDispatch, useAppSelector } from '../../store/hooks';
 import { updateAppointment } from '../../store/appointments';
@@ -23,12 +9,15 @@ import DeleteAppointmentDialog from './DeleteAppointmentDialog';
 import EditAppointmentDialog from './EditAppointmentDialog';
 import { formatShortDateTime, formatDuration, isPast } from '../../utils/dateTime';
 
+const { Text } = Typography;
+
 interface AppointmentListProps {
   appointments: Appointment[];
   barberId: string;
 }
 
 const AppointmentList: React.FC<AppointmentListProps> = ({ appointments, barberId }) => {
+  const { token } = theme.useToken();
   const dispatch = useAppDispatch();
   const services = useAppSelector(selectAllServices);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -36,168 +25,65 @@ const AppointmentList: React.FC<AppointmentListProps> = ({ appointments, barberI
   const [selectedAppointmentId, setSelectedAppointmentId] = useState<string | null>(null);
   const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
 
-  const getServiceName = (serviceId: string): string => {
-    const service = services.find(s => s.serviceId === serviceId);
-    return service ? service.title : serviceId;
-  };
+  const getServiceName = (serviceId: string) => services.find(s => s.serviceId === serviceId)?.title || serviceId;
 
-  const getStatusLabel = (status: string): string => {
-    switch (status) {
-      case 'scheduled':
-        return 'Agendado';
-      case 'completed':
-        return 'Concluído';
-      case 'cancelled':
-        return 'Cancelado';
-      default:
-        return status;
-    }
+  const getStatusLabel = (status: string) => {
+    switch (status) { case 'scheduled': return 'Agendado'; case 'completed': return 'Concluído'; case 'cancelled': return 'Cancelado'; default: return status; }
   };
-
-  const handleDeleteClick = (appointmentId: string) => {
-    setSelectedAppointmentId(appointmentId);
-    setDeleteDialogOpen(true);
-  };
-
-  const handleEditClick = (appointment: Appointment) => {
-    setSelectedAppointment(appointment);
-    setEditDialogOpen(true);
-  };
-
-  const handleDeleteConfirm = () => {
-    setDeleteDialogOpen(false);
-    setSelectedAppointmentId(null);
-  };
-
-  const handleEditSuccess = () => {
-    setEditDialogOpen(false);
-    setSelectedAppointment(null);
+  const getStatusColor = (status: string) => {
+    switch (status) { case 'scheduled': return 'processing'; case 'completed': return 'success'; case 'cancelled': return 'error'; default: return 'default'; }
   };
 
   const handleMarkComplete = async (appointmentId: string, startTime: number) => {
-    // Validate that appointment has started
-    if (!isPast(startTime)) {
-      alert('Não é possível marcar um agendamento como concluído antes que ele aconteça');
-      return;
-    }
-
-    await dispatch(updateAppointment({
-      barberId,
-      appointmentId,
-      data: { status: 'completed' },
-    }));
-  };
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'scheduled':
-        return 'primary';
-      case 'completed':
-        return 'success';
-      case 'cancelled':
-        return 'error';
-      default:
-        return 'default';
-    }
+    if (!isPast(startTime)) { alert('Não é possível marcar um agendamento como concluído antes que ele aconteça'); return; }
+    await dispatch(updateAppointment({ barberId, appointmentId, data: { status: 'completed' } }));
   };
 
   return (
     <>
-      <List>
-        {appointments.map((appointment, index) => (
-          <Box key={appointment.appointmentId}>
-            {index > 0 && <Divider />}
-            <ListItem
-              sx={{
-                py: 2,
-                opacity: appointment.status === 'cancelled' ? 0.6 : 1,
-              }}
-            >
-              <ListItemText
-                primary={
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
-                    <Typography variant="subtitle1" component="span">
-                      {appointment.customerName}
-                    </Typography>
-                    <Chip
-                      label={getStatusLabel(appointment.status)}
-                      size="small"
-                      color={getStatusColor(appointment.status)}
-                    />
-                  </Box>
-                }
-                secondary={
-                  <Box>
-                    <Typography variant="body2" color="text.secondary">
-                      {formatShortDateTime(appointment.startTime)} • {formatDuration(appointment.startTime, appointment.endTime)}
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      {getServiceName(appointment.service)}
-                    </Typography>
-                    {appointment.customerPhone && (
-                      <Typography variant="body2" color="text.secondary">
-                        📞 {appointment.customerPhone}
-                      </Typography>
-                    )}
-                    {appointment.notes && (
-                      <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-                        Nota: {appointment.notes}
-                      </Typography>
-                    )}
-                  </Box>
-                }
-              />
-              <ListItemSecondaryAction>
-                <Box sx={{ display: 'flex', gap: 0.5 }}>
-                  {appointment.status === 'scheduled' && isPast(appointment.startTime) && (
-                    <IconButton
-                      edge="end"
-                      size="small"
-                      color="success"
-                      onClick={() => handleMarkComplete(appointment.appointmentId, appointment.startTime)}
-                      title="Marcar como concluído"
-                    >
-                      <CheckCircleIcon />
-                    </IconButton>
-                  )}
-                  <IconButton
-                    edge="end"
-                    size="small"
-                    onClick={() => handleEditClick(appointment)}
-                    title="Editar agendamento"
-                  >
-                    <EditIcon />
-                  </IconButton>
-                  <IconButton
-                    edge="end"
-                    size="small"
-                    color="error"
-                    onClick={() => handleDeleteClick(appointment.appointmentId)}
-                  >
-                    <DeleteIcon />
-                  </IconButton>
-                </Box>
-              </ListItemSecondaryAction>
-            </ListItem>
-          </Box>
-        ))}
-      </List>
-
-      <DeleteAppointmentDialog
-        open={deleteDialogOpen}
-        barberId={barberId}
-        appointmentId={selectedAppointmentId}
-        onConfirm={handleDeleteConfirm}
-        onCancel={() => setDeleteDialogOpen(false)}
+      <List
+        dataSource={appointments}
+        renderItem={(appointment) => (
+          <List.Item
+            style={{ opacity: appointment.status === 'cancelled' ? 0.6 : 1 }}
+            actions={[
+              ...(appointment.status === 'scheduled' && isPast(appointment.startTime) ? [
+                <Button key="complete" type="text" size="small" style={{ color: token.colorSuccess }} icon={<CheckCircleOutlined />}
+                  onClick={() => handleMarkComplete(appointment.appointmentId, appointment.startTime)} title="Marcar como concluído" />
+              ] : []),
+              <Button key="edit" type="text" size="small" icon={<EditOutlined />}
+                onClick={() => { setSelectedAppointment(appointment); setEditDialogOpen(true); }} title="Editar agendamento" />,
+              <Button key="delete" type="text" size="small" danger icon={<DeleteOutlined />}
+                onClick={() => { setSelectedAppointmentId(appointment.appointmentId); setDeleteDialogOpen(true); }} />,
+            ]}
+          >
+            <List.Item.Meta
+              title={
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <span>{appointment.customerName}</span>
+                  <Tag color={getStatusColor(appointment.status)}>{getStatusLabel(appointment.status)}</Tag>
+                </div>
+              }
+              description={
+                <div>
+                  <Text type="secondary">{formatShortDateTime(appointment.startTime)} • {formatDuration(appointment.startTime, appointment.endTime)}</Text>
+                  <br /><Text type="secondary">{getServiceName(appointment.service)}</Text>
+                  {appointment.customerPhone && <><br /><Text type="secondary">📞 {appointment.customerPhone}</Text></>}
+                  {appointment.notes && <><br /><Text type="secondary">Nota: {appointment.notes}</Text></>}
+                </div>
+              }
+            />
+          </List.Item>
+        )}
       />
 
-      <EditAppointmentDialog
-        open={editDialogOpen}
-        appointment={selectedAppointment}
-        barberId={barberId}
+      <DeleteAppointmentDialog open={deleteDialogOpen} barberId={barberId} appointmentId={selectedAppointmentId}
+        onConfirm={() => { setDeleteDialogOpen(false); setSelectedAppointmentId(null); }}
+        onCancel={() => setDeleteDialogOpen(false)} />
+
+      <EditAppointmentDialog open={editDialogOpen} appointment={selectedAppointment} barberId={barberId}
         onClose={() => setEditDialogOpen(false)}
-        onSuccess={handleEditSuccess}
-      />
+        onSuccess={() => { setEditDialogOpen(false); setSelectedAppointment(null); }} />
     </>
   );
 };

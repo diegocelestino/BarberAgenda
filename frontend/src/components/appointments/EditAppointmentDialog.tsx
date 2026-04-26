@@ -1,28 +1,12 @@
 import { useState, useEffect } from 'react';
-import {
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  Button,
-  TextField,
-  MenuItem,
-  Box,
-  CircularProgress,
-  Alert,
-} from '@mui/material';
+import { Alert, Input, Modal, Select, Typography } from 'antd';
 import { useAppDispatch, useAppSelector } from '../../store/hooks';
 import { updateAppointment } from '../../store/appointments';
 import { Appointment } from '../../services/appointmentsApi';
 import { barberApi } from '../../services/api';
-import { 
-  formatDateTimeLocal, 
-  parseDateTimeLocal, 
-  addMinutes, 
-  isPast, 
-  isFuture, 
-  getCurrentDateTimeLocal 
-} from '../../utils/dateTime';
+import { formatDateTimeLocal, parseDateTimeLocal, addMinutes, isPast, isFuture, getCurrentDateTimeLocal } from '../../utils/dateTime';
+
+const { Text } = Typography;
 
 interface EditAppointmentDialogProps {
   open: boolean;
@@ -32,264 +16,101 @@ interface EditAppointmentDialogProps {
   onSuccess: () => void;
 }
 
-const EditAppointmentDialog: React.FC<EditAppointmentDialogProps> = ({
-  open,
-  appointment,
-  barberId,
-  onClose,
-  onSuccess,
-}) => {
+const EditAppointmentDialog: React.FC<EditAppointmentDialogProps> = ({ open, appointment, barberId, onClose, onSuccess }) => {
   const dispatch = useAppDispatch();
-  const appointments = useAppSelector((state) => state.appointments.appointments);
+  const allAppointments = useAppSelector((state) => state.appointments.appointments);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [availableServices, setAvailableServices] = useState<any[]>([]);
   const [servicesLoading, setServicesLoading] = useState(false);
-  const [formData, setFormData] = useState({
-    customerName: '',
-    customerPhone: '',
-    serviceId: '',
-    startTime: '',
-    status: 'scheduled' as 'scheduled' | 'completed' | 'cancelled',
-    notes: '',
-  });
+  const [formData, setFormData] = useState({ customerName: '', customerPhone: '', serviceId: '', startTime: '', status: 'scheduled' as string, notes: '' });
 
   useEffect(() => {
-    const loadServices = async () => {
-      if (!open) return;
-      
-      try {
-        setServicesLoading(true);
-        const services = await barberApi.getServices(barberId);
-        setAvailableServices(services);
-      } catch (err) {
-        console.error('Error loading services:', err);
-      } finally {
-        setServicesLoading(false);
-      }
-    };
-
-    loadServices();
+    if (!open) return;
+    const load = async () => { try { setServicesLoading(true); setAvailableServices(await barberApi.getServices(barberId)); } catch {} finally { setServicesLoading(false); } };
+    load();
   }, [open, barberId]);
 
   useEffect(() => {
     if (appointment) {
-      // Format timestamp for datetime-local input using centralized utility
-      const localDateTimeString = formatDateTimeLocal(appointment.startTime);
-      
       setFormData({
-        customerName: appointment.customerName,
-        customerPhone: appointment.customerPhone || '',
-        serviceId: appointment.service,
-        startTime: localDateTimeString,
-        status: appointment.status,
-        notes: appointment.notes || '',
+        customerName: appointment.customerName, customerPhone: appointment.customerPhone || '',
+        serviceId: appointment.service, startTime: formatDateTimeLocal(appointment.startTime),
+        status: appointment.status, notes: appointment.notes || '',
       });
       setError('');
     }
   }, [appointment]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async () => {
     setError('');
-    
     if (!appointment || !formData.serviceId) return;
-
     const selectedService = availableServices.find(s => s.serviceId === formData.serviceId);
-    if (!selectedService) {
-      setError('Por favor, selecione um serviço válido');
-      return;
-    }
-
+    if (!selectedService) { setError('Por favor, selecione um serviço válido'); return; }
     const serviceDuration = selectedService.durationMinutes || selectedService.duration;
-    if (!serviceDuration) {
-      setError('Serviço inválido - duração não encontrada');
-      return;
-    }
+    if (!serviceDuration) { setError('Serviço inválido - duração não encontrada'); return; }
 
-    // Parse datetime using centralized utility
     const startTime = parseDateTimeLocal(formData.startTime);
     const endTime = addMinutes(startTime, serviceDuration);
 
-    // Validation: Cannot schedule in the past
-    if (isPast(startTime) && formData.status === 'scheduled') {
-      setError('Não é possível agendar um compromisso no passado');
-      return;
-    }
+    if (isPast(startTime) && formData.status === 'scheduled') { setError('Não é possível agendar um compromisso no passado'); return; }
+    if (formData.status === 'completed' && isFuture(startTime)) { setError('Não é possível marcar um agendamento como concluído antes que ele aconteça'); return; }
 
-    // Validation: Cannot complete an appointment before it happens
-    if (formData.status === 'completed' && isFuture(startTime)) {
-      setError('Não é possível marcar um agendamento como concluído antes que ele aconteça');
-      return;
-    }
-
-    // Check for conflicts with other appointments (excluding current one)
-    const hasConflict = appointments.some((apt) => {
-      // Skip the current appointment being edited
-      if (apt.appointmentId === appointment.appointmentId) return false;
-      
-      // Skip cancelled appointments
-      if (apt.status === 'cancelled') return false;
-      
-      // Skip if different barber
-      if (apt.barberId !== barberId) return false;
-      
-      // Check for time overlap
-      const aptStart = apt.startTime;
-      const aptEnd = apt.endTime;
-      
-      // Overlap occurs if: new appointment starts before existing ends AND new appointment ends after existing starts
-      return startTime < aptEnd && endTime > aptStart;
+    const hasConflict = allAppointments.some((apt) => {
+      if (apt.appointmentId === appointment.appointmentId || apt.status === 'cancelled' || apt.barberId !== barberId) return false;
+      return startTime < apt.endTime && endTime > apt.startTime;
     });
-
-    if (hasConflict) {
-      setError('Este horário conflita com outro agendamento. Por favor, escolha outro horário.');
-      return;
-    }
+    if (hasConflict) { setError('Este horário conflita com outro agendamento. Por favor, escolha outro horário.'); return; }
 
     setLoading(true);
     try {
-      await dispatch(updateAppointment({
-        barberId,
-        appointmentId: appointment.appointmentId,
-        data: {
-          customerName: formData.customerName,
-          customerPhone: formData.customerPhone || undefined,
-          service: formData.serviceId, // Send service ID
-          startTime,
-          endTime,
-          status: formData.status,
-          notes: formData.notes || undefined,
-        },
+      await dispatch(updateAppointment({ barberId, appointmentId: appointment.appointmentId,
+        data: { customerName: formData.customerName, customerPhone: formData.customerPhone || undefined, service: formData.serviceId, startTime, endTime, status: formData.status as 'scheduled' | 'completed' | 'cancelled', notes: formData.notes || undefined },
       })).unwrap();
       onSuccess();
-    } catch (err: any) {
-      console.error('Failed to update appointment:', err);
-      setError(err.message || 'Erro ao atualizar agendamento');
-    } finally {
-      setLoading(false);
-    }
+    } catch (err: any) { setError(err.message || 'Erro ao atualizar agendamento'); }
+    finally { setLoading(false); }
   };
 
-  const handleChange = (field: string, value: any) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
-  };
-
-  const isAppointmentInFuture = () => {
-    if (!appointment) return false;
-    return isFuture(appointment.startTime);
-  };
-
-  const isAppointmentInPast = () => {
-    if (!appointment) return false;
-    return isPast(appointment.startTime);
-  };
-
+  const handleChange = (field: string, value: any) => setFormData(prev => ({ ...prev, [field]: value }));
+  const isInFuture = () => appointment ? isFuture(appointment.startTime) : false;
+  const isInPast = () => appointment ? isPast(appointment.startTime) : false;
   const selectedService = availableServices.find(s => s.serviceId === formData.serviceId);
 
+  const statusOptions = [
+    { value: 'scheduled', label: 'Agendado', disabled: isInPast() },
+    { value: 'completed', label: 'Concluído', disabled: isInFuture() },
+    { value: 'cancelled', label: 'Cancelado' },
+  ];
+
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
-      <form onSubmit={handleSubmit}>
-        <DialogTitle>Editar Agendamento</DialogTitle>
-        <DialogContent>
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 1 }}>
-            {error && <Alert severity="error">{error}</Alert>}
-            
-            <TextField
-              label="Nome do Cliente"
-              value={formData.customerName}
-              onChange={(e) => handleChange('customerName', e.target.value)}
-              required
-              fullWidth
-            />
+    <Modal title="Editar Agendamento" open={open} onCancel={onClose} onOk={handleSubmit}
+      okText="Salvar Alterações" confirmLoading={loading} okButtonProps={{ disabled: loading }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 16, marginTop: 8 }}>
+        {error && <Alert type="error" message={error} showIcon />}
 
-            <TextField
-              label="Telefone do Cliente"
-              value={formData.customerPhone}
-              onChange={(e) => handleChange('customerPhone', e.target.value)}
-              fullWidth
-            />
+        <div><label>Nome do Cliente</label><Input value={formData.customerName} onChange={(e) => handleChange('customerName', e.target.value)} /></div>
+        <div><label>Telefone do Cliente</label><Input value={formData.customerPhone} onChange={(e) => handleChange('customerPhone', e.target.value)} /></div>
 
-            <TextField
-              select
-              label="Serviço"
-              value={formData.serviceId}
-              onChange={(e) => handleChange('serviceId', e.target.value)}
-              required
-              fullWidth
-              disabled={servicesLoading}
-              helperText={selectedService ? `Duração: ${selectedService.durationMinutes || selectedService.duration} minutos` : ''}
-            >
-              {servicesLoading ? (
-                <MenuItem disabled>
-                  <CircularProgress size={20} /> Carregando serviços...
-                </MenuItem>
-              ) : availableServices.length === 0 ? (
-                <MenuItem disabled>Nenhum serviço disponível para este barbeiro</MenuItem>
-              ) : (
-                availableServices.map((service) => (
-                  <MenuItem key={service.serviceId} value={service.serviceId}>
-                    {service.title || service.name}
-                  </MenuItem>
-                ))
-              )}
-            </TextField>
+        <div>
+          <label>Serviço</label>
+          <Select style={{ width: '100%' }} value={formData.serviceId || undefined} onChange={(v) => handleChange('serviceId', v)}
+            loading={servicesLoading} disabled={servicesLoading}
+            options={availableServices.map(s => ({ value: s.serviceId, label: s.title || s.name }))} />
+          {selectedService && <Text type="secondary" style={{ fontSize: 12 }}>Duração: {selectedService.durationMinutes || selectedService.duration} minutos</Text>}
+        </div>
 
-            <TextField
-              label="Horário de Início"
-              type="datetime-local"
-              value={formData.startTime}
-              onChange={(e) => handleChange('startTime', e.target.value)}
-              required
-              fullWidth
-              InputLabelProps={{ shrink: true }}
-              inputProps={{
-                min: formData.status === 'scheduled' ? getCurrentDateTimeLocal() : undefined,
-              }}
-            />
+        <div><label>Horário de Início</label><Input type="datetime-local" value={formData.startTime} onChange={(e) => handleChange('startTime', e.target.value)}
+          min={formData.status === 'scheduled' ? getCurrentDateTimeLocal() : undefined} /></div>
 
-            <TextField
-              select
-              label="Status"
-              value={formData.status}
-              onChange={(e) => handleChange('status', e.target.value)}
-              required
-              fullWidth
-            >
-              <MenuItem value="scheduled" disabled={isAppointmentInPast()}>
-                Agendado
-              </MenuItem>
-              <MenuItem value="completed" disabled={isAppointmentInFuture()}>
-                Concluído
-              </MenuItem>
-              <MenuItem value="cancelled">Cancelado</MenuItem>
-            </TextField>
+        <div>
+          <label>Status</label>
+          <Select style={{ width: '100%' }} value={formData.status} onChange={(v) => handleChange('status', v)} options={statusOptions} />
+        </div>
 
-            <TextField
-              label="Notas"
-              value={formData.notes}
-              onChange={(e) => handleChange('notes', e.target.value)}
-              multiline
-              rows={3}
-              fullWidth
-            />
-          </Box>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={onClose} disabled={loading}>
-            Cancelar
-          </Button>
-          <Button
-            type="submit"
-            variant="contained"
-            disabled={loading}
-            startIcon={loading ? <CircularProgress size={20} /> : null}
-          >
-            Salvar Alterações
-          </Button>
-        </DialogActions>
-      </form>
-    </Dialog>
+        <div><label>Notas</label><Input.TextArea rows={3} value={formData.notes} onChange={(e) => handleChange('notes', e.target.value)} /></div>
+      </div>
+    </Modal>
   );
 };
 

@@ -1,11 +1,4 @@
-import {
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogContentText,
-  DialogActions,
-  Button,
-} from '@mui/material';
+import { Modal } from 'antd';
 import { useAppDispatch } from '../../store/hooks';
 import { deleteBarber } from '../../store/barbers';
 
@@ -16,12 +9,7 @@ interface DeleteBarberDialogProps {
   onCancel: () => void;
 }
 
-const DeleteBarberDialog: React.FC<DeleteBarberDialogProps> = ({
-  open,
-  barberId,
-  onConfirm,
-  onCancel,
-}) => {
+const DeleteBarberDialog: React.FC<DeleteBarberDialogProps> = ({ open, barberId, onConfirm, onCancel }) => {
   const dispatch = useAppDispatch();
 
   const handleConfirm = async () => {
@@ -32,20 +20,10 @@ const DeleteBarberDialog: React.FC<DeleteBarberDialogProps> = ({
   };
 
   return (
-    <Dialog open={open} onClose={onCancel}>
-      <DialogTitle>Delete Barber</DialogTitle>
-      <DialogContent>
-        <DialogContentText>
-          Are you sure you want to delete this barber? This action cannot be undone.
-        </DialogContentText>
-      </DialogContent>
-      <DialogActions>
-        <Button onClick={onCancel}>Cancel</Button>
-        <Button onClick={handleConfirm} color="error" variant="contained">
-          Delete
-        </Button>
-      </DialogActions>
-    </Dialog>
+    <Modal title="Delete Barber" open={open} onCancel={onCancel} onOk={handleConfirm}
+      okText="Delete" okButtonProps={{ danger: true }} cancelText="Cancel">
+      Are you sure you want to delete this barber? This action cannot be undone.
+    </Modal>
   );
 };
 

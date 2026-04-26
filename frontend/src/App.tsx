@@ -1,8 +1,8 @@
 import { lazy, Suspense } from 'react';
-import { CssBaseline, ThemeProvider, Box, CircularProgress } from '@mui/material';
+import { ConfigProvider, Spin } from 'antd';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
-import { theme } from './theme/theme';
+import { antdTheme } from './theme/theme';
 import Header from './components/layout/Header';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 import ErrorBoundary from './components/common/ErrorBoundary';
@@ -21,26 +21,18 @@ const BarberExtractPage = lazy(() => import('./pages/BarberExtractPage'));
 
 // Loading fallback component
 const PageLoader = () => (
-  <Box
-    sx={{
-      display: 'flex',
-      justifyContent: 'center',
-      alignItems: 'center',
-      minHeight: '60vh',
-    }}
-  >
-    <CircularProgress />
-  </Box>
+  <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '60vh' }}>
+    <Spin size="large" />
+  </div>
 );
 
 function App() {
   return (
     <ErrorBoundary>
-      <ThemeProvider theme={theme}>
-        <CssBaseline />
+      <ConfigProvider theme={antdTheme}>
         <AuthProvider>
           <BrowserRouter>
-            <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
               <Header />
               <Suspense fallback={<PageLoader />}>
                 <Routes>
@@ -120,10 +112,10 @@ function App() {
                   <Route path="/barber/:barberId" element={<Navigate to="/admin/barber/:barberId" replace />} />
                 </Routes>
               </Suspense>
-            </Box>
+            </div>
           </BrowserRouter>
         </AuthProvider>
-      </ThemeProvider>
+      </ConfigProvider>
     </ErrorBoundary>
   );
 }

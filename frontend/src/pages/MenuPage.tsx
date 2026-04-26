@@ -1,88 +1,37 @@
-import { Container, Grid, Card, CardContent, CardActionArea, Typography, Box } from '@mui/material';
-import { People as PeopleIcon, Build as BuildIcon } from '@mui/icons-material';
+import { Card, Col, Row, Typography, theme } from 'antd';
+import { TeamOutlined, ToolOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 
+const { Title, Text } = Typography;
+
 const MenuPage: React.FC = () => {
+  const { token } = theme.useToken();
   const navigate = useNavigate();
 
   const menuItems = [
-    {
-      title: 'Barbeiros',
-      description: 'Gerenciar barbeiros e seus horários',
-      icon: <PeopleIcon sx={{ fontSize: 80 }} />,
-      path: '/admin/barbers',
-      color: '#90caf9',
-    },
-    {
-      title: 'Serviços',
-      description: 'Gerenciar serviços e durações',
-      icon: <BuildIcon sx={{ fontSize: 80 }} />,
-      path: '/admin/services',
-      color: '#f48fb1',
-    },
+    { title: 'Barbeiros', description: 'Gerenciar barbeiros e seus horários', icon: <TeamOutlined />, path: '/admin/barbers' },
+    { title: 'Serviços', description: 'Gerenciar serviços e durações', icon: <ToolOutlined />, path: '/admin/services' },
   ];
 
   return (
-    <Container
-      component="main"
-      maxWidth="md"
-      sx={{
-        mt: { xs: 4, sm: 8 },
-        mb: { xs: 2, sm: 4 },
-        px: { xs: 2, sm: 3 },
-      }}
-    >
-      <Typography
-        variant="h3"
-        component="h1"
-        align="center"
-        gutterBottom
-        sx={{ mb: 6, fontWeight: 'bold' }}
-      >
-        Bem-vindo
-      </Typography>
-
-      <Grid container spacing={4}>
+    <div style={{ maxWidth: 768, margin: '0 auto', padding: '48px 16px' }}>
+      <Title level={2} style={{ textAlign: 'center', marginBottom: 48 }}>Bem-vindo</Title>
+      <Row gutter={[24, 24]}>
         {menuItems.map((item) => (
-          <Grid item xs={12} sm={6} key={item.path}>
+          <Col xs={24} sm={12} key={item.path}>
             <Card
-              sx={{
-                height: '100%',
-                transition: 'transform 0.2s, box-shadow 0.2s',
-                '&:hover': {
-                  transform: 'translateY(-8px)',
-                  boxShadow: 6,
-                },
-              }}
+              hoverable
+              onClick={() => navigate(item.path)}
+              style={{ textAlign: 'center', padding: '32px 16px', borderColor: token.colorBorder }}
             >
-              <CardActionArea
-                onClick={() => navigate(item.path)}
-                sx={{
-                  height: '100%',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  py: 6,
-                }}
-              >
-                <CardContent sx={{ textAlign: 'center' }}>
-                  <Box sx={{ color: item.color, mb: 2 }}>
-                    {item.icon}
-                  </Box>
-                  <Typography variant="h4" component="h2" gutterBottom>
-                    {item.title}
-                  </Typography>
-                  <Typography variant="body1" color="text.secondary">
-                    {item.description}
-                  </Typography>
-                </CardContent>
-              </CardActionArea>
+              <div style={{ fontSize: 64, color: token.colorPrimary, marginBottom: 16 }}>{item.icon}</div>
+              <Title level={3} style={{ marginBottom: 8 }}>{item.title}</Title>
+              <Text type="secondary">{item.description}</Text>
             </Card>
-          </Grid>
+          </Col>
         ))}
-      </Grid>
-    </Container>
+      </Row>
+    </div>
   );
 };
 

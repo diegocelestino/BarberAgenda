@@ -1,10 +1,15 @@
 import { useState, useRef } from 'react';
-import { Box, Typography, Button, Card, CardContent, Divider, CircularProgress, Alert } from '@mui/material';
-import { CheckCircle as CheckIcon, Person, Phone, ContentCut, MiscellaneousServices, CalendarMonth, AccessTime } from '@mui/icons-material';
+import { Alert, Button, Card, Divider, Spin, Typography, theme } from 'antd';
+import {
+  CheckCircleOutlined, UserOutlined, PhoneOutlined, ScissorOutlined,
+  ToolOutlined, CalendarOutlined, ClockCircleOutlined,
+} from '@ant-design/icons';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import ReCAPTCHA from 'react-google-recaptcha';
 import { useAppSelector } from '../../store/hooks';
+
+const { Title, Text } = Typography;
 
 interface ConfirmationStepProps {
   onConfirm: () => Promise<void>;
@@ -15,33 +20,20 @@ interface ConfirmationStepProps {
   date: Date;
   time: string;
   name: string;
-  service?: any; // Add service as optional prop
+  service?: any;
 }
 
 const ConfirmationStep: React.FC<ConfirmationStepProps> = ({
-  onConfirm,
-  onBack,
-  phoneNumber,
-  barberId,
-  serviceId,
-  date,
-  time,
-  name,
-  service: serviceProp, // Rename to avoid conflict
+  onConfirm, onBack, phoneNumber, barberId, serviceId, date, time, name, service: serviceProp,
 }) => {
+  const { token } = theme.useToken();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [recaptchaToken, setRecaptchaToken] = useState<string | null>(null);
   const recaptchaRef = useRef<ReCAPTCHA>(null);
-  
-  const barber = useAppSelector((state) => 
-    state.barbers.barbers.find(b => b.barberId === barberId)
-  );
-  
-  // Use prop service if available, otherwise fallback to Redux
-  const serviceFromRedux = useAppSelector((state) => 
-    state.services.services.find(s => s.serviceId === serviceId)
-  );
+
+  const barber = useAppSelector((state) => state.barbers.barbers.find(b => b.barberId === barberId));
+  const serviceFromRedux = useAppSelector((state) => state.services.services.find(s => s.serviceId === serviceId));
   const service = serviceProp || serviceFromRedux;
 
   const recaptchaSiteKey = process.env.REACT_APP_RECAPTCHA_SITE_KEY || '';
@@ -49,18 +41,14 @@ const ConfirmationStep: React.FC<ConfirmationStepProps> = ({
 
   const handleRecaptchaChange = (token: string | null) => {
     setRecaptchaToken(token);
-    if (token) {
-      setError('');
-    }
+    if (token) setError('');
   };
 
   const handleConfirm = async () => {
-    // Bypass reCAPTCHA in development mode
     if (!isDevelopment && !recaptchaToken) {
       setError('Por favor, complete a verificação reCAPTCHA.');
       return;
     }
-
     setLoading(true);
     setError('');
     try {
@@ -68,7 +56,6 @@ const ConfirmationStep: React.FC<ConfirmationStepProps> = ({
     } catch (err) {
       setError('Falha ao agendar. Por favor, tente novamente.');
       setLoading(false);
-      // Reset reCAPTCHA on error
       if (recaptchaRef.current) {
         recaptchaRef.current.reset();
         setRecaptchaToken(null);
@@ -76,151 +63,72 @@ const ConfirmationStep: React.FC<ConfirmationStepProps> = ({
     }
   };
 
+  const DetailRow = ({ icon, label, value, extra }: { icon: React.ReactNode; label: string; value: string; extra?: string }) => (
+    <div style={{ display: 'flex', alignItems: 'center', padding: '8px 0' }}>
+      <span style={{ marginRight: 16, color: token.colorTextTertiary, fontSize: 18 }}>{icon}</span>
+      <div>
+        <Text type="secondary" style={{ fontSize: 12, display: 'block' }}>{label}</Text>
+        <Text>{value}</Text>
+        {extra && <Text type="secondary" style={{ display: 'block', fontSize: 13 }}>{extra}</Text>}
+      </div>
+    </div>
+  );
+
   return (
-    <Box>
-      <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-        <CheckIcon sx={{ fontSize: { xs: 32, sm: 40 }, color: 'primary.main', mr: 2 }} />
-        <Typography variant="h5" color="text.primary" sx={{ fontSize: { xs: '1.25rem', sm: '1.5rem' } }}>
-          Confirme seu Agendamento
-        </Typography>
-      </Box>
+    <div>
+      <div style={{ display: 'flex', alignItems: 'center', marginBottom: 16 }}>
+        <CheckCircleOutlined style={{ fontSize: 32, color: token.colorPrimary, marginRight: 16 }} />
+        <Title level={4} style={{ margin: 0 }}>Confirme seu Agendamento</Title>
+      </div>
 
-      <Typography variant="body1" color="text.secondary" sx={{ mb: 2, fontSize: { xs: '0.875rem', sm: '1rem' } }}>
+      <Text type="secondary" style={{ display: 'block', marginBottom: 16 }}>
         Por favor, revise os detalhes do seu agendamento
-      </Typography>
+      </Text>
 
-      <Card sx={{ mb: 2, bgcolor: 'background.default' }}>
-        <CardContent>
-          <Box sx={{ display: 'flex', alignItems: 'center', mb: 1.5 }}>
-            <Person sx={{ mr: 2, color: 'text.secondary' }} />
-            <Box>
-              <Typography variant="caption" color="text.secondary">
-                Nome
-              </Typography>
-              <Typography variant="body1" color="text.primary">
-                {name}
-              </Typography>
-            </Box>
-          </Box>
-
-          <Divider sx={{ my: 1.5 }} />
-
-          <Box sx={{ display: 'flex', alignItems: 'center', mb: 1.5 }}>
-            <Phone sx={{ mr: 2, color: 'text.secondary' }} />
-            <Box>
-              <Typography variant="caption" color="text.secondary">
-                Telefone
-              </Typography>
-              <Typography variant="body1" color="text.primary">
-                {phoneNumber}
-              </Typography>
-            </Box>
-          </Box>
-
-          <Divider sx={{ my: 1.5 }} />
-
-          <Box sx={{ display: 'flex', alignItems: 'center', mb: 1.5 }}>
-            <ContentCut sx={{ mr: 2, color: 'text.secondary' }} />
-            <Box>
-              <Typography variant="caption" color="text.secondary">
-                Barbeiro
-              </Typography>
-              <Typography variant="body1" color="text.primary">
-                {barber?.name || 'Desconhecido'}
-              </Typography>
-            </Box>
-          </Box>
-
-          <Divider sx={{ my: 1.5 }} />
-
-          <Box sx={{ display: 'flex', alignItems: 'center', mb: 1.5 }}>
-            <MiscellaneousServices sx={{ mr: 2, color: 'text.secondary' }} />
-            <Box>
-              <Typography variant="caption" color="text.secondary">
-                Serviço
-              </Typography>
-              <Typography variant="body1" color="text.primary">
-                {service?.title || service?.name || 'Desconhecido'}
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                R$ {service?.price} • {service?.duration || service?.durationMinutes} min
-              </Typography>
-            </Box>
-          </Box>
-
-          <Divider sx={{ my: 1.5 }} />
-
-          <Box sx={{ display: 'flex', alignItems: 'center', mb: 1.5 }}>
-            <CalendarMonth sx={{ mr: 2, color: 'text.secondary' }} />
-            <Box>
-              <Typography variant="caption" color="text.secondary">
-                Data
-              </Typography>
-              <Typography variant="body1" color="text.primary">
-                {format(date, "EEEE, dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
-              </Typography>
-            </Box>
-          </Box>
-
-          <Divider sx={{ my: 1.5 }} />
-
-          <Box sx={{ display: 'flex', alignItems: 'center' }}>
-            <AccessTime sx={{ mr: 2, color: 'text.secondary' }} />
-            <Box>
-              <Typography variant="caption" color="text.secondary">
-                Horário
-              </Typography>
-              <Typography variant="body1" color="text.primary">
-                {time}
-              </Typography>
-            </Box>
-          </Box>
-        </CardContent>
+      <Card style={{ marginBottom: 16 }}>
+        <DetailRow icon={<UserOutlined />} label="Nome" value={name} />
+        <Divider style={{ margin: '8px 0' }} />
+        <DetailRow icon={<PhoneOutlined />} label="Telefone" value={phoneNumber} />
+        <Divider style={{ margin: '8px 0' }} />
+        <DetailRow icon={<ScissorOutlined />} label="Barbeiro" value={barber?.name || 'Desconhecido'} />
+        <Divider style={{ margin: '8px 0' }} />
+        <DetailRow
+          icon={<ToolOutlined />}
+          label="Serviço"
+          value={service?.title || service?.name || 'Desconhecido'}
+          extra={`R$ ${service?.price} • ${service?.duration || service?.durationMinutes} min`}
+        />
+        <Divider style={{ margin: '8px 0' }} />
+        <DetailRow icon={<CalendarOutlined />} label="Data" value={format(date, "EEEE, dd 'de' MMMM 'de' yyyy", { locale: ptBR })} />
+        <Divider style={{ margin: '8px 0' }} />
+        <DetailRow icon={<ClockCircleOutlined />} label="Horário" value={time} />
       </Card>
 
-      {error && (
-        <Alert severity="error" sx={{ mb: 2 }}>
-          {error}
-        </Alert>
-      )}
+      {error && <Alert type="error" message={error} showIcon style={{ marginBottom: 16 }} />}
 
       {!isDevelopment && recaptchaSiteKey && (
-        <Box sx={{ display: 'flex', justifyContent: 'center', mb: 2 }}>
-          <ReCAPTCHA
-            ref={recaptchaRef}
-            sitekey={recaptchaSiteKey}
-            onChange={handleRecaptchaChange}
-            hl="pt-BR"
-          />
-        </Box>
+        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 16 }}>
+          <ReCAPTCHA ref={recaptchaRef} sitekey={recaptchaSiteKey} onChange={handleRecaptchaChange} hl="pt-BR" />
+        </div>
       )}
 
       {isDevelopment && (
-        <Alert severity="info" sx={{ mb: 2 }}>
-          🔧 Modo de Desenvolvimento - reCAPTCHA desabilitado
-        </Alert>
+        <Alert type="info" message="🔧 Modo de Desenvolvimento - reCAPTCHA desabilitado" showIcon style={{ marginBottom: 16 }} />
       )}
 
-      <Box sx={{ display: 'flex', gap: 2 }}>
+      <div style={{ display: 'flex', gap: 16 }}>
+        <Button block onClick={onBack} disabled={loading}>Voltar</Button>
         <Button
-          variant="outlined"
-          onClick={onBack}
-          fullWidth
-          disabled={loading}
-        >
-          Voltar
-        </Button>
-        <Button
-          variant="contained"
+          block
+          type="primary"
           onClick={handleConfirm}
-          fullWidth
           disabled={loading || (!isDevelopment && !recaptchaToken)}
-          startIcon={loading ? <CircularProgress size={20} /> : null}
+          icon={loading ? <Spin size="small" /> : undefined}
         >
           {loading ? 'Agendando...' : 'Confirmar Agendamento'}
         </Button>
-      </Box>
-    </Box>
+      </div>
+    </div>
   );
 };
 

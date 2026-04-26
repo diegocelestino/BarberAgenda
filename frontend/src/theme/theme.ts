@@ -1,25 +1,47 @@
-import { createTheme } from '@mui/material/styles';
+import { theme, ThemeConfig } from 'antd';
 
-export const theme = createTheme({
-  palette: {
-    primary: {
-      main: '#b8860b', // Darker gold
-      contrastText: '#ffffff',
-    },
-    secondary: {
-      main: '#1a1a1a', // Rich black
-      contrastText: '#ffffff',
-    },
-    background: {
-      default: '#f5f5f5', // Light gray
-      paper: '#ffffff', // White
-    },
-    text: {
-      primary: '#1a1a1a', // Dark
-      secondary: '#666666', // Medium gray
-    },
+export const antdTheme: ThemeConfig = {
+  algorithm: theme.darkAlgorithm,
+  token: {
+    colorPrimary: '#c8a05c',
+    colorSuccess: '#50c878',
+    colorWarning: '#ffa726',
+    colorError: '#ff5252',
+    colorInfo: '#c8a05c',
+    colorTextBase: '#e8e6e3',
+    colorBgBase: '#121212',
+    colorPrimaryBg: '#1e1e1e',
+    colorPrimaryBgHover: '#2a2a2a',
+    colorPrimaryBorder: '#c8a05c',
+    colorPrimaryBorderHover: '#d4af7a',
+    colorPrimaryHover: '#d4af7a',
+    colorPrimaryActive: '#b3894c',
+    colorPrimaryText: '#c8a05c',
+    colorPrimaryTextHover: '#d4af7a',
+    colorPrimaryTextActive: '#b3894c',
+    colorText: '#e8e6e3',
+    colorTextSecondary: '#b3b3b3',
+    colorTextTertiary: '#808080',
+    colorTextQuaternary: '#666666',
+    colorTextDisabled: '#555555',
+    colorBgContainer: '#1a1a1a',
+    colorBgElevated: '#222222',
+    colorBgLayout: '#121212',
+    colorBgSpotlight: '#333333',
+    colorBgMask: 'rgba(0, 0, 0, 0.75)',
+    colorBorder: '#333333',
+    colorBorderSecondary: '#2a2a2a',
+    borderRadius: 4,
+    borderRadiusXS: 2,
+    borderRadiusSM: 3,
+    borderRadiusLG: 6,
+    padding: 16,
+    paddingSM: 12,
+    paddingLG: 24,
+    margin: 16,
+    marginSM: 12,
+    marginLG: 24,
+    boxShadow: '0 2px 8px 0 rgba(0, 0, 0, 0.4)',
+    boxShadowSecondary: '0 4px 12px 0 rgba(0, 0, 0, 0.6)',
   },
-  typography: {
-    fontFamily: '"Roboto", "Helvetica", "Arial", sans-serif',
-  },
-});
+};

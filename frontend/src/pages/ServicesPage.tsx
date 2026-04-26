@@ -1,20 +1,9 @@
-import { Container } from '@mui/material';
 import ServicesList from '../components/services/ServicesList';
 
-const ServicesPage: React.FC = () => {
-  return (
-    <Container
-      component="main"
-      maxWidth="lg"
-      sx={{
-        mt: { xs: 2, sm: 4 },
-        mb: { xs: 2, sm: 4 },
-        px: { xs: 2, sm: 3 },
-      }}
-    >
-      <ServicesList />
-    </Container>
-  );
-};
+const ServicesPage: React.FC = () => (
+  <div style={{ maxWidth: 1024, margin: '0 auto', padding: '24px 16px' }}>
+    <ServicesList />
+  </div>
+);
 
 export default ServicesPage;

@@ -1,6 +1,8 @@
 import { useState } from 'react';
-import { Box, Typography, TextField, Button } from '@mui/material';
-import { Phone as PhoneIcon } from '@mui/icons-material';
+import { Button, Input, Typography, theme } from 'antd';
+import { PhoneOutlined } from '@ant-design/icons';
+
+const { Title, Text } = Typography;
 
 interface PhoneNumberStepProps {
   onNext: (phoneNumber: string) => void;
@@ -9,18 +11,15 @@ interface PhoneNumberStepProps {
 }
 
 const PhoneNumberStep: React.FC<PhoneNumberStepProps> = ({ onNext, onBack, initialValue = '' }) => {
+  const { token } = theme.useToken();
   const [phoneNumber, setPhoneNumber] = useState(initialValue);
   const [error, setError] = useState('');
 
   const formatPhoneNumber = (value: string): string => {
     const onlyNumbers = value.replace(/\D/g, '');
-    if (onlyNumbers.length <= 2) {
-      return onlyNumbers;
-    } else if (onlyNumbers.length <= 7) {
-      return `${onlyNumbers.slice(0, 2)} ${onlyNumbers.slice(2)}`;
-    } else {
-      return `${onlyNumbers.slice(0, 2)} ${onlyNumbers.slice(2, 7)} ${onlyNumbers.slice(7, 11)}`;
-    }
+    if (onlyNumbers.length <= 2) return onlyNumbers;
+    if (onlyNumbers.length <= 7) return `${onlyNumbers.slice(0, 2)} ${onlyNumbers.slice(2)}`;
+    return `${onlyNumbers.slice(0, 2)} ${onlyNumbers.slice(2, 7)} ${onlyNumbers.slice(7, 11)}`;
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -34,7 +33,6 @@ const PhoneNumberStep: React.FC<PhoneNumberStepProps> = ({ onNext, onBack, initi
   };
 
   const handleSubmit = () => {
-    // Basic phone validation
     const cleaned = phoneNumber.replace(/\D/g, '');
     if (cleaned.length < 10) {
       setError('Por favor, insira um número de telefone válido');
@@ -45,47 +43,33 @@ const PhoneNumberStep: React.FC<PhoneNumberStepProps> = ({ onNext, onBack, initi
   };
 
   return (
-    <Box>
-      <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-        <PhoneIcon sx={{ fontSize: { xs: 32, sm: 40 }, color: 'primary.main', mr: 2 }} />
-        <Typography variant="h5" color="text.primary" sx={{ fontSize: { xs: '1.25rem', sm: '1.5rem' } }}>
-          Digite seu Telefone
-        </Typography>
-      </Box>
+    <div>
+      <div style={{ display: 'flex', alignItems: 'center', marginBottom: 16 }}>
+        <PhoneOutlined style={{ fontSize: 32, color: token.colorPrimary, marginRight: 16 }} />
+        <Title level={4} style={{ margin: 0 }}>Digite seu Telefone</Title>
+      </div>
 
-      <Typography variant="body1" color="text.secondary" sx={{ mb: 2, fontSize: { xs: '0.875rem', sm: '1rem' } }}>
+      <Text type="secondary" style={{ display: 'block', marginBottom: 16 }}>
         Usaremos para enviar lembretes do seu agendamento
-      </Typography>
+      </Text>
 
-      <TextField
-        fullWidth
-        label="Telefone"
-        value={formatPhoneNumber(phoneNumber)}
-        onChange={handleChange}
-        placeholder="11 99999 9999"
-        error={!!error}
-        helperText={error}
-        inputProps={{ inputMode: 'numeric' }}
-        sx={{ mb: 2 }}
-      />
+      <div style={{ marginBottom: 16 }}>
+        <Input
+          size="large"
+          placeholder="11 99999 9999"
+          value={formatPhoneNumber(phoneNumber)}
+          onChange={handleChange}
+          inputMode="numeric"
+          status={error ? 'error' : undefined}
+        />
+        {error && <Text type="danger" style={{ fontSize: 12 }}>{error}</Text>}
+      </div>
 
-      <Box sx={{ display: 'flex', gap: 2 }}>
-        <Button
-          variant="outlined"
-          onClick={onBack}
-          fullWidth
-        >
-          Voltar
-        </Button>
-        <Button
-          variant="contained"
-          onClick={handleSubmit}
-          fullWidth
-        >
-          Próximo
-        </Button>
-      </Box>
-    </Box>
+      <div style={{ display: 'flex', gap: 16 }}>
+        <Button block onClick={onBack}>Voltar</Button>
+        <Button block type="primary" onClick={handleSubmit}>Próximo</Button>
+      </div>
+    </div>
   );
 };
 

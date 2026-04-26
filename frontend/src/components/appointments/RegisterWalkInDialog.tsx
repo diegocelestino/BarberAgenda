@@ -1,19 +1,10 @@
 import { useState, useEffect } from 'react';
-import {
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  Button,
-  TextField,
-  MenuItem,
-  Stack,
-  Alert,
-  CircularProgress,
-} from '@mui/material';
+import { Alert, Input, Modal, Select, Spin, Typography } from 'antd';
 import { useAppDispatch, useAppSelector } from '../../store/hooks';
 import { createAppointment, updateAppointment } from '../../store/appointments';
 import { fetchServices, selectAllServices, selectServicesLoading } from '../../store/services';
+
+const { Text } = Typography;
 
 interface RegisterWalkInDialogProps {
   open: boolean;
@@ -22,12 +13,7 @@ interface RegisterWalkInDialogProps {
   onSuccess: () => void;
 }
 
-const RegisterWalkInDialog: React.FC<RegisterWalkInDialogProps> = ({
-  open,
-  barberId,
-  onClose,
-  onSuccess,
-}) => {
+const RegisterWalkInDialog: React.FC<RegisterWalkInDialogProps> = ({ open, barberId, onClose, onSuccess }) => {
   const dispatch = useAppDispatch();
   const services = useAppSelector(selectAllServices);
   const servicesLoading = useAppSelector(selectServicesLoading);
@@ -37,127 +23,48 @@ const RegisterWalkInDialog: React.FC<RegisterWalkInDialogProps> = ({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  useEffect(() => {
-    if (services.length === 0) {
-      dispatch(fetchServices());
-    }
-  }, [services.length, dispatch]);
+  useEffect(() => { if (services.length === 0) dispatch(fetchServices()); }, [services.length, dispatch]);
+  useEffect(() => { if (open) { setCustomerName('LOJA'); setSelectedService(''); setError(''); } }, [open]);
 
-  useEffect(() => {
-    if (open) {
-      // Reset form when dialog opens
-      setCustomerName('LOJA');
-      setSelectedService('');
-      setError('');
-    }
-  }, [open]);
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async () => {
     setError('');
-
-    if (!customerName.trim() || !selectedService) {
-      setError('Por favor, preencha todos os campos obrigatórios');
-      return;
-    }
-
+    if (!customerName.trim() || !selectedService) { setError('Por favor, preencha todos os campos obrigatórios'); return; }
     setLoading(true);
-
     try {
       const now = Date.now();
-      
-      // selectedService already contains the serviceId
-      
-      // Create the appointment
-      const createdAppointment = await dispatch(
-        createAppointment({
-          barberId,
-          data: {
-            customerName: customerName.trim(),
-            customerPhone: '',
-            service: selectedService, // Send service ID directly
-            startTime: now,
-            endTime: now + 1000, // 1 second after start
-            notes: 'Atendimento sem agendamento',
-          },
-        })
-      ).unwrap();
-
-      // Immediately mark it as completed
-      await dispatch(
-        updateAppointment({
-          barberId,
-          appointmentId: createdAppointment.appointmentId,
-          data: { status: 'completed' },
-        })
-      ).unwrap();
-
+      const created = await dispatch(createAppointment({ barberId, data: { customerName: customerName.trim(), customerPhone: '', service: selectedService, startTime: now, endTime: now + 1000, notes: 'Atendimento sem agendamento' } })).unwrap();
+      await dispatch(updateAppointment({ barberId, appointmentId: created.appointmentId, data: { status: 'completed' } })).unwrap();
       onSuccess();
-    } catch (err: any) {
-      setError(err.message || 'Erro ao registrar atendimento');
-    } finally {
-      setLoading(false);
-    }
+    } catch (err: any) { setError(err.message || 'Erro ao registrar atendimento'); }
+    finally { setLoading(false); }
   };
 
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
-      <form onSubmit={handleSubmit}>
-        <DialogTitle>Registrar Atendimento</DialogTitle>
-        <DialogContent>
-          <Stack spacing={2.5} sx={{ mt: 1 }}>
-            {error && <Alert severity="error">{error}</Alert>}
+    <Modal title="Registrar Atendimento" open={open} onCancel={onClose} onOk={handleSubmit}
+      okText={loading ? 'Registrando...' : 'Registrar'} confirmLoading={loading}
+      okButtonProps={{ disabled: loading || servicesLoading || services.length === 0 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 16, marginTop: 8 }}>
+        {error && <Alert type="error" message={error} showIcon />}
 
-            <TextField
-              label="Nome do Cliente"
-              value={customerName}
-              onChange={(e) => setCustomerName(e.target.value)}
-              required
-              fullWidth
-              helperText="Padrão: LOJA (pode ser editado)"
-            />
+        <div>
+          <label>Nome do Cliente</label>
+          <Input value={customerName} onChange={(e) => setCustomerName(e.target.value)} />
+          <Text type="secondary" style={{ fontSize: 12 }}>Padrão: LOJA (pode ser editado)</Text>
+        </div>
 
-            {servicesLoading ? (
-              <Stack direction="row" alignItems="center" spacing={1}>
-                <CircularProgress size={20} />
-                <span>Carregando serviços...</span>
-              </Stack>
-            ) : services.length === 0 ? (
-              <Alert severity="warning">
-                Nenhum serviço disponível. Por favor, crie serviços primeiro.
-              </Alert>
-            ) : (
-              <TextField
-                select
-                label="Serviço Realizado"
-                value={selectedService}
-                onChange={(e) => setSelectedService(e.target.value)}
-                required
-                fullWidth
-              >
-                {services.map((service) => (
-                  <MenuItem key={service.serviceId} value={service.serviceId}>
-                    {service.title} - R$ {service.price} ({service.duration} min)
-                  </MenuItem>
-                ))}
-              </TextField>
-            )}
-          </Stack>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={onClose} disabled={loading}>
-            Cancelar
-          </Button>
-          <Button
-            type="submit"
-            variant="contained"
-            disabled={loading || servicesLoading || services.length === 0}
-          >
-            {loading ? 'Registrando...' : 'Registrar'}
-          </Button>
-        </DialogActions>
-      </form>
-    </Dialog>
+        {servicesLoading ? (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}><Spin size="small" /><span>Carregando serviços...</span></div>
+        ) : services.length === 0 ? (
+          <Alert type="warning" message="Nenhum serviço disponível. Por favor, crie serviços primeiro." />
+        ) : (
+          <div>
+            <label>Serviço Realizado</label>
+            <Select style={{ width: '100%' }} value={selectedService || undefined} onChange={setSelectedService} placeholder="Selecione um serviço"
+              options={services.map(s => ({ value: s.serviceId, label: `${s.title} - R$ ${s.price} (${s.duration} min)` }))} />
+          </div>
+        )}
+      </div>
+    </Modal>
   );
 };
 

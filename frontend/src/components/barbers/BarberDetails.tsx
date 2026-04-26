@@ -1,305 +1,93 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { Alert, Button, Card, Col, Row, Spin, Typography, message } from 'antd';
 import {
-  Box,
-  Typography,
-  Paper,
-  Alert,
-  CircularProgress,
-  IconButton,
-  Grid,
-  Card,
-  CardContent,
-  CardActionArea,
-  Button,
-  Stack,
-  Snackbar,
-} from '@mui/material';
-import {
-  ArrowBack as ArrowBackIcon,
-  Person as PersonIcon,
-  Schedule as ScheduleIcon,
-  CalendarMonth as CalendarMonthIcon,
-  AddCircle as AddCircleIcon,
-  Receipt as ReceiptIcon,
-} from '@mui/icons-material';
+  ArrowLeftOutlined, UserOutlined, ScheduleOutlined,
+  CalendarOutlined, PlusCircleOutlined, FileTextOutlined,
+} from '@ant-design/icons';
 import { useAppDispatch, useAppSelector } from '../../store/hooks';
 import {
-  fetchBarberById,
-  selectSelectedBarber,
-  selectBarbersLoading,
-  selectBarbersError,
-  clearSelectedBarber,
+  fetchBarberById, selectSelectedBarber, selectBarbersLoading,
+  selectBarbersError, clearSelectedBarber,
 } from '../../store/barbers';
-import { 
-  fetchAppointmentsByBarber,
-  selectAllAppointments,
-  selectAppointmentsLoading,
-  clearAppointments 
+import {
+  fetchAppointmentsByBarber, selectAllAppointments,
+  selectAppointmentsLoading, clearAppointments,
 } from '../../store/appointments';
 import AppointmentNavigationCard from '../appointments/AppointmentNavigationCard';
 import RegisterWalkInDialog from '../appointments/RegisterWalkInDialog';
 import { now, addDays } from '../../utils/dateTime';
 
+const { Title, Text } = Typography;
+
 const BarberDetails: React.FC = () => {
   const { barberId } = useParams<{ barberId: string }>();
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
-  
+
   const barber = useAppSelector(selectSelectedBarber);
   const loading = useAppSelector(selectBarbersLoading);
   const error = useAppSelector(selectBarbersError);
   const appointments = useAppSelector(selectAllAppointments);
   const appointmentsLoading = useAppSelector(selectAppointmentsLoading);
-
   const [walkInDialogOpen, setWalkInDialogOpen] = useState(false);
-  const [successOpen, setSuccessOpen] = useState(false);
 
-  useEffect(() => {
+  const fetchAppointments = useCallback(() => {
     if (barberId) {
-      dispatch(fetchBarberById(barberId));
-      
-      // Fetch only scheduled appointments for the next 30 days, sorted by time ascending
       const startDate = now();
       const endDate = addDays(now(), 30);
-      dispatch(fetchAppointmentsByBarber({ 
-        barberId, 
-        params: { 
-          startDate, 
-          endDate, 
-          status: 'scheduled',
-          sortBy: 'startTime',
-          sortOrder: 'asc'
-        } 
-      }));
+      dispatch(fetchAppointmentsByBarber({ barberId, params: { startDate, endDate, status: 'scheduled', sortBy: 'startTime', sortOrder: 'asc' } }));
     }
-    
-    return () => {
-      dispatch(clearSelectedBarber());
-      dispatch(clearAppointments());
-    };
   }, [barberId, dispatch]);
 
-  // Backend already returns filtered and sorted appointments
-  const scheduledAppointments = appointments;
+  useEffect(() => {
+    if (barberId) { dispatch(fetchBarberById(barberId)); fetchAppointments(); }
+    return () => { dispatch(clearSelectedBarber()); dispatch(clearAppointments()); };
+  }, [barberId, dispatch, fetchAppointments]);
 
-  const handleWalkInSuccess = () => {
-    setWalkInDialogOpen(false);
-    setSuccessOpen(true);
-    
-    // Refresh appointments
-    if (barberId) {
-      const startDate = now();
-      const endDate = addDays(now(), 30);
-      dispatch(fetchAppointmentsByBarber({ 
-        barberId, 
-        params: { 
-          startDate, 
-          endDate, 
-          status: 'scheduled',
-          sortBy: 'startTime',
-          sortOrder: 'asc'
-        } 
-      }));
-    }
-  };
+  const handleWalkInSuccess = () => { setWalkInDialogOpen(false); message.success('Atendimento registrado com sucesso!'); fetchAppointments(); };
 
-  const handleAppointmentUpdate = () => {
-    // Refresh appointments after completing one
-    if (barberId) {
-      const startDate = now();
-      const endDate = addDays(now(), 30);
-      dispatch(fetchAppointmentsByBarber({ 
-        barberId, 
-        params: { 
-          startDate, 
-          endDate, 
-          status: 'scheduled',
-          sortBy: 'startTime',
-          sortOrder: 'asc'
-        } 
-      }));
-    }
-  };
-
-  if (loading && !barber) {
-    return (
-      <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
-        <CircularProgress />
-      </Box>
-    );
-  }
-
-  if (error) {
-    return (
-      <Alert severity="error" sx={{ mb: 2 }}>
-        {error}
-      </Alert>
-    );
-  }
-
-  if (!barber) {
-    return (
-      <Alert severity="warning" sx={{ mb: 2 }}>
-        Barbeiro não encontrado
-      </Alert>
-    );
-  }
-
-  const menuOptions = [
-    {
-      title: 'Agenda',
-      description: 'Ver e gerenciar agendamentos',
-      icon: <CalendarMonthIcon sx={{ fontSize: 48 }} />,
-      path: `/admin/barbers/${barberId}/appointments`,
-      color: '#ed6c02',
-    },
-    {
-      title: 'Detalhes',
-      description: 'Editar informações do barbeiro',
-      icon: <PersonIcon sx={{ fontSize: 48 }} />,
-      path: `/admin/barbers/${barberId}/edit`,
-      color: '#1976d2',
-    },
-    {
-      title: 'Expediente',
-      description: 'Gerenciar horários de trabalho',
-      icon: <ScheduleIcon sx={{ fontSize: 48 }} />,
-      path: `/admin/barbers/${barberId}/schedule`,
-      color: '#2e7d32',
-    },
-  ];
+  if (loading && !barber) return <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 400 }}><Spin size="large" /></div>;
+  if (error) return <Alert type="error" message={error} showIcon style={{ margin: 16 }} />;
+  if (!barber) return <Alert type="warning" message="Barbeiro não encontrado" showIcon style={{ margin: 16 }} />;
 
   return (
-    <Paper elevation={2} sx={{ p: { xs: 2, sm: 3 } }}>
-      <Box sx={{ display: 'flex', alignItems: 'center', mb: 4 }}>
-        <IconButton onClick={() => navigate('/admin/barbers')} sx={{ mr: 1 }}>
-          <ArrowBackIcon />
-        </IconButton>
-        <Typography variant="h5" component="h2">
-          {barber.name}
-        </Typography>
-      </Box>
+    <Card>
+      <div style={{ display: 'flex', alignItems: 'center', marginBottom: 24 }}>
+        <Button type="text" icon={<ArrowLeftOutlined />} onClick={() => navigate('/admin/barbers')} style={{ marginRight: 8 }} />
+        <Title level={4} style={{ margin: 0 }}>{barber.name}</Title>
+      </div>
 
-      <Grid container spacing={3}>
-        {/* Next Appointment Card */}
-        <Grid item xs={12}>
-          <AppointmentNavigationCard
-            appointments={scheduledAppointments}
-            barberId={barberId || ''}
-            loading={appointmentsLoading}
-            onAppointmentUpdate={handleAppointmentUpdate}
-          />
-        </Grid>
+      <Row gutter={[16, 16]}>
+        <Col span={24}>
+          <AppointmentNavigationCard appointments={appointments} barberId={barberId || ''} loading={appointmentsLoading} onAppointmentUpdate={fetchAppointments} />
+        </Col>
 
-        {/* Agenda Card - Full Width */}
-        <Grid item xs={12}>
-          <Card 
-            elevation={2}
-            sx={{
-              transition: 'transform 0.2s, box-shadow 0.2s',
-              '&:hover': {
-                transform: 'translateY(-4px)',
-                boxShadow: 4,
-              },
-            }}
-          >
-            <CardActionArea 
-              onClick={() => navigate(menuOptions[0].path)}
-              sx={{ p: 2 }}
-            >
-              <CardContent sx={{ textAlign: 'center' }}>
-                <Box sx={{ color: menuOptions[0].color, mb: 2 }}>
-                  {menuOptions[0].icon}
-                </Box>
-                <Typography variant="h6" component="h3" gutterBottom>
-                  {menuOptions[0].title}
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  {menuOptions[0].description}
-                </Typography>
-              </CardContent>
-            </CardActionArea>
+        <Col span={24}>
+          <Card hoverable onClick={() => navigate(`/admin/barbers/${barberId}/appointments`)} style={{ textAlign: 'center', padding: 16 }}>
+            <CalendarOutlined style={{ fontSize: 48, color: '#ed6c02', marginBottom: 8 }} />
+            <Title level={5}>Agenda</Title>
+            <Text type="secondary">Ver e gerenciar agendamentos</Text>
           </Card>
-        </Grid>
+        </Col>
 
-        {/* Detalhes and Expediente Buttons */}
-        <Grid item xs={12}>
-          <Stack direction="row" spacing={2}>
-            <Button
-              variant="outlined"
-              size="large"
-              fullWidth
-              startIcon={menuOptions[1].icon}
-              onClick={() => navigate(menuOptions[1].path)}
-              sx={{ py: 2 }}
-            >
-              {menuOptions[1].title}
-            </Button>
-            <Button
-              variant="outlined"
-              size="large"
-              fullWidth
-              startIcon={menuOptions[2].icon}
-              onClick={() => navigate(menuOptions[2].path)}
-              sx={{ py: 2 }}
-            >
-              {menuOptions[2].title}
-            </Button>
-          </Stack>
-        </Grid>
+        <Col span={24}>
+          <div style={{ display: 'flex', gap: 16 }}>
+            <Button block size="large" icon={<UserOutlined />} onClick={() => navigate(`/admin/barbers/${barberId}/edit`)} style={{ height: 48 }}>Detalhes</Button>
+            <Button block size="large" icon={<ScheduleOutlined />} onClick={() => navigate(`/admin/barbers/${barberId}/schedule`)} style={{ height: 48 }}>Expediente</Button>
+          </div>
+        </Col>
 
-        {/* Register Walk-In Service Button */}
-        <Grid item xs={12}>
-          <Stack direction="row" spacing={2}>
-            <Button
-              variant="outlined"
-              color="primary"
-              size="large"
-              fullWidth
-              startIcon={<ReceiptIcon />}
-              onClick={() => navigate(`/admin/barbers/${barberId}/extract`)}
-              sx={{ py: 2 }}
-            >
-              Extrato
-            </Button>
-            <Button
-              variant="contained"
-              color="secondary"
-              size="large"
-              fullWidth
-              startIcon={<AddCircleIcon />}
-              onClick={() => setWalkInDialogOpen(true)}
-              sx={{ py: 2 }}
-            >
-              Registrar Atendimento
-            </Button>
-          </Stack>
-        </Grid>
-      </Grid>
+        <Col span={24}>
+          <div style={{ display: 'flex', gap: 16 }}>
+            <Button block size="large" icon={<FileTextOutlined />} onClick={() => navigate(`/admin/barbers/${barberId}/extract`)} style={{ height: 48 }}>Extrato</Button>
+            <Button block size="large" type="primary" icon={<PlusCircleOutlined />} onClick={() => setWalkInDialogOpen(true)} style={{ height: 48 }}>Registrar Atendimento</Button>
+          </div>
+        </Col>
+      </Row>
 
-      <RegisterWalkInDialog
-        open={walkInDialogOpen}
-        barberId={barberId || ''}
-        onClose={() => setWalkInDialogOpen(false)}
-        onSuccess={handleWalkInSuccess}
-      />
-
-      <Snackbar
-        open={successOpen}
-        autoHideDuration={3000}
-        onClose={() => setSuccessOpen(false)}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
-      >
-        <Alert
-          onClose={() => setSuccessOpen(false)}
-          severity="success"
-          sx={{ width: '100%' }}
-        >
-          Atendimento registrado com sucesso!
-        </Alert>
-      </Snackbar>
-    </Paper>
+      <RegisterWalkInDialog open={walkInDialogOpen} barberId={barberId || ''} onClose={() => setWalkInDialogOpen(false)} onSuccess={handleWalkInSuccess} />
+    </Card>
   );
 };
 

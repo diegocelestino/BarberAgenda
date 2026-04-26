@@ -1,9 +1,13 @@
-import { AppBar, Toolbar, Typography, IconButton, Button } from '@mui/material';
-import { Home as HomeIcon, Logout as LogoutIcon } from '@mui/icons-material';
+import { Button, Layout, Typography, theme } from 'antd';
+import { HomeOutlined, LogoutOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 
+const { Header: AntHeader } = Layout;
+const { Title } = Typography;
+
 const Header: React.FC = () => {
+  const { token } = theme.useToken();
   const navigate = useNavigate();
   const { isAuthenticated, logout } = useAuth();
 
@@ -13,30 +17,27 @@ const Header: React.FC = () => {
   };
 
   return (
-    <AppBar position="sticky">
-      <Toolbar>
-        <IconButton
-          color="inherit"
-          onClick={() => navigate('/', { state: { reset: Date.now() } })}
-          edge="start"
-          sx={{ mr: 2 }}
-        >
-          <HomeIcon />
-        </IconButton>
-        <Typography variant="h6" component="h1" sx={{ flexGrow: 1 }}>
-          Miguel Castilho Agenda
-        </Typography>
-        {isAuthenticated && (
-          <Button
-            color="inherit"
-            startIcon={<LogoutIcon />}
-            onClick={handleLogout}
-          >
-            Sair
-          </Button>
-        )}
-      </Toolbar>
-    </AppBar>
+    <AntHeader style={{
+      display: 'flex', alignItems: 'center', padding: '0 16px',
+      position: 'sticky', top: 0, zIndex: 1000,
+      background: token.colorBgContainer,
+      borderBottom: `1px solid ${token.colorBorder}`,
+    }}>
+      <Button
+        type="text"
+        icon={<HomeOutlined />}
+        onClick={() => navigate('/', { state: { reset: Date.now() } })}
+        style={{ marginRight: 16 }}
+      />
+      <Title level={4} style={{ margin: 0, flex: 1 }}>
+        Miguel Castilho Agenda
+      </Title>
+      {isAuthenticated && (
+        <Button type="text" icon={<LogoutOutlined />} onClick={handleLogout}>
+          Sair
+        </Button>
+      )}
+    </AntHeader>
   );
 };
 

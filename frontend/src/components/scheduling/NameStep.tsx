@@ -1,6 +1,8 @@
 import { useState } from 'react';
-import { Box, Typography, TextField, Button } from '@mui/material';
-import { Person as PersonIcon } from '@mui/icons-material';
+import { Button, Input, Typography, theme } from 'antd';
+import { UserOutlined } from '@ant-design/icons';
+
+const { Title, Text } = Typography;
 
 interface NameStepProps {
   onNext: (name: string) => void;
@@ -9,6 +11,7 @@ interface NameStepProps {
 }
 
 const NameStep: React.FC<NameStepProps> = ({ onNext, onBack, initialValue = '' }) => {
+  const { token } = theme.useToken();
   const [name, setName] = useState(initialValue);
   const [error, setError] = useState('');
 
@@ -22,46 +25,32 @@ const NameStep: React.FC<NameStepProps> = ({ onNext, onBack, initialValue = '' }
   };
 
   return (
-    <Box>
-      <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-        <PersonIcon sx={{ fontSize: { xs: 32, sm: 40 }, color: 'primary.main', mr: 2 }} />
-        <Typography variant="h5" color="text.primary" sx={{ fontSize: { xs: '1.25rem', sm: '1.5rem' } }}>
-          Digite seu Nome
-        </Typography>
-      </Box>
+    <div>
+      <div style={{ display: 'flex', alignItems: 'center', marginBottom: 16 }}>
+        <UserOutlined style={{ fontSize: 32, color: token.colorPrimary, marginRight: 16 }} />
+        <Title level={4} style={{ margin: 0 }}>Digite seu Nome</Title>
+      </div>
 
-      <Typography variant="body1" color="text.secondary" sx={{ mb: 2, fontSize: { xs: '0.875rem', sm: '1rem' } }}>
+      <Text type="secondary" style={{ display: 'block', marginBottom: 16 }}>
         Como devemos te chamar?
-      </Typography>
+      </Text>
 
-      <TextField
-        fullWidth
-        label="Nome Completo"
-        value={name}
-        onChange={(e) => setName(e.target.value)}
-        placeholder="João Silva"
-        error={!!error}
-        helperText={error}
-        sx={{ mb: 2 }}
-      />
+      <div style={{ marginBottom: 16 }}>
+        <Input
+          size="large"
+          placeholder="João Silva"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          status={error ? 'error' : undefined}
+        />
+        {error && <Text type="danger" style={{ fontSize: 12 }}>{error}</Text>}
+      </div>
 
-      <Box sx={{ display: 'flex', gap: 2 }}>
-        <Button
-          variant="outlined"
-          onClick={onBack}
-          fullWidth
-        >
-          Voltar
-        </Button>
-        <Button
-          variant="contained"
-          onClick={handleSubmit}
-          fullWidth
-        >
-          Próximo
-        </Button>
-      </Box>
-    </Box>
+      <div style={{ display: 'flex', gap: 16 }}>
+        <Button block onClick={onBack}>Voltar</Button>
+        <Button block type="primary" onClick={handleSubmit}>Próximo</Button>
+      </div>
+    </div>
   );
 };
 

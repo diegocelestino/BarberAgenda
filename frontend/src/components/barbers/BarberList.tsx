@@ -1,25 +1,14 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import {
-  Box,
-  Typography,
-  CircularProgress,
-  Alert,
-  Grid,
-  Button,
-  IconButton,
-} from '@mui/material';
-import { Add as AddIcon, ArrowBack as ArrowBackIcon } from '@mui/icons-material';
+import { Alert, Button, Col, Row, Spin, Typography } from 'antd';
+import { PlusOutlined, ArrowLeftOutlined } from '@ant-design/icons';
 import { useAppDispatch, useAppSelector } from '../../store/hooks';
-import {
-  fetchBarbers,
-  selectAllBarbers,
-  selectBarbersLoading,
-  selectBarbersError,
-} from '../../store/barbers';
+import { fetchBarbers, selectAllBarbers, selectBarbersLoading, selectBarbersError } from '../../store/barbers';
 import BarberCard from './BarberCard';
 import DeleteBarberDialog from './DeleteBarberDialog';
 import CreateBarberDialog from './CreateBarberDialog';
+
+const { Title } = Typography;
 
 const BarberList: React.FC = () => {
   const navigate = useNavigate();
@@ -31,92 +20,41 @@ const BarberList: React.FC = () => {
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [selectedBarberId, setSelectedBarberId] = useState<string | null>(null);
 
-  useEffect(() => {
-    dispatch(fetchBarbers());
-  }, [dispatch]);
+  useEffect(() => { dispatch(fetchBarbers()); }, [dispatch]);
 
-  const handleDeleteClick = (barberId: string) => {
-    setSelectedBarberId(barberId);
-    setDeleteDialogOpen(true);
-  };
+  const handleDeleteClick = (barberId: string) => { setSelectedBarberId(barberId); setDeleteDialogOpen(true); };
+  const handleDeleteConfirm = () => { setDeleteDialogOpen(false); setSelectedBarberId(null); };
+  const handleDeleteCancel = () => { setDeleteDialogOpen(false); setSelectedBarberId(null); };
+  const handleCreateSuccess = () => { setCreateDialogOpen(false); };
 
-  const handleDeleteConfirm = () => {
-    setDeleteDialogOpen(false);
-    setSelectedBarberId(null);
-  };
-
-  const handleDeleteCancel = () => {
-    setDeleteDialogOpen(false);
-    setSelectedBarberId(null);
-  };
-
-  const handleCreateSuccess = () => {
-    setCreateDialogOpen(false);
-  };
-
-  if (loading) {
-    return (
-      <Box display="flex" justifyContent="center" alignItems="center" minHeight="200px">
-        <CircularProgress />
-      </Box>
-    );
-  }
-
-  if (error) {
-    return (
-      <Alert severity="error" sx={{ mb: 2 }}>
-        {error}
-      </Alert>
-    );
-  }
+  if (loading) return <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 200 }}><Spin size="large" /></div>;
+  if (error) return <Alert type="error" message={error} showIcon style={{ marginBottom: 16 }} />;
 
   return (
-    <Box>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-          <IconButton onClick={() => navigate('/admin')} title="Voltar">
-            <ArrowBackIcon />
-          </IconButton>
-          <Typography variant="h5" component="h2">
-            Barbeiros
-          </Typography>
-        </Box>
-        <Button
-          variant="contained"
-          startIcon={<AddIcon />}
-          onClick={() => setCreateDialogOpen(true)}
-        >
-          Novo Barbeiro
-        </Button>
-      </Box>
+    <div>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <Button type="text" icon={<ArrowLeftOutlined />} onClick={() => navigate('/admin')} />
+          <Title level={4} style={{ margin: 0 }}>Barbeiros</Title>
+        </div>
+        <Button type="primary" icon={<PlusOutlined />} onClick={() => setCreateDialogOpen(true)}>Novo Barbeiro</Button>
+      </div>
 
       {barbers.length === 0 ? (
-        <Alert severity="info">
-          Nenhum barbeiro encontrado. Crie um para começar!
-        </Alert>
+        <Alert type="info" message="Nenhum barbeiro encontrado. Crie um para começar!" showIcon />
       ) : (
-        <Grid container spacing={2}>
+        <Row gutter={[16, 16]}>
           {barbers.map((barber) => (
-            <Grid item xs={12} sm={6} md={4} key={barber.barberId}>
+            <Col xs={24} sm={12} md={8} key={barber.barberId}>
               <BarberCard barber={barber} onDelete={handleDeleteClick} />
-            </Grid>
+            </Col>
           ))}
-        </Grid>
+        </Row>
       )}
 
-      <DeleteBarberDialog
-        open={deleteDialogOpen}
-        barberId={selectedBarberId}
-        onConfirm={handleDeleteConfirm}
-        onCancel={handleDeleteCancel}
-      />
-
-      <CreateBarberDialog
-        open={createDialogOpen}
-        onClose={() => setCreateDialogOpen(false)}
-        onSuccess={handleCreateSuccess}
-      />
-    </Box>
+      <DeleteBarberDialog open={deleteDialogOpen} barberId={selectedBarberId} onConfirm={handleDeleteConfirm} onCancel={handleDeleteCancel} />
+      <CreateBarberDialog open={createDialogOpen} onClose={() => setCreateDialogOpen(false)} onSuccess={handleCreateSuccess} />
+    </div>
   );
 };
 

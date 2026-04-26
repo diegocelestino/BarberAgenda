@@ -1,20 +1,11 @@
 import { useState, useEffect } from 'react';
-import {
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  Button,
-  TextField,
-  Stack,
-  Alert,
-  MenuItem,
-  CircularProgress,
-} from '@mui/material';
+import { Alert, Input, Modal, Select, Typography } from 'antd';
 import { useAppDispatch, useAppSelector } from '../../store/hooks';
 import { createAppointment, selectAppointmentsLoading, selectAppointmentsError } from '../../store/appointments';
 import { barberApi } from '../../services/api';
 import { parseDateTime, addMinutes, isPast, getTodayDateString } from '../../utils/dateTime';
+
+const { Text } = Typography;
 
 interface CreateAppointmentDialogProps {
   open: boolean;
@@ -23,12 +14,7 @@ interface CreateAppointmentDialogProps {
   onSuccess: () => void;
 }
 
-const CreateAppointmentDialog: React.FC<CreateAppointmentDialogProps> = ({
-  open,
-  barberId,
-  onClose,
-  onSuccess,
-}) => {
+const CreateAppointmentDialog: React.FC<CreateAppointmentDialogProps> = ({ open, barberId, onClose, onSuccess }) => {
   const dispatch = useAppDispatch();
   const loading = useAppSelector(selectAppointmentsLoading);
   const error = useAppSelector(selectAppointmentsError);
@@ -44,193 +30,61 @@ const CreateAppointmentDialog: React.FC<CreateAppointmentDialogProps> = ({
   const [servicesError, setServicesError] = useState<string | null>(null);
 
   useEffect(() => {
-    const loadServices = async () => {
-      if (!open) return;
-      
-      try {
-        setServicesLoading(true);
-        setServicesError(null);
-        const services = await barberApi.getServices(barberId);
-        setAvailableServices(services);
-      } catch (err) {
-        console.error('Error loading services:', err);
-        setServicesError('Failed to load services');
-      } finally {
-        setServicesLoading(false);
-      }
+    if (!open) return;
+    const load = async () => {
+      try { setServicesLoading(true); setServicesError(null); setAvailableServices(await barberApi.getServices(barberId)); }
+      catch { setServicesError('Failed to load services'); }
+      finally { setServicesLoading(false); }
     };
-
-    loadServices();
+    load();
   }, [open, barberId]);
 
-  const getSelectedService = () => {
-    return availableServices.find(s => s.serviceId === selectedServiceId);
-  };
+  const getSelectedService = () => availableServices.find(s => s.serviceId === selectedServiceId);
 
   const handleSubmit = async () => {
-    if (!customerName || !date || !startTime || !selectedServiceId) {
-      return;
-    }
-
+    if (!customerName || !date || !startTime || !selectedServiceId) return;
     const selectedService = getSelectedService();
-    if (!selectedService) {
-      return;
-    }
-
+    if (!selectedService) return;
     const serviceDuration = selectedService.durationMinutes || selectedService.duration;
-    if (!serviceDuration) {
-      return;
-    }
-
-    // Parse date and time using centralized utility
+    if (!serviceDuration) return;
     const startDateTime = parseDateTime(date, startTime);
     const endDateTime = addMinutes(startDateTime, serviceDuration);
-
-    // Validation: Cannot schedule in the past
-    if (isPast(startDateTime)) {
-      alert('Cannot schedule an appointment in the past');
-      return;
-    }
-
-    // Validation: End time must be after start time
-    if (endDateTime <= startDateTime) {
-      alert('Invalid duration');
-      return;
-    }
-
+    if (isPast(startDateTime)) { alert('Cannot schedule an appointment in the past'); return; }
+    if (endDateTime <= startDateTime) { alert('Invalid duration'); return; }
     try {
-      await dispatch(
-        createAppointment({
-          barberId,
-          data: {
-            customerName,
-            customerPhone,
-            startTime: startDateTime,
-            endTime: endDateTime,
-            service: selectedServiceId, // Send service ID
-            notes,
-          },
-        })
-      ).unwrap();
-
-      // Reset form
-      setCustomerName('');
-      setCustomerPhone('');
-      setDate('');
-      setStartTime('');
-      setSelectedServiceId('');
-      setNotes('');
-      
+      await dispatch(createAppointment({ barberId, data: { customerName, customerPhone, startTime: startDateTime, endTime: endDateTime, service: selectedServiceId, notes } })).unwrap();
+      setCustomerName(''); setCustomerPhone(''); setDate(''); setStartTime(''); setSelectedServiceId(''); setNotes('');
       onSuccess();
-    } catch (err) {
-      console.error('Failed to create appointment:', err);
-    }
+    } catch (err) { console.error('Failed to create appointment:', err); }
   };
 
-  const handleClose = () => {
-    setCustomerName('');
-    setCustomerPhone('');
-    setDate('');
-    setStartTime('');
-    setSelectedServiceId('');
-    setNotes('');
-    onClose();
-  };
+  const handleClose = () => { setCustomerName(''); setCustomerPhone(''); setDate(''); setStartTime(''); setSelectedServiceId(''); setNotes(''); onClose(); };
 
   const selectedService = getSelectedService();
 
   return (
-    <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
-      <DialogTitle>New Appointment</DialogTitle>
-      <DialogContent>
-        <Stack spacing={2} sx={{ mt: 1 }}>
-          {error && <Alert severity="error">{error}</Alert>}
-          {servicesError && <Alert severity="error">{servicesError}</Alert>}
-          
-          <TextField
-            label="Customer Name"
-            value={customerName}
-            onChange={(e) => setCustomerName(e.target.value)}
-            required
-            fullWidth
-          />
+    <Modal title="New Appointment" open={open} onCancel={handleClose} onOk={handleSubmit}
+      okText={loading ? 'Creating...' : 'Create'} okButtonProps={{ disabled: loading || !customerName || !date || !startTime || !selectedServiceId }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 16, marginTop: 8 }}>
+        {error && <Alert type="error" message={error} showIcon />}
+        {servicesError && <Alert type="error" message={servicesError} showIcon />}
 
-          <TextField
-            label="Phone Number"
-            value={customerPhone}
-            onChange={(e) => setCustomerPhone(e.target.value)}
-            fullWidth
-          />
+        <div><label>Customer Name</label><Input value={customerName} onChange={(e) => setCustomerName(e.target.value)} /></div>
+        <div><label>Phone Number</label><Input value={customerPhone} onChange={(e) => setCustomerPhone(e.target.value)} /></div>
 
-          <TextField
-            select
-            label="Service"
-            value={selectedServiceId}
-            onChange={(e) => setSelectedServiceId(e.target.value)}
-            required
-            fullWidth
-            disabled={servicesLoading}
-            helperText={selectedService ? `Duration: ${selectedService.durationMinutes || selectedService.duration} minutes` : ''}
-          >
-            {servicesLoading ? (
-              <MenuItem disabled>
-                <CircularProgress size={20} /> Loading services...
-              </MenuItem>
-            ) : availableServices.length === 0 ? (
-              <MenuItem disabled>No services available for this barber</MenuItem>
-            ) : (
-              availableServices.map((service) => (
-                <MenuItem key={service.serviceId} value={service.serviceId}>
-                  {service.title || service.name}
-                </MenuItem>
-              ))
-            )}
-          </TextField>
+        <div>
+          <label>Service</label>
+          <Select style={{ width: '100%' }} value={selectedServiceId || undefined} onChange={setSelectedServiceId}
+            placeholder="Select a service" loading={servicesLoading} disabled={servicesLoading}
+            options={availableServices.map(s => ({ value: s.serviceId, label: s.title || s.name }))} />
+          {selectedService && <Text type="secondary" style={{ fontSize: 12 }}>Duration: {selectedService.durationMinutes || selectedService.duration} minutes</Text>}
+        </div>
 
-          <TextField
-            label="Date"
-            type="date"
-            value={date}
-            onChange={(e) => setDate(e.target.value)}
-            required
-            fullWidth
-            InputLabelProps={{ shrink: true }}
-            inputProps={{
-              min: getTodayDateString(),
-            }}
-          />
-
-          <TextField
-            label="Start Time"
-            type="time"
-            value={startTime}
-            onChange={(e) => setStartTime(e.target.value)}
-            required
-            fullWidth
-            InputLabelProps={{ shrink: true }}
-          />
-
-          <TextField
-            label="Notes"
-            value={notes}
-            onChange={(e) => setNotes(e.target.value)}
-            multiline
-            rows={2}
-            fullWidth
-          />
-        </Stack>
-      </DialogContent>
-      <DialogActions>
-        <Button onClick={handleClose}>Cancel</Button>
-        <Button
-          onClick={handleSubmit}
-          variant="contained"
-          disabled={loading || !customerName || !date || !startTime || !selectedServiceId}
-        >
-          {loading ? 'Creating...' : 'Create'}
-        </Button>
-      </DialogActions>
-    </Dialog>
+        <div><label>Date</label><Input type="date" value={date} onChange={(e) => setDate(e.target.value)} min={getTodayDateString()} /></div>
+        <div><label>Start Time</label><Input type="time" value={startTime} onChange={(e) => setStartTime(e.target.value)} /></div>
+        <div><label>Notes</label><Input.TextArea rows={2} value={notes} onChange={(e) => setNotes(e.target.value)} /></div>
+      </div>
+    </Modal>
   );
 };
 

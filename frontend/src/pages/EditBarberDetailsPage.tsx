@@ -1,99 +1,52 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import {
-  Box,
-  Typography,
-  TextField,
-  Button,
-  Paper,
-  Stack,
-  Chip,
-  Alert,
-  Snackbar,
-  CircularProgress,
-  IconButton,
-  Container,
-} from '@mui/material';
-import { Save as SaveIcon, ArrowBack as ArrowBackIcon } from '@mui/icons-material';
+import { Alert, Button, Card, Input, InputNumber, Spin, Tag, Typography, message } from 'antd';
+import { SaveOutlined, ArrowLeftOutlined } from '@ant-design/icons';
 import { useAppDispatch, useAppSelector } from '../store/hooks';
 import {
-  fetchBarberById,
-  updateBarber,
-  selectSelectedBarber,
-  selectBarbersLoading,
-  selectBarbersError,
-  clearSelectedBarber,
+  fetchBarberById, updateBarber, selectSelectedBarber,
+  selectBarbersLoading, selectBarbersError, clearSelectedBarber,
 } from '../store/barbers';
 import { fetchServices, selectAllServices, selectServicesLoading } from '../store/services';
+
+const { Title, Text } = Typography;
 
 const EditBarberDetailsPage: React.FC = () => {
   const { barberId } = useParams<{ barberId: string }>();
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
-  
+
   const barber = useAppSelector(selectSelectedBarber);
   const loading = useAppSelector(selectBarbersLoading);
   const error = useAppSelector(selectBarbersError);
   const services = useAppSelector(selectAllServices);
   const servicesLoading = useAppSelector(selectServicesLoading);
-  
+
   const [name, setName] = useState('');
   const [selectedServiceIds, setSelectedServiceIds] = useState<string[]>([]);
   const [rating, setRating] = useState<number>(5);
-  const [successOpen, setSuccessOpen] = useState(false);
 
+  useEffect(() => { if (services.length === 0) dispatch(fetchServices()); }, [services.length, dispatch]);
   useEffect(() => {
-    if (services.length === 0) {
-      dispatch(fetchServices());
-    }
-  }, [services.length, dispatch]);
-
-  useEffect(() => {
-    if (barberId) {
-      dispatch(fetchBarberById(barberId));
-    }
-    
-    return () => {
-      dispatch(clearSelectedBarber());
-    };
+    if (barberId) dispatch(fetchBarberById(barberId));
+    return () => { dispatch(clearSelectedBarber()); };
   }, [barberId, dispatch]);
-
   useEffect(() => {
-    if (barber) {
-      setName(barber.name);
-      setSelectedServiceIds(barber.serviceIds);
-      setRating(barber.rating);
-    }
+    if (barber) { setName(barber.name); setSelectedServiceIds(barber.serviceIds); setRating(barber.rating); }
   }, [barber]);
 
   const handleToggleService = (serviceId: string) => {
     setSelectedServiceIds(prev =>
-      prev.includes(serviceId)
-        ? prev.filter(id => id !== serviceId)
-        : [...prev, serviceId]
+      prev.includes(serviceId) ? prev.filter(id => id !== serviceId) : [...prev, serviceId]
     );
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    if (!name.trim() || !barberId || selectedServiceIds.length === 0) {
-      return;
-    }
-
+    if (!name.trim() || !barberId || selectedServiceIds.length === 0) return;
     try {
-      await dispatch(
-        updateBarber({
-          barberId,
-          data: {
-            name: name.trim(),
-            serviceIds: selectedServiceIds,
-            rating,
-          },
-        })
-      ).unwrap();
-
-      setSuccessOpen(true);
+      await dispatch(updateBarber({ barberId, data: { name: name.trim(), serviceIds: selectedServiceIds, rating } })).unwrap();
+      message.success('Barbeiro atualizado com sucesso!');
       setTimeout(() => navigate(`/admin/barber/${barberId}`), 1500);
     } catch (err) {
       console.error('Failed to update barber:', err);
@@ -101,135 +54,62 @@ const EditBarberDetailsPage: React.FC = () => {
   };
 
   if (loading && !barber) {
-    return (
-      <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
-        <CircularProgress />
-      </Box>
-    );
+    return <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 400 }}><Spin size="large" /></div>;
   }
-
-  if (error) {
-    return (
-      <Alert severity="error" sx={{ mb: 2 }}>
-        {error}
-      </Alert>
-    );
-  }
-
-  if (!barber) {
-    return (
-      <Alert severity="warning" sx={{ mb: 2 }}>
-        Barbeiro não encontrado
-      </Alert>
-    );
-  }
+  if (error) return <Alert type="error" message={error} showIcon style={{ margin: 16 }} />;
+  if (!barber) return <Alert type="warning" message="Barbeiro não encontrado" showIcon style={{ margin: 16 }} />;
 
   return (
-    <Container maxWidth="md" sx={{ mt: { xs: 2, sm: 4 }, mb: { xs: 2, sm: 4 } }}>
-      <Paper elevation={2} sx={{ p: { xs: 2, sm: 3 } }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
-          <IconButton onClick={() => navigate(`/admin/barber/${barberId}`)} sx={{ mr: 1 }}>
-            <ArrowBackIcon />
-          </IconButton>
-          <Typography variant="h5" component="h2">
-            Editar Detalhes - {barber.name}
-          </Typography>
-        </Box>
+    <div style={{ maxWidth: 768, margin: '0 auto', padding: '24px 16px' }}>
+      <Card>
+        <div style={{ display: 'flex', alignItems: 'center', marginBottom: 24 }}>
+          <Button type="text" icon={<ArrowLeftOutlined />} onClick={() => navigate(`/admin/barber/${barberId}`)} style={{ marginRight: 8 }} />
+          <Title level={4} style={{ margin: 0 }}>Editar Detalhes - {barber.name}</Title>
+        </div>
 
-        <Box component="form" onSubmit={handleSubmit}>
-          <Stack spacing={2.5}>
-            <TextField
-              label="Nome"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              required
-              fullWidth
-              variant="outlined"
-            />
+        <form onSubmit={handleSubmit}>
+          <div style={{ marginBottom: 20 }}>
+            <label>Nome</label>
+            <Input size="large" value={name} onChange={(e) => setName(e.target.value)} required />
+          </div>
 
-            <Box>
-              <Typography variant="subtitle2" gutterBottom>
-                Serviços *
-              </Typography>
+          <div style={{ marginBottom: 20 }}>
+            <Text strong>Serviços *</Text>
+            <div style={{ marginTop: 8 }}>
               {servicesLoading ? (
-                <Box display="flex" alignItems="center" gap={1}>
-                  <CircularProgress size={20} />
-                  <Typography variant="body2" color="text.secondary">
-                    Carregando serviços...
-                  </Typography>
-                </Box>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}><Spin size="small" /><Text type="secondary">Carregando serviços...</Text></div>
               ) : services.length === 0 ? (
-                <Alert severity="info">
-                  Nenhum serviço disponível. Por favor, crie serviços primeiro.
-                </Alert>
+                <Alert type="info" message="Nenhum serviço disponível. Por favor, crie serviços primeiro." />
               ) : (
-                <Stack direction="row" spacing={0.5} flexWrap="wrap" gap={0.5}>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
                   {services.map((service) => (
-                    <Chip
-                      key={service.serviceId}
-                      label={service.title}
+                    <Tag key={service.serviceId}
+                      color={selectedServiceIds.includes(service.serviceId) ? 'gold' : undefined}
                       onClick={() => handleToggleService(service.serviceId)}
-                      color={selectedServiceIds.includes(service.serviceId) ? 'primary' : 'default'}
-                      variant={selectedServiceIds.includes(service.serviceId) ? 'filled' : 'outlined'}
-                      clickable
-                    />
+                      style={{ cursor: 'pointer', padding: '4px 12px' }}>
+                      {service.title}
+                    </Tag>
                   ))}
-                </Stack>
+                </div>
               )}
-            </Box>
+            </div>
+          </div>
 
-            <TextField
-              label="Avaliação"
-              type="number"
-              value={rating}
-              onChange={(e) => setRating(parseFloat(e.target.value))}
-              inputProps={{
-                min: 0,
-                max: 5,
-                step: 0.1,
-              }}
-              fullWidth
-              variant="outlined"
-            />
+          <div style={{ marginBottom: 20 }}>
+            <label>Avaliação</label>
+            <InputNumber size="large" min={0} max={5} step={0.1} value={rating} onChange={(v) => setRating(v || 0)} style={{ width: '100%' }} />
+          </div>
 
-            <Stack direction="row" spacing={2}>
-              <Button
-                variant="outlined"
-                onClick={() => navigate(`/admin/barber/${barberId}`)}
-                fullWidth
-              >
-                Cancelar
-              </Button>
-              <Button
-                type="submit"
-                variant="contained"
-                size="large"
-                startIcon={<SaveIcon />}
-                disabled={loading || !name.trim() || selectedServiceIds.length === 0}
-                fullWidth
-              >
-                {loading ? 'Salvando...' : 'Salvar Alterações'}
-              </Button>
-            </Stack>
-          </Stack>
-        </Box>
-      </Paper>
-
-      <Snackbar
-        open={successOpen}
-        autoHideDuration={3000}
-        onClose={() => setSuccessOpen(false)}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
-      >
-        <Alert
-          onClose={() => setSuccessOpen(false)}
-          severity="success"
-          sx={{ width: '100%' }}
-        >
-          Barbeiro atualizado com sucesso!
-        </Alert>
-      </Snackbar>
-    </Container>
+          <div style={{ display: 'flex', gap: 16 }}>
+            <Button block onClick={() => navigate(`/admin/barber/${barberId}`)}>Cancelar</Button>
+            <Button block type="primary" htmlType="submit" size="large" icon={<SaveOutlined />}
+              disabled={loading || !name.trim() || selectedServiceIds.length === 0}>
+              {loading ? 'Salvando...' : 'Salvar Alterações'}
+            </Button>
+          </div>
+        </form>
+      </Card>
+    </div>
   );
 };
 

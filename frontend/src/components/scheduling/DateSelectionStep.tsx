@@ -1,13 +1,16 @@
 import { useState } from 'react';
-import { Box, Typography, Button } from '@mui/material';
-import { CalendarMonth as CalendarIcon } from '@mui/icons-material';
-import { LocalizationProvider, DateCalendar } from '@mui/x-date-pickers';
-import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
-import { ptBR } from 'date-fns/locale';
+import { Button, Calendar, Typography, theme } from 'antd';
+import { CalendarOutlined } from '@ant-design/icons';
+import dayjs, { Dayjs } from 'dayjs';
+import 'dayjs/locale/pt-br';
 import { startOfDay } from 'date-fns';
 import { getMaxBookingDate } from '../../config/businessHours';
 import { useAppSelector } from '../../store/hooks';
 import { selectBarberById } from '../../store/barbers/barbersSelectors';
+
+dayjs.locale('pt-br');
+
+const { Title, Text } = Typography;
 
 interface DateSelectionStepProps {
   onNext: (date: Date) => void;
@@ -17,106 +20,63 @@ interface DateSelectionStepProps {
 }
 
 const DateSelectionStep: React.FC<DateSelectionStepProps> = ({ onNext, onBack, selectedDate, barberId }) => {
-  const [date, setDate] = useState<Date | null>(selectedDate || null);
+  const { token } = theme.useToken();
+  const [date, setDate] = useState<Dayjs | null>(selectedDate ? dayjs(selectedDate) : null);
   const barber = useAppSelector((state) => selectBarberById(state, barberId));
 
   const workDays = barber?.schedule?.workDays ?? [1, 2, 3, 4, 5, 6];
-  
-  const shouldDisableDate = (d: Date) => {
-    // Check if it's a work day
-    if (!workDays.includes(d.getDay())) {
-      return true;
+  const minDate = dayjs();
+  const maxDate = dayjs(getMaxBookingDate());
+
+  const disabledDate = (current: Dayjs) => {
+    if (current.isBefore(minDate, 'day') || current.isAfter(maxDate, 'day')) return true;
+
+    if (!workDays.includes(current.day())) return true;
+
+    const now = new Date();
+    const isToday = startOfDay(current.toDate()).getTime() === startOfDay(now).getTime();
+    if (isToday && barber?.schedule) {
+      const [closeH, closeM] = barber.schedule.closeTime.split(':').map(Number);
+      const closingTime = new Date(now);
+      closingTime.setHours(closeH, closeM, 0, 0);
+      if (now.getTime() >= closingTime.getTime() - 60 * 60 * 1000) return true;
     }
 
-    // Check if it's today and we're within 1 hour of closing time
-    const now = new Date();
-    const isToday = startOfDay(d).getTime() === startOfDay(now).getTime();
-    
-    if (isToday) {
-      const schedule = barber?.schedule;
-      if (schedule) {
-        const [closeH, closeM] = schedule.closeTime.split(':').map(Number);
-        const closingTime = new Date(now);
-        closingTime.setHours(closeH, closeM, 0, 0);
-        
-        // Disable today if we're within 1 hour of closing
-        const oneHourBeforeClose = closingTime.getTime() - (60 * 60 * 1000);
-        if (now.getTime() >= oneHourBeforeClose) {
-          return true;
-        }
-      }
-    }
-    
     return false;
   };
 
   const handleNext = () => {
-    if (date) {
-      onNext(date);
-    }
+    if (date) onNext(date.toDate());
   };
 
-  const minDate = new Date();
-  const maxDate = getMaxBookingDate();
-
   return (
-    <Box>
-      <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-        <CalendarIcon sx={{ fontSize: { xs: 32, sm: 40 }, color: 'primary.main', mr: 2 }} />
-        <Typography variant="h5" color="text.primary" sx={{ fontSize: { xs: '1.25rem', sm: '1.5rem' } }}>
-          Escolha uma Data
-        </Typography>
-      </Box>
+    <div>
+      <div style={{ display: 'flex', alignItems: 'center', marginBottom: 16 }}>
+        <CalendarOutlined style={{ fontSize: 32, color: token.colorPrimary, marginRight: 16 }} />
+        <Title level={4} style={{ margin: 0 }}>Escolha uma Data</Title>
+      </div>
 
-      <Typography variant="body1" color="text.secondary" sx={{ mb: 2, fontSize: { xs: '0.875rem', sm: '1rem' } }}>
+      <Text type="secondary" style={{ display: 'block', marginBottom: 16 }}>
         Selecione a data de sua preferência
-      </Typography>
+      </Text>
 
-      <Box sx={{ display: 'flex', justifyContent: 'center', mb: 2 }}>
-        <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={ptBR}>
-          <DateCalendar
-            value={date}
-            onChange={(newDate) => setDate(newDate)}
-            minDate={minDate}
-            maxDate={maxDate}
-            shouldDisableDate={shouldDisableDate}
-            sx={{
-              bgcolor: 'background.default',
-              borderRadius: 2,
-              maxWidth: '100%',
-              '& .MuiPickersCalendarHeader-root': {
-                paddingLeft: { xs: 1, sm: 2 },
-                paddingRight: { xs: 1, sm: 2 },
-              },
-              '& .MuiDayCalendar-header': {
-                justifyContent: 'space-around',
-              },
-              '& .MuiPickersDay-root': {
-                fontSize: { xs: '0.75rem', sm: '0.875rem' },
-              },
-            }}
-          />
-        </LocalizationProvider>
-      </Box>
+      <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 16 }}>
+        <Calendar
+          fullscreen={false}
+          value={date || undefined}
+          disabledDate={disabledDate}
+          onSelect={(value) => {
+            if (!disabledDate(value)) setDate(value);
+          }}
+          style={{ maxWidth: 400, borderRadius: 8 }}
+        />
+      </div>
 
-      <Box sx={{ display: 'flex', gap: 2 }}>
-        <Button
-          variant="outlined"
-          onClick={onBack}
-          fullWidth
-        >
-          Voltar
-        </Button>
-        <Button
-          variant="contained"
-          onClick={handleNext}
-          fullWidth
-          disabled={!date}
-        >
-          Próximo
-        </Button>
-      </Box>
-    </Box>
+      <div style={{ display: 'flex', gap: 16 }}>
+        <Button block onClick={onBack}>Voltar</Button>
+        <Button block type="primary" onClick={handleNext} disabled={!date}>Próximo</Button>
+      </div>
+    </div>
   );
 };
 

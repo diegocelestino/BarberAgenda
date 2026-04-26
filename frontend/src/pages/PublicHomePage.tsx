@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Container, Typography, Box, Button, Paper, Stepper, Step, StepLabel } from '@mui/material';
-import { ContentCut as ContentCutIcon, CalendarMonth as CalendarIcon } from '@mui/icons-material';
+import { Button, Card, Steps, Typography, theme } from 'antd';
+import { ScissorOutlined, CalendarOutlined } from '@ant-design/icons';
 import { useLocation } from 'react-router-dom';
 import PhoneNumberStep from '../components/scheduling/PhoneNumberStep';
 import BarberSelectionStep from '../components/scheduling/BarberSelectionStep';
@@ -13,6 +13,8 @@ import SuccessStep from '../components/scheduling/SuccessStep';
 import { useAppDispatch, useAppSelector } from '../store/hooks';
 import { createAppointment } from '../store/appointments/appointmentsThunks';
 
+const { Title, Text } = Typography;
+
 const steps = ['Telefone', 'Barbeiro', 'Serviço', 'Data', 'Horário', 'Nome', 'Confirmar'];
 
 interface AppointmentData {
@@ -22,351 +24,116 @@ interface AppointmentData {
   date: Date | null;
   time: string;
   name: string;
-  selectedService?: any; // Store the full service object
+  selectedService?: any;
 }
 
+const initialData: AppointmentData = { phoneNumber: '', barberId: '', serviceId: '', date: null, time: '', name: '' };
+
 const PublicHomePage: React.FC = () => {
+  const { token } = theme.useToken();
   const dispatch = useAppDispatch();
   const location = useLocation();
   const [schedulingStarted, setSchedulingStarted] = useState(false);
   const [activeStep, setActiveStep] = useState(0);
-  const [appointmentData, setAppointmentData] = useState<AppointmentData>({
-    phoneNumber: '',
-    barberId: '',
-    serviceId: '',
-    date: null,
-    time: '',
-    name: '',
-  });
+  const [appointmentData, setAppointmentData] = useState<AppointmentData>(initialData);
 
-  // Reset to home screen when Home icon is clicked
   useEffect(() => {
     if (location.state?.reset) {
       setSchedulingStarted(false);
       setActiveStep(0);
-      setAppointmentData({ phoneNumber: '', barberId: '', serviceId: '', date: null, time: '', name: '' });
+      setAppointmentData(initialData);
     }
   }, [location.state?.reset]);
 
-  // Get selected service for duration calculation
-  const selectedService = useAppSelector((state) => 
-    appointmentData.serviceId 
-      ? state.services.services.find(s => s.serviceId === appointmentData.serviceId)
-      : null
+  const selectedService = useAppSelector((state) =>
+    appointmentData.serviceId ? state.services.services.find(s => s.serviceId === appointmentData.serviceId) : null
+  );
+  const selectedBarber = useAppSelector((state) =>
+    appointmentData.barberId ? state.barbers.barbers.find(b => b.barberId === appointmentData.barberId) : null
   );
 
-  // Get selected barber
-  const selectedBarber = useAppSelector((state) => 
-    appointmentData.barberId 
-      ? state.barbers.barbers.find(b => b.barberId === appointmentData.barberId)
-      : null
-  );
-
-  const handleNext = () => {
-    setActiveStep((prev) => prev + 1);
-  };
-
+  const handleNext = () => setActiveStep((prev) => prev + 1);
   const handleBack = () => {
-    if (activeStep === 0) {
-      setSchedulingStarted(false);
-    } else {
-      setActiveStep((prev) => prev - 1);
-    }
+    if (activeStep === 0) setSchedulingStarted(false);
+    else setActiveStep((prev) => prev - 1);
   };
 
-  const handlePhoneSubmit = (phoneNumber: string) => {
-    setAppointmentData((prev) => ({ ...prev, phoneNumber }));
-    handleNext();
-  };
-
-  const handleBarberSelect = (barberId: string) => {
-    setAppointmentData((prev) => ({ ...prev, barberId }));
-    handleNext();
-  };
-
-  const handleServiceSelect = (serviceId: string, service: any) => {
-    setAppointmentData((prev) => ({ ...prev, serviceId, selectedService: service }));
-    handleNext();
-  };
-
-  const handleDateSelect = (date: Date) => {
-    setAppointmentData((prev) => ({ ...prev, date }));
-    handleNext();
-  };
-
-  const handleTimeSelect = (time: string) => {
-    setAppointmentData((prev) => ({ ...prev, time }));
-    handleNext();
-  };
-
-  const handleNameSubmit = (name: string) => {
-    setAppointmentData((prev) => ({ ...prev, name }));
+  const update = (fields: Partial<AppointmentData>) => {
+    setAppointmentData((prev) => ({ ...prev, ...fields }));
     handleNext();
   };
 
   const handleConfirm = async () => {
     if (!appointmentData.date) return;
+    const { date, time, barberId, serviceId, name, phoneNumber } = appointmentData;
+    const [hours, minutes] = time.split(':');
+    const startTime = new Date(date!.getFullYear(), date!.getMonth(), date!.getDate(), parseInt(hours), parseInt(minutes)).getTime();
+    const serviceDuration = selectedService?.durationMinutes || 30;
+    const endTime = startTime + serviceDuration * 60 * 1000;
 
-    // Create date in local timezone (São Paulo)
-    const year = appointmentData.date.getFullYear();
-    const month = appointmentData.date.getMonth();
-    const day = appointmentData.date.getDate(); 
-    const [hours, minutes] = appointmentData.time.split(':');
-    
-    // Create a new date with local timezone
-    const appointmentDateTime = new Date(year, month, day, parseInt(hours), parseInt(minutes), 0, 0);
-
-    // Calculate end time based on service duration
-    const startTime = appointmentDateTime.getTime();
-    const serviceDuration = selectedService?.durationMinutes || 30; // Default to 30 minutes
-    const endTime = startTime + (serviceDuration * 60 * 1000);
-
-    await dispatch(
-      createAppointment({
-        barberId: appointmentData.barberId,
-        data: {
-          customerName: appointmentData.name,
-          customerPhone: appointmentData.phoneNumber,
-          startTime,
-          endTime,
-          service: appointmentData.serviceId,
-        },
-      })
-    ).unwrap();
-
+    await dispatch(createAppointment({
+      barberId,
+      data: { customerName: name, customerPhone: phoneNumber, startTime, endTime, service: serviceId },
+    })).unwrap();
     handleNext();
   };
 
   const handleClose = () => {
     setSchedulingStarted(false);
     setActiveStep(0);
-    setAppointmentData({
-      phoneNumber: '',
-      barberId: '',
-      serviceId: '',
-      date: null,
-      time: '',
-      name: '',
-    });
+    setAppointmentData(initialData);
   };
 
   if (!schedulingStarted) {
     return (
-      <Box
-        sx={{
-          height: 'calc(100vh - 64px)', // Subtract header height (64px is default AppBar height)
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          bgcolor: 'background.default',
-        }}
-      >
-        <Container maxWidth="sm">
-          <Paper
-            elevation={8}
-            sx={{
-              p: { xs: 4, sm: 6 },
-              textAlign: 'center',
-              borderRadius: 4,
-              bgcolor: 'background.paper',
-            }}
-          >
-            <Box
-              sx={{
-                display: 'flex',
-                justifyContent: 'center',
-                mb: 3,
-              }}
-            >
-              <Box
-                sx={{
-                  width: 120,
-                  height: 120,
-                  borderRadius: '50%',
-                  bgcolor: 'primary.main',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  boxShadow: 3,
-                }}
-              >
-                <ContentCutIcon sx={{ fontSize: 60, color: 'background.paper' }} />
-              </Box>
-            </Box>
-
-            <Typography
-              variant="h3"
-              component="h1"
-              gutterBottom
-              sx={{
-                fontWeight: 'bold',
-                color: 'text.primary',
-                mb: 2,
-              }}
-            >
-              Miguel Castilho
-            </Typography>
-
-            <Typography
-              variant="h6"
-              color="text.secondary"
-              sx={{ mb: 4 }}
-            >
+      <div style={{ height: 'calc(100vh - 64px)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ maxWidth: 480, width: '100%', padding: '0 16px' }}>
+          <Card style={{ textAlign: 'center', padding: '32px 16px', borderRadius: 16 }}>
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 24 }}>
+              <div style={{
+                width: 120, height: 120, borderRadius: '50%', background: token.colorPrimary,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
+              }}>
+                <ScissorOutlined style={{ fontSize: 60, color: '#fff' }} />
+              </div>
+            </div>
+            <Title level={2} style={{ marginBottom: 8 }}>Miguel Castilho</Title>
+            <Text type="secondary" style={{ display: 'block', marginBottom: 32, fontSize: 16 }}>
               Agende seu corte com apenas alguns cliques
-            </Typography>
-
-            <Button
-              variant="contained"
-              size="large"
-              startIcon={<CalendarIcon />}
-              onClick={() => setSchedulingStarted(true)}
-              sx={{
-                py: 2,
-                px: 6,
-                fontSize: '1.1rem',
-                borderRadius: 3,
-                fontWeight: 'bold',
-                '&:hover': {
-                  transform: 'translateY(-2px)',
-                },
-                transition: 'all 0.3s',
-              }}
-            >
+            </Text>
+            <Button type="primary" size="large" icon={<CalendarOutlined />} onClick={() => setSchedulingStarted(true)}
+              style={{ height: 48, paddingInline: 48, fontSize: 16, fontWeight: 'bold', borderRadius: 12 }}>
               Agendar horário
             </Button>
-          </Paper>
-        </Container>
-      </Box>
+          </Card>
+        </div>
+      </div>
     );
   }
 
   return (
-    <Box
-      sx={{
-        minHeight: 'calc(100vh - 64px)', // Subtract header height
-        bgcolor: 'background.default',
-        py: { xs: 1, sm: 2 },
-        px: { xs: 1, sm: 2 },
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-      }}
-    >
-      <Container maxWidth="md">
-        <Paper
-          elevation={8}
-          sx={{
-            p: { xs: 1.5, sm: 3 },
-            borderRadius: 4,
-            bgcolor: 'background.paper',
-          }}
-        >
+    <div style={{ minHeight: 'calc(100vh - 64px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
+      <div style={{ maxWidth: 720, width: '100%' }}>
+        <Card style={{ borderRadius: 16, padding: '8px 0' }}>
           {activeStep < steps.length && (
-            <Stepper 
-              activeStep={activeStep} 
-              sx={{ 
-                mb: { xs: 1.5, sm: 2 },
-                px: { xs: 0.5, sm: 1 },
-                '& .MuiStepLabel-label': {
-                  display: { xs: 'none', sm: 'block' }
-                },
-                '& .MuiStepConnector-root': {
-                  flex: { xs: '0 1 auto', sm: '1 1 auto' }
-                },
-                '& .MuiStep-root': {
-                  px: { xs: 0.25, sm: 1 }
-                }
-              }}
-            >
-              {steps.map((label) => (
-                <Step key={label}>
-                  <StepLabel>{label}</StepLabel>
-                </Step>
-              ))}
-            </Stepper>
-          )}
-
-          {activeStep === 0 && (
-            <PhoneNumberStep
-              onNext={handlePhoneSubmit}
-              onBack={handleBack}
-              initialValue={appointmentData.phoneNumber}
+            <Steps current={activeStep} size="small" style={{ marginBottom: 16, paddingInline: 8 }}
+              items={steps.map((title) => ({ title }))}
+              responsive={false}
             />
           )}
 
-          {activeStep === 1 && (
-            <BarberSelectionStep
-              onNext={handleBarberSelect}
-              onBack={handleBack}
-              selectedBarberId={appointmentData.barberId}
-            />
-          )}
-
-          {activeStep === 2 && (
-            <ServiceSelectionStep
-              onNext={handleServiceSelect}
-              onBack={handleBack}
-              selectedServiceId={appointmentData.serviceId}
-              barberId={appointmentData.barberId}
-            />
-          )}
-
-          {activeStep === 3 && (
-            <DateSelectionStep
-              onNext={handleDateSelect}
-              onBack={handleBack}
-              selectedDate={appointmentData.date || undefined}
-              barberId={appointmentData.barberId}
-            />
-          )}
-
-          {activeStep === 4 && appointmentData.date && (
-            <TimeSelectionStep
-              onNext={handleTimeSelect}
-              onBack={handleBack}
-              selectedDate={appointmentData.date}
-              barberId={appointmentData.barberId}
-              serviceId={appointmentData.serviceId}
-              selectedTime={appointmentData.time}
-            />
-          )}
-
-          {activeStep === 5 && (
-            <NameStep
-              onNext={handleNameSubmit}
-              onBack={handleBack}
-              initialValue={appointmentData.name}
-            />
-          )}
-
-          {activeStep === 6 && appointmentData.date && (
-            <ConfirmationStep
-              onConfirm={handleConfirm}
-              onBack={handleBack}
-              phoneNumber={appointmentData.phoneNumber}
-              barberId={appointmentData.barberId}
-              serviceId={appointmentData.serviceId}
-              date={appointmentData.date}
-              time={appointmentData.time}
-              name={appointmentData.name}
-              service={appointmentData.selectedService}
-            />
-          )}
-
-          {activeStep === 7 && appointmentData.date && (
-            <SuccessStep
-              onClose={handleClose}
-              date={appointmentData.date}
-              time={appointmentData.time}
-              name={appointmentData.name}
-              barberName={selectedBarber?.name}
-              serviceName={selectedService?.name}
-              phoneNumber={appointmentData.phoneNumber}
-            />
-          )}
-        </Paper>
-      </Container>
-    </Box>
+          {activeStep === 0 && <PhoneNumberStep onNext={(phoneNumber) => update({ phoneNumber })} onBack={handleBack} initialValue={appointmentData.phoneNumber} />}
+          {activeStep === 1 && <BarberSelectionStep onNext={(barberId) => update({ barberId })} onBack={handleBack} selectedBarberId={appointmentData.barberId} />}
+          {activeStep === 2 && <ServiceSelectionStep onNext={(serviceId, service) => update({ serviceId, selectedService: service })} onBack={handleBack} selectedServiceId={appointmentData.serviceId} barberId={appointmentData.barberId} />}
+          {activeStep === 3 && <DateSelectionStep onNext={(date) => update({ date })} onBack={handleBack} selectedDate={appointmentData.date || undefined} barberId={appointmentData.barberId} />}
+          {activeStep === 4 && appointmentData.date && <TimeSelectionStep onNext={(time) => update({ time })} onBack={handleBack} selectedDate={appointmentData.date} barberId={appointmentData.barberId} serviceId={appointmentData.serviceId} selectedTime={appointmentData.time} />}
+          {activeStep === 5 && <NameStep onNext={(name) => update({ name })} onBack={handleBack} initialValue={appointmentData.name} />}
+          {activeStep === 6 && appointmentData.date && <ConfirmationStep onConfirm={handleConfirm} onBack={handleBack} phoneNumber={appointmentData.phoneNumber} barberId={appointmentData.barberId} serviceId={appointmentData.serviceId} date={appointmentData.date} time={appointmentData.time} name={appointmentData.name} service={appointmentData.selectedService} />}
+          {activeStep === 7 && appointmentData.date && <SuccessStep onClose={handleClose} date={appointmentData.date} time={appointmentData.time} name={appointmentData.name} barberName={selectedBarber?.name} serviceName={selectedService?.name} phoneNumber={appointmentData.phoneNumber} />}
+        </Card>
+      </div>
+    </div>
   );
 };
 

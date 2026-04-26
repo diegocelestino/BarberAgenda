@@ -1,28 +1,13 @@
 import { useState } from 'react';
-import {
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  Button,
-  TextField,
-  Stack,
-  Alert,
-} from '@mui/material';
+import { Alert, Input, InputNumber, Modal, Typography } from 'antd';
 import { useAppDispatch, useAppSelector } from '../../store/hooks';
 import { createService, selectServicesLoading, selectServicesError } from '../../store/services';
 
-interface CreateServiceDialogProps {
-  open: boolean;
-  onClose: () => void;
-  onSuccess: () => void;
-}
+const { Text } = Typography;
 
-const CreateServiceDialog: React.FC<CreateServiceDialogProps> = ({
-  open,
-  onClose,
-  onSuccess,
-}) => {
+interface CreateServiceDialogProps { open: boolean; onClose: () => void; onSuccess: () => void; }
+
+const CreateServiceDialog: React.FC<CreateServiceDialogProps> = ({ open, onClose, onSuccess }) => {
   const dispatch = useAppDispatch();
   const loading = useAppSelector(selectServicesLoading);
   const error = useAppSelector(selectServicesError);
@@ -34,114 +19,28 @@ const CreateServiceDialog: React.FC<CreateServiceDialogProps> = ({
   const [duration, setDuration] = useState(30);
 
   const handleSubmit = async () => {
-    if (!title || !name || price <= 0 || duration <= 0) {
-      return;
-    }
-
+    if (!title || !name || price <= 0 || duration <= 0) return;
     try {
-      await dispatch(
-        createService({
-          title,
-          name,
-          description: description || undefined,
-          price,
-          duration,
-          durationMinutes: duration,
-        })
-      ).unwrap();
-
-      // Reset form
-      setTitle('');
-      setName('');
-      setDescription('');
-      setPrice(30);
-      setDuration(30);
-      
+      await dispatch(createService({ title, name, description: description || undefined, price, duration, durationMinutes: duration })).unwrap();
+      setTitle(''); setName(''); setDescription(''); setPrice(30); setDuration(30);
       onSuccess();
-    } catch (err) {
-      console.error('Failed to create service:', err);
-    }
+    } catch (err) { console.error('Failed to create service:', err); }
   };
 
-  const handleClose = () => {
-    setTitle('');
-    setName('');
-    setDescription('');
-    setPrice(30);
-    setDuration(30);
-    onClose();
-  };
+  const handleClose = () => { setTitle(''); setName(''); setDescription(''); setPrice(30); setDuration(30); onClose(); };
 
   return (
-    <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
-      <DialogTitle>New Service</DialogTitle>
-      <DialogContent>
-        <Stack spacing={2} sx={{ mt: 1 }}>
-          {error && <Alert severity="error">{error}</Alert>}
-          
-          <TextField
-            label="Service Title"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            required
-            fullWidth
-            placeholder="e.g., Haircut"
-            helperText="Internal title for admin use"
-          />
-
-          <TextField
-            label="Display Name"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            required
-            fullWidth
-            placeholder="e.g., Professional Haircut"
-            helperText="Name shown to customers"
-          />
-
-          <TextField
-            label="Description"
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            fullWidth
-            multiline
-            rows={2}
-            placeholder="e.g., Professional haircut with styling"
-            helperText="Optional description for customers"
-          />
-
-          <TextField
-            label="Price ($)"
-            type="number"
-            value={price}
-            onChange={(e) => setPrice(parseFloat(e.target.value))}
-            inputProps={{ min: 0, step: 5 }}
-            required
-            fullWidth
-          />
-
-          <TextField
-            label="Duration (minutes)"
-            type="number"
-            value={duration}
-            onChange={(e) => setDuration(parseInt(e.target.value))}
-            inputProps={{ min: 15, step: 15 }}
-            required
-            fullWidth
-          />
-        </Stack>
-      </DialogContent>
-      <DialogActions>
-        <Button onClick={handleClose}>Cancel</Button>
-        <Button
-          onClick={handleSubmit}
-          variant="contained"
-          disabled={loading || !title || !name || price <= 0 || duration <= 0}
-        >
-          {loading ? 'Creating...' : 'Create'}
-        </Button>
-      </DialogActions>
-    </Dialog>
+    <Modal title="New Service" open={open} onCancel={handleClose} onOk={handleSubmit}
+      okText={loading ? 'Creating...' : 'Create'} okButtonProps={{ disabled: loading || !title || !name || price <= 0 || duration <= 0 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 16, marginTop: 8 }}>
+        {error && <Alert type="error" message={error} showIcon />}
+        <div><label>Service Title</label><Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g., Haircut" /><Text type="secondary" style={{ fontSize: 12 }}>Internal title for admin use</Text></div>
+        <div><label>Display Name</label><Input value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g., Professional Haircut" /><Text type="secondary" style={{ fontSize: 12 }}>Name shown to customers</Text></div>
+        <div><label>Description</label><Input.TextArea rows={2} value={description} onChange={(e) => setDescription(e.target.value)} placeholder="e.g., Professional haircut with styling" /><Text type="secondary" style={{ fontSize: 12 }}>Optional description for customers</Text></div>
+        <div><label>Price (R$)</label><InputNumber min={0} step={5} value={price} onChange={(v) => setPrice(v || 0)} style={{ width: '100%' }} /></div>
+        <div><label>Duration (minutes)</label><InputNumber min={15} step={15} value={duration} onChange={(v) => setDuration(v || 15)} style={{ width: '100%' }} /></div>
+      </div>
+    </Modal>
   );
 };
 

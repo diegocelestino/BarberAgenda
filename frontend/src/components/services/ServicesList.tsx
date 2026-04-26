@@ -1,32 +1,15 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import {
-  Box,
-  Typography,
-  CircularProgress,
-  Alert,
-  Paper,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  IconButton,
-  Button,
-} from '@mui/material';
-import { Edit as EditIcon, Delete as DeleteIcon, Add as AddIcon, ArrowBack as ArrowBackIcon } from '@mui/icons-material';
+import { Alert, Button, Spin, Table, Typography } from 'antd';
+import { EditOutlined, DeleteOutlined, PlusOutlined, ArrowLeftOutlined } from '@ant-design/icons';
 import { useAppDispatch, useAppSelector } from '../../store/hooks';
-import {
-  fetchServices,
-  selectAllServices,
-  selectServicesLoading,
-  selectServicesError,
-} from '../../store/services';
+import { fetchServices, selectAllServices, selectServicesLoading, selectServicesError } from '../../store/services';
 import { Service } from '../../services/servicesApi';
 import CreateServiceDialog from './CreateServiceDialog';
 import EditServiceDialog from './EditServiceDialog';
 import DeleteServiceDialog from './DeleteServiceDialog';
+
+const { Title, Text } = Typography;
 
 const ServicesList: React.FC = () => {
   const navigate = useNavigate();
@@ -40,151 +23,50 @@ const ServicesList: React.FC = () => {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedService, setSelectedService] = useState<Service | null>(null);
 
-  useEffect(() => {
-    dispatch(fetchServices());
-  }, [dispatch]);
+  useEffect(() => { dispatch(fetchServices()); }, [dispatch]);
 
-  const handleEditClick = (service: Service) => {
-    setSelectedService(service);
-    setEditDialogOpen(true);
-  };
+  if (loading && services.length === 0) return <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 200 }}><Spin size="large" /></div>;
+  if (error) return <Alert type="error" message={error} showIcon style={{ marginBottom: 16 }} />;
 
-  const handleDeleteClick = (service: Service) => {
-    setSelectedService(service);
-    setDeleteDialogOpen(true);
-  };
-
-  const handleCreateSuccess = () => {
-    setCreateDialogOpen(false);
-  };
-
-  const handleEditSuccess = () => {
-    setEditDialogOpen(false);
-    setSelectedService(null);
-  };
-
-  const handleDeleteConfirm = () => {
-    setDeleteDialogOpen(false);
-    setSelectedService(null);
-  };
-
-  if (loading && services.length === 0) {
-    return (
-      <Box display="flex" justifyContent="center" alignItems="center" minHeight="200px">
-        <CircularProgress />
-      </Box>
-    );
-  }
-
-  if (error) {
-    return (
-      <Alert severity="error" sx={{ mb: 2 }}>
-        {error}
-      </Alert>
-    );
-  }
+  const columns = [
+    {
+      title: 'Serviço', dataIndex: 'name', key: 'name',
+      render: (_: string, record: Service) => (<><Text strong>{record.name}</Text><br /><Text type="secondary" style={{ fontSize: 12 }}>{record.title}</Text></>),
+    },
+    { title: 'Preço', dataIndex: 'price', key: 'price', align: 'right' as const, render: (v: number) => <Text type="secondary">R$ {v}</Text> },
+    { title: 'Duração', dataIndex: 'duration', key: 'duration', align: 'right' as const, render: (v: number) => <Text type="secondary">{v} min</Text> },
+    {
+      title: 'Ações', key: 'actions', align: 'right' as const,
+      render: (_: any, record: Service) => (
+        <div style={{ display: 'flex', gap: 4, justifyContent: 'flex-end' }}>
+          <Button type="text" size="small" icon={<EditOutlined />} onClick={() => { setSelectedService(record); setEditDialogOpen(true); }} />
+          <Button type="text" size="small" danger icon={<DeleteOutlined />} onClick={() => { setSelectedService(record); setDeleteDialogOpen(true); }} />
+        </div>
+      ),
+    },
+  ];
 
   return (
-    <Box>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-          <IconButton onClick={() => navigate('/admin')} title="Voltar">
-            <ArrowBackIcon />
-          </IconButton>
-          <Typography variant="h5" component="h2">
-            Serviços
-          </Typography>
-        </Box>
-        <Button
-          variant="contained"
-          startIcon={<AddIcon />}
-          onClick={() => setCreateDialogOpen(true)}
-        >
-          Novo Serviço
-        </Button>
-      </Box>
+    <div>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <Button type="text" icon={<ArrowLeftOutlined />} onClick={() => navigate('/admin')} />
+          <Title level={4} style={{ margin: 0 }}>Serviços</Title>
+        </div>
+        <Button type="primary" icon={<PlusOutlined />} onClick={() => setCreateDialogOpen(true)}>Novo Serviço</Button>
+      </div>
 
       {services.length === 0 ? (
-        <Alert severity="info">
-          Nenhum serviço encontrado. Crie um para começar!
-        </Alert>
+        <Alert type="info" message="Nenhum serviço encontrado. Crie um para começar!" showIcon />
       ) : (
-        <TableContainer component={Paper}>
-          <Table>
-            <TableHead>
-              <TableRow>
-                <TableCell>Serviço</TableCell>
-                <TableCell align="right">Preço</TableCell>
-                <TableCell align="right">Duração</TableCell>
-                <TableCell align="right">Ações</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {services.map((service) => (
-                <TableRow key={service.serviceId} hover>
-                  <TableCell>
-                    <Typography variant="body1" fontWeight="medium">
-                      {service.name}
-                    </Typography>
-                    <Typography variant="caption" color="text.secondary">
-                      {service.title}
-                    </Typography>
-                  </TableCell>
-                  <TableCell align="right">
-                    <Typography variant="body2" color="text.secondary">
-                      R$ {service.price}
-                    </Typography>
-                  </TableCell>
-                  <TableCell align="right">
-                    <Typography variant="body2" color="text.secondary">
-                      {service.duration} min
-                    </Typography>
-                  </TableCell>
-                  <TableCell align="right">
-                    <IconButton
-                      size="small"
-                      onClick={() => handleEditClick(service)}
-                      title="Editar serviço"
-                    >
-                      <EditIcon />
-                    </IconButton>
-                    <IconButton
-                      size="small"
-                      color="error"
-                      onClick={() => handleDeleteClick(service)}
-                      title="Excluir serviço"
-                    >
-                      <DeleteIcon />
-                    </IconButton>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </TableContainer>
+        <Table columns={columns} dataSource={services} rowKey="serviceId" pagination={false} size="small" />
       )}
 
-      <CreateServiceDialog
-        open={createDialogOpen}
-        onClose={() => setCreateDialogOpen(false)}
-        onSuccess={handleCreateSuccess}
-      />
-
-      <EditServiceDialog
-        open={editDialogOpen}
-        service={selectedService}
-        onClose={() => setEditDialogOpen(false)}
-        onSuccess={handleEditSuccess}
-      />
-
-      <DeleteServiceDialog
-        open={deleteDialogOpen}
-        serviceId={selectedService?.serviceId || null}
-        serviceName={selectedService?.title || null}
-        onConfirm={handleDeleteConfirm}
-        onCancel={() => setDeleteDialogOpen(false)}
-      />
-    </Box>
+      <CreateServiceDialog open={createDialogOpen} onClose={() => setCreateDialogOpen(false)} onSuccess={() => setCreateDialogOpen(false)} />
+      <EditServiceDialog open={editDialogOpen} service={selectedService} onClose={() => setEditDialogOpen(false)} onSuccess={() => { setEditDialogOpen(false); setSelectedService(null); }} />
+      <DeleteServiceDialog open={deleteDialogOpen} serviceId={selectedService?.serviceId || null} serviceName={selectedService?.title || null}
+        onConfirm={() => { setDeleteDialogOpen(false); setSelectedService(null); }} onCancel={() => setDeleteDialogOpen(false)} />
+    </div>
   );
 };
 

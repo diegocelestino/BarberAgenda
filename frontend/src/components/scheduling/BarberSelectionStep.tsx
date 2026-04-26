@@ -1,9 +1,11 @@
 import { useEffect } from 'react';
-import { Box, Typography, Card, CardContent, CardActionArea, Grid, CircularProgress, Avatar, Button } from '@mui/material';
-import { ContentCut as ContentCutIcon } from '@mui/icons-material';
+import { Avatar, Button, Card, Col, Row, Spin, Typography, theme } from 'antd';
+import { ScissorOutlined } from '@ant-design/icons';
 import { useAppDispatch, useAppSelector } from '../../store/hooks';
 import { fetchBarbers } from '../../store/barbers/barbersThunks';
 import { selectAllBarbers, selectBarbersLoading } from '../../store/barbers/barbersSelectors';
+
+const { Title, Text } = Typography;
 
 interface BarberSelectionStepProps {
   onNext: (barberId: string) => void;
@@ -12,6 +14,7 @@ interface BarberSelectionStepProps {
 }
 
 const BarberSelectionStep: React.FC<BarberSelectionStepProps> = ({ onNext, onBack, selectedBarberId }) => {
+  const { token } = theme.useToken();
   const dispatch = useAppDispatch();
   const barbers = useAppSelector(selectAllBarbers);
   const loading = useAppSelector(selectBarbersLoading);
@@ -21,64 +24,49 @@ const BarberSelectionStep: React.FC<BarberSelectionStepProps> = ({ onNext, onBac
   }, [dispatch]);
 
   if (loading) {
-    return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
-        <CircularProgress />
-      </Box>
-    );
+    return <div style={{ display: 'flex', justifyContent: 'center', padding: '32px 0' }}><Spin size="large" /></div>;
   }
 
   return (
-    <Box>
-      <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-        <ContentCutIcon sx={{ fontSize: { xs: 32, sm: 40 }, color: 'primary.main', mr: 2 }} />
-        <Typography variant="h5" color="text.primary" sx={{ fontSize: { xs: '1.25rem', sm: '1.5rem' } }}>
-          Escolha seu Barbeiro
-        </Typography>
-      </Box>
+    <div>
+      <div style={{ display: 'flex', alignItems: 'center', marginBottom: 16 }}>
+        <ScissorOutlined style={{ fontSize: 32, color: token.colorPrimary, marginRight: 16 }} />
+        <Title level={4} style={{ margin: 0 }}>Escolha seu Barbeiro</Title>
+      </div>
 
-      <Typography variant="body1" color="text.secondary" sx={{ mb: 2, fontSize: { xs: '0.875rem', sm: '1rem' } }}>
+      <Text type="secondary" style={{ display: 'block', marginBottom: 16 }}>
         Selecione o barbeiro de sua preferência
-      </Typography>
+      </Text>
 
-      <Grid container spacing={2}>
+      <Row gutter={[16, 16]}>
         {barbers.map((barber) => (
-          <Grid item xs={12} sm={6} key={barber.barberId}>
+          <Col xs={24} sm={12} key={barber.barberId}>
             <Card
-              sx={{
-                bgcolor: selectedBarberId === barber.barberId ? 'primary.dark' : 'background.paper',
-                border: selectedBarberId === barber.barberId ? 2 : 0,
-                borderColor: 'primary.main',
+              hoverable
+              onClick={() => onNext(barber.barberId)}
+              style={{
+                borderColor: selectedBarberId === barber.barberId ? token.colorPrimary : undefined,
+                borderWidth: selectedBarberId === barber.barberId ? 2 : 1,
               }}
             >
-              <CardActionArea onClick={() => onNext(barber.barberId)}>
-                <CardContent>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                    <Avatar sx={{ bgcolor: 'primary.main', width: 56, height: 56 }}>
-                      {barber.name.charAt(0)}
-                    </Avatar>
-                    <Box>
-                      <Typography variant="h6" color="text.primary">
-                        {barber.name}
-                      </Typography>
-                      <Typography variant="body2" color="text.secondary">
-                        Avaliação: {barber.rating}/5
-                      </Typography>
-                    </Box>
-                  </Box>
-                </CardContent>
-              </CardActionArea>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+                <Avatar size={56} style={{ backgroundColor: token.colorPrimary }}>
+                  {barber.name.charAt(0)}
+                </Avatar>
+                <div>
+                  <Title level={5} style={{ margin: 0 }}>{barber.name}</Title>
+                  <Text type="secondary">Avaliação: {barber.rating}/5</Text>
+                </div>
+              </div>
             </Card>
-          </Grid>
+          </Col>
         ))}
-      </Grid>
+      </Row>
 
-      <Box sx={{ display: 'flex', gap: 2, mt: 2 }}>
-        <Button variant="outlined" onClick={onBack} fullWidth>
-          Voltar
-        </Button>
-      </Box>
-    </Box>
+      <div style={{ display: 'flex', gap: 16, marginTop: 16 }}>
+        <Button block onClick={onBack}>Voltar</Button>
+      </div>
+    </div>
   );
 };
 

@@ -1,9 +1,11 @@
-import { Box, Typography, Button, Card, CardContent } from '@mui/material';
-import { CheckCircleOutline as SuccessIcon, WhatsApp as WhatsAppIcon } from '@mui/icons-material';
+import { Button, Card, Typography, theme } from 'antd';
+import { CheckCircleOutlined, WhatsAppOutlined } from '@ant-design/icons';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { WHATSAPP_NUMBER } from '../../config/whatsapp';
 import { sendAppointmentEmail } from '../../services/notificationsApi';
+
+const { Title, Text } = Typography;
 
 interface SuccessStepProps {
   onClose: () => void;
@@ -15,107 +17,60 @@ interface SuccessStepProps {
   phoneNumber?: string;
 }
 
-const SuccessStep: React.FC<SuccessStepProps> = ({ 
-  onClose, 
-  date, 
-  time, 
-  name,
-  barberName = '',
-  serviceName = '',
-  phoneNumber = '',
+const SuccessStep: React.FC<SuccessStepProps> = ({
+  onClose, date, time, name, barberName = '', serviceName = '', phoneNumber = '',
 }) => {
+  const { token } = theme.useToken();
   const handleWhatsAppClick = async () => {
     const formattedDate = format(date, "dd 'de' MMMM 'de' yyyy", { locale: ptBR });
     const message = `Olá! Meu agendamento foi confirmado:\n\n` +
-      `👤 Nome: ${name}\n` +
-      `📞 Telefone: ${phoneNumber}\n` +
-      `✂️ Barbeiro: ${barberName}\n` +
-      `💈 Serviço: ${serviceName}\n` +
-      `📅 Data: ${formattedDate}\n` +
-      `🕐 Horário: ${time}`;
-    
-    const encodedMessage = encodeURIComponent(message);
-    // Remove any non-numeric characters from the phone number
+      `👤 Nome: ${name}\n📞 Telefone: ${phoneNumber}\n✂️ Barbeiro: ${barberName}\n` +
+      `💈 Serviço: ${serviceName}\n📅 Data: ${formattedDate}\n🕐 Horário: ${time}`;
+
     const cleanNumber = WHATSAPP_NUMBER.replace(/\D/g, '');
-    const whatsappUrl = `https://wa.me/${cleanNumber}?text=${encodedMessage}`;
-    
-    // Open WhatsApp
-    window.open(whatsappUrl, '_blank');
-    
-    // Send email notification
+    window.open(`https://wa.me/${cleanNumber}?text=${encodeURIComponent(message)}`, '_blank');
+
     try {
-      await sendAppointmentEmail({
-        name,
-        phoneNumber,
-        barberName: barberName || '',
-        serviceName: serviceName || '',
-        date: formattedDate,
-        time,
-      });
+      await sendAppointmentEmail({ name, phoneNumber, barberName, serviceName, date: formattedDate, time });
     } catch (error) {
       console.error('Failed to send email:', error);
     }
-    
+
     onClose();
   };
 
   return (
-    <Box sx={{ textAlign: 'center' }}>
-      <Box
-        sx={{
-          display: 'flex',
-          justifyContent: 'center',
-          mb: 2,
-        }}
-      >
-        <Box
-          sx={{
-            width: 100,
-            height: 100,
-            borderRadius: '50%',
-            bgcolor: 'success.main',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-          }}
-        >
-          <SuccessIcon sx={{ fontSize: 50, color: 'white' }} />
-        </Box>
-      </Box>
+    <div style={{ textAlign: 'center' }}>
+      <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 16 }}>
+        <div style={{
+          width: 100, height: 100, borderRadius: '50%', background: token.colorSuccess,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+        }}>
+          <CheckCircleOutlined style={{ fontSize: 50, color: 'white' }} />
+        </div>
+      </div>
 
-      <Typography variant="h4" color="text.primary" gutterBottom>
-        Agendamento Confirmado!
-      </Typography>
+      <Title level={3}>Agendamento Confirmado!</Title>
 
-      <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
+      <Text type="secondary" style={{ display: 'block', marginBottom: 24 }}>
         Obrigado, {name}! Seu agendamento foi realizado com sucesso.
-      </Typography>
+      </Text>
 
-      <Card sx={{ mb: 3, bgcolor: 'background.default' }}>
-        <CardContent>
-          <Typography variant="h6" color="text.primary" gutterBottom>
-            Detalhes do Agendamento
-          </Typography>
-          <Typography variant="body1" color="text.secondary">
-            {format(date, "EEEE, dd 'de' MMMM 'de' yyyy", { locale: ptBR })} às {time}
-          </Typography>
-        </CardContent>
+      <Card style={{ marginBottom: 24 }}>
+        <Title level={5}>Detalhes do Agendamento</Title>
+        <Text type="secondary">
+          {format(date, "EEEE, dd 'de' MMMM 'de' yyyy", { locale: ptBR })} às {time}
+        </Text>
       </Card>
 
-      <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+      <Text type="secondary" style={{ display: 'block', marginBottom: 16 }}>
         Você receberá uma mensagem de confirmação em breve. Esperamos ver você!
-      </Typography>
+      </Text>
 
-      <Button
-        variant="contained"
-        onClick={handleWhatsAppClick}
-        size="large"
-        fullWidth
-        startIcon={<WhatsAppIcon />}
-      >
+      <Button type="primary" size="large" block icon={<WhatsAppOutlined />} onClick={handleWhatsAppClick}>
         Concluir
       </Button>
-    </Box>
+    </div>
   );
 };
 
