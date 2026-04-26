@@ -61,6 +61,8 @@ const PhoneNumberStep: React.FC<PhoneNumberStepProps> = ({ onNext, onBack, initi
           onChange={handleChange}
           inputMode="numeric"
           status={error ? 'error' : undefined}
+          autoFocus
+          onKeyDown={(e) => { if (e.key === 'Enter') handleSubmit(); }}
         />
         {error && <Text type="danger" style={{ fontSize: 12 }}>{error}</Text>}
       </div>

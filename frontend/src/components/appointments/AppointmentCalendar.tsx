@@ -9,22 +9,25 @@ import {
 import AppointmentList from './AppointmentList';
 import CreateAppointmentDialog from './CreateAppointmentDialog';
 import RegisterWalkInDialog from './RegisterWalkInDialog';
+import { useIsMobile } from '../../hooks/useIsMobile';
 import { now, getWeekBounds, addDays } from '../../utils/dateTime';
 
 type FilterType = 'thisWeek' | 'next';
 
-interface AppointmentCalendarProps {
-  barberId?: string;
-}
+interface Props { barberId?: string; fabTrigger?: number; }
 
-const AppointmentCalendar: React.FC<AppointmentCalendarProps> = ({ barberId: barberIdProp }) => {
+const AppointmentCalendar: React.FC<Props> = ({ barberId: barberIdProp, fabTrigger }) => {
   const dispatch = useAppDispatch();
+  const isMobile = useIsMobile();
   const appointments = useAppSelector(selectAllAppointments);
   const loading = useAppSelector(selectAppointmentsLoading);
   const error = useAppSelector(selectAppointmentsError);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [walkInDialogOpen, setWalkInDialogOpen] = useState(false);
   const [filter, setFilter] = useState<FilterType>('thisWeek');
+
+  // Open create dialog when FAB is pressed
+  useEffect(() => { if (fabTrigger && fabTrigger > 0) setCreateDialogOpen(true); }, [fabTrigger]);
 
   useEffect(() => {
     if (barberIdProp) {
@@ -45,17 +48,20 @@ const AppointmentCalendar: React.FC<AppointmentCalendarProps> = ({ barberId: bar
 
   return (
     <div style={{ overflow: 'hidden' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, flexWrap: 'wrap', gap: 12 }}>
-        <div>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, flexWrap: 'wrap', gap: 8 }}>
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+          <Tag color="processing">{scheduledCount} Agendados</Tag>
+          <Tag color="success">{completedCount} Concluídos</Tag>
+        </div>
+        {!isMobile && (
           <div style={{ display: 'flex', gap: 8 }}>
-            <Tag color="processing">{scheduledCount} Agendados</Tag>
-            <Tag color="success">{completedCount} Concluídos</Tag>
+            <Button icon={<PlusCircleOutlined />} onClick={() => setWalkInDialogOpen(true)}>Walk-in</Button>
+            <Button type="primary" icon={<PlusOutlined />} onClick={() => setCreateDialogOpen(true)}>Novo</Button>
           </div>
-        </div>
-        <div style={{ display: 'flex', gap: 8 }}>
-          <Button icon={<PlusCircleOutlined />} onClick={() => setWalkInDialogOpen(true)}>Walk-in</Button>
-          <Button type="primary" icon={<PlusOutlined />} onClick={() => setCreateDialogOpen(true)}>Novo</Button>
-        </div>
+        )}
+        {isMobile && (
+          <Button size="small" icon={<PlusCircleOutlined />} onClick={() => setWalkInDialogOpen(true)}>Walk-in</Button>
+        )}
       </div>
 
       <div style={{ marginBottom: 16, display: 'flex', gap: 4 }}>
@@ -64,13 +70,13 @@ const AppointmentCalendar: React.FC<AppointmentCalendarProps> = ({ barberId: bar
       </div>
 
       {appointments.length === 0 ? (
-        <Alert type="info" message='Nenhum agendamento encontrado. Clique em "Novo" para criar um.' showIcon />
+        <Alert type="info" message='Nenhum agendamento encontrado.' showIcon />
       ) : (
         <AppointmentList appointments={appointments} barberId={barberIdProp || ''} />
       )}
 
       <CreateAppointmentDialog open={createDialogOpen} barberId={barberIdProp || ''} onClose={() => setCreateDialogOpen(false)} onSuccess={() => setCreateDialogOpen(false)} />
-      <RegisterWalkInDialog open={walkInDialogOpen} barberId={barberIdProp || ''} onClose={() => setWalkInDialogOpen(false)} onSuccess={() => { setWalkInDialogOpen(false); message.success('Atendimento registrado com sucesso!'); }} />
+      <RegisterWalkInDialog open={walkInDialogOpen} barberId={barberIdProp || ''} onClose={() => setWalkInDialogOpen(false)} onSuccess={() => { setWalkInDialogOpen(false); message.success('Atendimento registrado!'); }} />
     </div>
   );
 };

@@ -42,6 +42,8 @@ const NameStep: React.FC<NameStepProps> = ({ onNext, onBack, initialValue = '' }
           value={name}
           onChange={(e) => setName(e.target.value)}
           status={error ? 'error' : undefined}
+          autoFocus
+          onKeyDown={(e) => { if (e.key === 'Enter') handleSubmit(); }}
         />
         {error && <Text type="danger" style={{ fontSize: 12 }}>{error}</Text>}
       </div>

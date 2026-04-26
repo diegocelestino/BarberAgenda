@@ -2,14 +2,14 @@ import { Modal } from 'antd';
 import { useAppDispatch } from '../../store/hooks';
 import { deleteBarber } from '../../store/barbers';
 
-interface DeleteBarberDialogProps {
+interface Props {
   open: boolean;
   barberId: string | null;
   onConfirm: () => void;
   onCancel: () => void;
 }
 
-const DeleteBarberDialog: React.FC<DeleteBarberDialogProps> = ({ open, barberId, onConfirm, onCancel }) => {
+const DeleteBarberDialog: React.FC<Props> = ({ open, barberId, onConfirm, onCancel }) => {
   const dispatch = useAppDispatch();
 
   const handleConfirm = async () => {
@@ -20,9 +20,9 @@ const DeleteBarberDialog: React.FC<DeleteBarberDialogProps> = ({ open, barberId,
   };
 
   return (
-    <Modal title="Delete Barber" open={open} onCancel={onCancel} onOk={handleConfirm}
-      okText="Delete" okButtonProps={{ danger: true }} cancelText="Cancel">
-      Are you sure you want to delete this barber? This action cannot be undone.
+    <Modal title="Excluir Barbeiro" open={open} onCancel={onCancel} onOk={handleConfirm}
+      okText="Excluir" okButtonProps={{ danger: true }} cancelText="Cancelar">
+      Tem certeza que deseja excluir este barbeiro? Esta ação não pode ser desfeita.
     </Modal>
   );
 };

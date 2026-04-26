@@ -2,7 +2,7 @@ import { Modal } from 'antd';
 import { useAppDispatch, useAppSelector } from '../../store/hooks';
 import { deleteService, selectServicesLoading } from '../../store/services';
 
-interface DeleteServiceDialogProps {
+interface Props {
   open: boolean;
   serviceId: string | null;
   serviceName: string | null;
@@ -10,20 +10,20 @@ interface DeleteServiceDialogProps {
   onCancel: () => void;
 }
 
-const DeleteServiceDialog: React.FC<DeleteServiceDialogProps> = ({ open, serviceId, serviceName, onConfirm, onCancel }) => {
+const DeleteServiceDialog: React.FC<Props> = ({ open, serviceId, serviceName, onConfirm, onCancel }) => {
   const dispatch = useAppDispatch();
   const loading = useAppSelector(selectServicesLoading);
 
   const handleDelete = async () => {
     if (!serviceId) return;
     try { await dispatch(deleteService(serviceId)).unwrap(); onConfirm(); }
-    catch (err) { console.error('Failed to delete service:', err); }
+    catch (err) { console.error('Erro ao excluir serviço:', err); }
   };
 
   return (
-    <Modal title="Delete Service" open={open} onCancel={onCancel} onOk={handleDelete}
-      okText="Delete" okButtonProps={{ danger: true, loading }} cancelText="Cancel">
-      Are you sure you want to delete "{serviceName}"? This action cannot be undone.
+    <Modal title="Excluir Serviço" open={open} onCancel={onCancel} onOk={handleDelete}
+      okText="Excluir" okButtonProps={{ danger: true, loading }} cancelText="Cancelar">
+      Tem certeza que deseja excluir "{serviceName}"? Esta ação não pode ser desfeita.
     </Modal>
   );
 };

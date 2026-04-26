@@ -45,10 +45,6 @@ const DateSelectionStep: React.FC<DateSelectionStepProps> = ({ onNext, onBack, s
     return false;
   };
 
-  const handleNext = () => {
-    if (date) onNext(date.toDate());
-  };
-
   return (
     <div>
       <div style={{ display: 'flex', alignItems: 'center', marginBottom: 16 }}>
@@ -66,7 +62,10 @@ const DateSelectionStep: React.FC<DateSelectionStepProps> = ({ onNext, onBack, s
           value={date || undefined}
           disabledDate={disabledDate}
           onSelect={(value) => {
-            if (!disabledDate(value)) setDate(value);
+            if (!disabledDate(value)) {
+              setDate(value);
+              onNext(value.toDate());
+            }
           }}
           style={{ maxWidth: 400, borderRadius: 8 }}
         />
@@ -74,7 +73,6 @@ const DateSelectionStep: React.FC<DateSelectionStepProps> = ({ onNext, onBack, s
 
       <div style={{ display: 'flex', gap: 16 }}>
         <Button block onClick={onBack}>Voltar</Button>
-        <Button block type="primary" onClick={handleNext} disabled={!date}>Próximo</Button>
       </div>
     </div>
   );

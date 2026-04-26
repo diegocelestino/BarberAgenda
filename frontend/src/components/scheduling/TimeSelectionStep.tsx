@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Alert, Button, Col, Row, Spin, Tag, Typography, theme } from 'antd';
+import { Alert, Button, Spin, Tag, Typography, theme } from 'antd';
 import { ClockCircleOutlined } from '@ant-design/icons';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -82,20 +82,18 @@ const TimeSelectionStep: React.FC<TimeSelectionStepProps> = ({
       {error && <Alert type="error" message={error} showIcon style={{ marginBottom: 16 }} />}
 
       {availableTimes.length > 0 ? (
-        <div style={{ marginBottom: 16, maxHeight: 300, overflowY: 'auto' }}>
-          <Row gutter={[8, 8]}>
+        <div style={{ marginBottom: 16, maxHeight: 300, overflowY: 'auto', WebkitOverflowScrolling: 'touch' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8 }}>
             {availableTimes.map((timeSlot) => (
-              <Col xs={8} sm={6} key={timeSlot}>
-                <Tag
-                  color={time === timeSlot ? 'gold' : undefined}
-                  onClick={() => setTime(timeSlot)}
-                  style={{ width: '100%', textAlign: 'center', cursor: 'pointer', padding: '4px 0', fontSize: 13 }}
-                >
-                  {timeSlot}
-                </Tag>
-              </Col>
+              <Tag key={timeSlot}
+                color={time === timeSlot ? 'gold' : undefined}
+                onClick={() => setTime(timeSlot)}
+                style={{ textAlign: 'center', cursor: 'pointer', padding: '6px 0', fontSize: 14, lineHeight: '24px', margin: 0 }}
+              >
+                {timeSlot}
+              </Tag>
             ))}
-          </Row>
+          </div>
         </div>
       ) : (
         <div style={{ marginBottom: 16, padding: 16, textAlign: 'center', borderRadius: 8, background: 'rgba(255,255,255,0.04)' }}>
