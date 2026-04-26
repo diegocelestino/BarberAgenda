@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { Alert, Button, Col, Row, Spin, Typography } from 'antd';
-import { PlusOutlined, ArrowLeftOutlined } from '@ant-design/icons';
+import { PlusOutlined } from '@ant-design/icons';
 import { useAppDispatch, useAppSelector } from '../../store/hooks';
 import { fetchBarbers, selectAllBarbers, selectBarbersLoading, selectBarbersError } from '../../store/barbers';
 import BarberCard from './BarberCard';
@@ -11,7 +10,6 @@ import CreateBarberDialog from './CreateBarberDialog';
 const { Title } = Typography;
 
 const BarberList: React.FC = () => {
-  const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const barbers = useAppSelector(selectAllBarbers);
   const loading = useAppSelector(selectBarbersLoading);
@@ -33,10 +31,7 @@ const BarberList: React.FC = () => {
   return (
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <Button type="text" icon={<ArrowLeftOutlined />} onClick={() => navigate('/admin')} />
-          <Title level={4} style={{ margin: 0 }}>Barbeiros</Title>
-        </div>
+        <Title level={4} style={{ margin: 0 }}>Barbeiros</Title>
         <Button type="primary" icon={<PlusOutlined />} onClick={() => setCreateDialogOpen(true)}>Novo Barbeiro</Button>
       </div>
 

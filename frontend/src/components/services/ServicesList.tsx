@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { Alert, Button, Spin, Table, Typography } from 'antd';
-import { EditOutlined, DeleteOutlined, PlusOutlined, ArrowLeftOutlined } from '@ant-design/icons';
+import { EditOutlined, DeleteOutlined, PlusOutlined } from '@ant-design/icons';
 import { useAppDispatch, useAppSelector } from '../../store/hooks';
 import { fetchServices, selectAllServices, selectServicesLoading, selectServicesError } from '../../store/services';
 import { Service } from '../../services/servicesApi';
@@ -12,7 +11,6 @@ import DeleteServiceDialog from './DeleteServiceDialog';
 const { Title, Text } = Typography;
 
 const ServicesList: React.FC = () => {
-  const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const services = useAppSelector(selectAllServices);
   const loading = useAppSelector(selectServicesLoading);
@@ -49,10 +47,7 @@ const ServicesList: React.FC = () => {
   return (
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <Button type="text" icon={<ArrowLeftOutlined />} onClick={() => navigate('/admin')} />
-          <Title level={4} style={{ margin: 0 }}>Serviços</Title>
-        </div>
+        <Title level={4} style={{ margin: 0 }}>Serviços</Title>
         <Button type="primary" icon={<PlusOutlined />} onClick={() => setCreateDialogOpen(true)}>Novo Serviço</Button>
       </div>
 
