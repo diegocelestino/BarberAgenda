@@ -1,15 +1,12 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { Card, Row, Col, Typography, Button, Space, Select, Grid, Spin, Segmented } from 'antd';
 import { PlusOutlined, LeftOutlined, RightOutlined, UnorderedListOutlined, CalendarOutlined } from '@ant-design/icons';
 import AdminLayout from '../layout/AdminLayout';
 import AppointmentStats from '../components/AppointmentStats';
 import AppointmentsTable from '../components/AppointmentsTable';
-import TimelineView, { TimelineAppointment } from '../components/TimelineView';
+import TimelineView from '../components/TimelineView';
 import CreateAppointmentModal from '../components/CreateAppointmentModal';
-import { AppointmentItem } from '../types';
-import { barberApi, Barber } from '../../../services/api';
-import { appointmentsApi } from '../../../services/appointmentsApi';
-import { servicesApi } from '../../../services/servicesApi';
+import { useDayAppointments } from '../hooks/useDayAppointments';
 
 const { Title, Text } = Typography;
 
@@ -17,68 +14,12 @@ const AgendaPage: React.FC = () => {
   const screens = Grid.useBreakpoint();
   const isMobile = !screens.md;
 
-  const [loading, setLoading] = useState(true);
-  const [barbers, setBarbers] = useState<Barber[]>([]);
-  const [appointments, setAppointments] = useState<AppointmentItem[]>([]);
-  const [timelineData, setTimelineData] = useState<TimelineAppointment[]>([]);
   const [selectedBarber, setSelectedBarber] = useState<string>('all');
   const [currentDate, setCurrentDate] = useState(new Date());
   const [viewMode, setViewMode] = useState<string>('timeline');
   const [createModalOpen, setCreateModalOpen] = useState(false);
 
-  const fetchData = async () => {
-    setLoading(true);
-    try {
-      const [fetchedBarbers, servicesList] = await Promise.all([
-        barberApi.getAll(),
-        servicesApi.getAll(),
-      ]);
-      setBarbers(fetchedBarbers);
-      const serviceNameMap = new Map(servicesList.map((s: any) => [s.serviceId, s.name]));
-
-      const startOfDay = new Date(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate()).getTime();
-      const endOfDay = startOfDay + 24 * 60 * 60 * 1000;
-
-      const results = await Promise.all(
-        fetchedBarbers.map((barber) =>
-          appointmentsApi.getByBarber(barber.barberId, { startDate: startOfDay, endDate: endOfDay })
-            .then((appts) => appts.map((a) => ({
-              raw: a,
-              barberName: barber.name,
-              item: {
-                time: new Date(a.startTime).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
-                customer: a.customerName,
-                phone: a.customerPhone || '',
-                service: serviceNameMap.get(a.service) || a.service,
-                duration: `${Math.round((a.endTime - a.startTime) / 60000)} min`,
-                barber: barber.name,
-                status: (a.status === 'scheduled' ? 'confirmed' : a.status === 'completed' ? 'in-progress' : 'cancelled') as AppointmentItem['status'],
-              },
-              timeline: {
-                id: a.appointmentId,
-                startTime: a.startTime,
-                endTime: a.endTime,
-                customer: a.customerName,
-                phone: a.customerPhone || '',
-                service: serviceNameMap.get(a.service) || a.service,
-                barber: barber.name,
-                status: (a.status === 'scheduled' ? 'confirmed' : a.status === 'completed' ? 'in-progress' : 'cancelled') as TimelineAppointment['status'],
-              },
-            })))
-        )
-      );
-
-      const flat = results.flat().sort((a, b) => a.item.time.localeCompare(b.item.time));
-      setAppointments(flat.map((f) => f.item));
-      setTimelineData(flat.map((f) => f.timeline));
-    } catch (err) {
-      console.error('Failed to fetch agenda:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => { fetchData(); }, [currentDate]); // eslint-disable-line react-hooks/exhaustive-deps
+  const { loading, barbers, appointments, timelineData, refetch } = useDayAppointments(currentDate);
 
   const filteredAppointments = selectedBarber === 'all'
     ? appointments
@@ -168,7 +109,7 @@ const AgendaPage: React.FC = () => {
       <CreateAppointmentModal
         open={createModalOpen}
         onClose={() => setCreateModalOpen(false)}
-        onCreated={fetchData}
+        onCreated={refetch}
         defaultDate={currentDate}
       />
     </AdminLayout>
