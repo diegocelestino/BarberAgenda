@@ -25,7 +25,6 @@ const CreateAppointmentModal: React.FC<CreateAppointmentModalProps> = ({ open, o
   const [selectedDate, setSelectedDate] = useState(dayjs(defaultDate || new Date()));
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
   const [existingAppointments, setExistingAppointments] = useState<TimelineAppointment[]>([]);
-  const [availableSlots, setAvailableSlots] = useState<string[]>([]);
   const [serviceNameMap, setServiceNameMap] = useState<Map<string, string>>(new Map());
 
   useEffect(() => {
@@ -54,10 +53,7 @@ const CreateAppointmentModal: React.FC<CreateAppointmentModalProps> = ({ open, o
     const endOfDay = date.endOf('day').valueOf();
 
     try {
-      const [appts, slots] = await Promise.all([
-        appointmentsApi.getByBarber(barberId, { startDate: startOfDay, endDate: endOfDay }),
-        barberApi.getAvailableSlots(barberId, date.format('YYYY-MM-DD'), service.duration),
-      ]);
+      const appts = await appointmentsApi.getByBarber(barberId, { startDate: startOfDay, endDate: endOfDay });
 
       const barber = barbers.find((b) => b.barberId === barberId);
       setExistingAppointments(appts.map((a) => ({
@@ -70,10 +66,8 @@ const CreateAppointmentModal: React.FC<CreateAppointmentModalProps> = ({ open, o
         barber: barber?.name || '',
         status: (a.status === 'scheduled' ? 'confirmed' : a.status === 'completed' ? 'in-progress' : 'cancelled') as TimelineAppointment['status'],
       })));
-      setAvailableSlots(slots);
     } catch {
       setExistingAppointments([]);
-      setAvailableSlots([]);
     }
   };
 

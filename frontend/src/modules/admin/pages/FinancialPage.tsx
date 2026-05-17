@@ -16,7 +16,6 @@ import {
 } from 'antd';
 import {
   DownloadOutlined,
-  PlusOutlined,
 } from '@ant-design/icons';
 import { Column, Pie } from '@ant-design/charts';
 import dayjs from 'dayjs';

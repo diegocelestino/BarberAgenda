@@ -1,24 +1,21 @@
-const businessRules = require('../../config/businessRules');
+const { getConfig, updateConfig } = require('../../config/businessRules');
 
-// Get business rules configuration
 const getBusinessRules = (req, res) => {
-  console.log('GET /config/business-rules');
-  res.json({ config: businessRules });
+  res.json(getConfig());
 };
 
-// Get specific rule category
 const getRuleCategory = (req, res) => {
   const { category } = req.params;
-  console.log(`GET /config/business-rules/${category}`);
-  
-  if (!businessRules[category]) {
+  const config = getConfig();
+  if (!config[category]) {
     return res.status(404).json({ error: `Category '${category}' not found` });
   }
-  
-  res.json({ config: businessRules[category] });
+  res.json({ config: config[category] });
 };
 
-module.exports = {
-  getBusinessRules,
-  getRuleCategory,
+const updateBusinessRules = (req, res) => {
+  const updated = updateConfig(req.body);
+  res.json(updated);
 };
+
+module.exports = { getBusinessRules, getRuleCategory, updateBusinessRules };

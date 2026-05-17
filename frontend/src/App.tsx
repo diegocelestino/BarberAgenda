@@ -16,6 +16,7 @@ const CustomerDetailPage = lazy(() => import('./modules/admin/pages/CustomerDeta
 const BarbersPage = lazy(() => import('./modules/admin/pages/BarbersPage'));
 const ServicesPage = lazy(() => import('./modules/admin/pages/ServicesPage'));
 const FinancialPage = lazy(() => import('./modules/admin/pages/FinancialPage'));
+const SettingsPage = lazy(() => import('./modules/admin/pages/SettingsPage'));
 
 const PageLoader = () => (
   <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh' }}>
@@ -43,6 +44,7 @@ function App() {
                 <Route path="/admin/barbeiros" element={<ProtectedRoute><BarbersPage /></ProtectedRoute>} />
                 <Route path="/admin/servicos" element={<ProtectedRoute><ServicesPage /></ProtectedRoute>} />
                 <Route path="/admin/financeiro" element={<ProtectedRoute><FinancialPage /></ProtectedRoute>} />
+                <Route path="/admin/configuracoes" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
 
                 <Route path="*" element={<Navigate to="/" replace />} />
               </Routes>

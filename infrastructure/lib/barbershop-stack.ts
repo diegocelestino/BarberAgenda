@@ -130,6 +130,16 @@ export class BarbershopStack extends cdk.Stack {
     });
 
     // ========================================
+    // NEW: Config Table
+    // ========================================
+
+    const configTable = new dynamodb.Table(this, 'ConfigTable', {
+      partitionKey: { name: 'configId', type: dynamodb.AttributeType.STRING },
+      billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
+      removalPolicy: cdk.RemovalPolicy.DESTROY,
+    });
+
+    // ========================================
     // Lambda helper
     // ========================================
 
@@ -308,6 +318,18 @@ export class BarbershopStack extends cdk.Stack {
     transactionsTable.grantReadWriteData(payCommissionFn);
 
     // ========================================
+    // Config functions
+    // ========================================
+
+    const configEnv = { CONFIG_TABLE: configTable.tableName };
+
+    const getConfigFn = makeFn('GetConfigFunction', 'dist/config/get.handler', configEnv);
+    const updateConfigFn = makeFn('UpdateConfigFunction', 'dist/config/update.handler', configEnv);
+
+    configTable.grantReadData(getConfigFn);
+    configTable.grantReadWriteData(updateConfigFn);
+
+    // ========================================
     // API Gateway
     // ========================================
 
@@ -466,6 +488,14 @@ export class BarbershopStack extends cdk.Stack {
       authorizationType: apigateway.AuthorizationType.COGNITO,
     });
 
+    // /config
+    const config = api.root.addResource('config');
+    config.addMethod('GET', int(getConfigFn)); // Public - read config
+    config.addMethod('PUT', int(updateConfigFn), {
+      authorizer,
+      authorizationType: apigateway.AuthorizationType.COGNITO,
+    });
+
     // ========================================
     // Frontend - S3 + CloudFront
     // ========================================
@@ -523,6 +553,7 @@ export class BarbershopStack extends cdk.Stack {
     new cdk.CfnOutput(this, 'UsersTableName', { value: usersTable.tableName });
     new cdk.CfnOutput(this, 'CustomersTableName', { value: customersTable.tableName });
     new cdk.CfnOutput(this, 'TransactionsTableName', { value: transactionsTable.tableName });
+    new cdk.CfnOutput(this, 'ConfigTableName', { value: configTable.tableName });
     new cdk.CfnOutput(this, 'BucketName', { value: websiteBucket.bucketName });
     new cdk.CfnOutput(this, 'BucketWebsiteURL', { value: websiteBucket.bucketWebsiteUrl });
     new cdk.CfnOutput(this, 'DistributionId', { value: distribution.distributionId });

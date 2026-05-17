@@ -178,15 +178,10 @@ const getAvailableSlots = (req, res) => {
     return res.status(404).json({ error: 'Barber not found' });
   }
   
-  // Get barber schedule with defaults
-  const schedule = barber.schedule || {
-    openTime: '09:00',
-    closeTime: '18:00',
-    lunchStart: '12:00',
-    lunchEnd: '13:00',
-    workDays: [1, 2, 3, 4, 5, 6],
-    slotInterval: 30,
-  };
+  // Get barber schedule with defaults from config
+  const { getConfig } = require('../../config/businessRules');
+  const defaultSchedule = getConfig().defaultSchedule;
+  const schedule = barber.schedule || defaultSchedule;
   
   // Parse the date (format: YYYY-MM-DD)
   const requestedDate = new Date(date + 'T00:00:00-03:00');

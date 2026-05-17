@@ -1,12 +1,9 @@
 const express = require('express');
 const router = express.Router();
-const {
-  getBusinessRules,
-  getRuleCategory,
-} = require('./configController');
+const { getBusinessRules, getRuleCategory, updateBusinessRules } = require('./configController');
 
-// Routes
-router.get('/config/business-rules', getBusinessRules);
-router.get('/config/business-rules/:category', getRuleCategory);
+router.get('/config', getBusinessRules);
+router.get('/config/:category', getRuleCategory);
+router.put('/config', updateBusinessRules);
 
 module.exports = router;
