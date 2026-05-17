@@ -23,7 +23,9 @@ import {
 } from '@ant-design/icons';
 import AdminLayout from '../layout/AdminLayout';
 import CreateCustomerModal from '../components/CreateCustomerModal';
-import { customersApi, Customer } from '../../../services/customersApi';
+import { Customer } from '../../../services/customersApi';
+import { useAppDispatch, useAppSelector } from '../../../store/hooks';
+import { fetchCustomers } from '../../../store/customers/customersThunks';
 import { useNavigate } from 'react-router-dom';
 
 const { Title, Text } = Typography;
@@ -32,24 +34,15 @@ const CustomersPage: React.FC = () => {
   const screens = Grid.useBreakpoint();
   const isMobile = !screens.md;
   const navigate = useNavigate();
+  const dispatch = useAppDispatch();
 
-  const [loading, setLoading] = useState(true);
-  const [customers, setCustomers] = useState<Customer[]>([]);
+  const { customers, loading } = useAppSelector((state) => state.customers);
   const [search, setSearch] = useState('');
   const [createModalOpen, setCreateModalOpen] = useState(false);
 
-  const fetchCustomers = async () => {
-    try {
-      const data = await customersApi.getAll();
-      setCustomers(data);
-    } catch (err) {
-      console.error('Failed to fetch customers:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => { fetchCustomers(); }, []);
+  useEffect(() => {
+    if (customers.length === 0) dispatch(fetchCustomers());
+  }, [dispatch, customers.length]);
 
   const filtered = customers
     .filter((c) => {
@@ -216,7 +209,7 @@ const CustomersPage: React.FC = () => {
       <CreateCustomerModal
         open={createModalOpen}
         onClose={() => setCreateModalOpen(false)}
-        onCreated={fetchCustomers}
+        onCreated={() => dispatch(fetchCustomers())}
       />
     </AdminLayout>
   );

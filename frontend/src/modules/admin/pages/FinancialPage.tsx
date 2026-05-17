@@ -20,7 +20,9 @@ import {
 import { Column, Pie } from '@ant-design/charts';
 import dayjs from 'dayjs';
 import AdminLayout from '../layout/AdminLayout';
-import { financialApi, Transaction, FinancialSummary } from '../../../services/financialApi';
+import { Transaction, FinancialSummary } from '../../../services/financialApi';
+import { useAppDispatch, useAppSelector } from '../../../store/hooks';
+import { fetchFinancialSummary, fetchTransactions } from '../../../store/financial/financialThunks';
 
 const { Title, Text } = Typography;
 const { RangePicker } = DatePicker;
@@ -220,32 +222,18 @@ function RecentTransactions({ transactions }: { transactions: Transaction[] }) {
 // ─── Main Page ───────────────────────────────────────────────────────────────
 
 const FinancialPage: React.FC = () => {
-  const [loading, setLoading] = useState(true);
-  const [summary, setSummary] = useState<FinancialSummary | null>(null);
-  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const dispatch = useAppDispatch();
+  const { summary, transactions, loading } = useAppSelector((state) => state.financial);
   const [dateRange, setDateRange] = useState<[string, string]>(() => {
     const end = dayjs().format('YYYY-MM-DD');
     const start = dayjs().subtract(30, 'day').format('YYYY-MM-DD');
     return [start, end];
   });
 
-  const fetchData = async () => {
-    setLoading(true);
-    try {
-      const [summaryData, txns] = await Promise.all([
-        financialApi.getSummary(dateRange[0], dateRange[1]),
-        financialApi.getTransactions({ startDate: dateRange[0], endDate: dateRange[1] }),
-      ]);
-      setSummary(summaryData);
-      setTransactions(txns);
-    } catch (err) {
-      console.error('Failed to fetch financial data:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => { fetchData(); }, [dateRange]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    dispatch(fetchFinancialSummary({ startDate: dateRange[0], endDate: dateRange[1] }));
+    dispatch(fetchTransactions({ startDate: dateRange[0], endDate: dateRange[1] }));
+  }, [dateRange, dispatch]);
 
   const handleDateChange = (dates: any) => {
     if (dates) {

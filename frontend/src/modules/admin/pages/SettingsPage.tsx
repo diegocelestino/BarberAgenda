@@ -18,12 +18,14 @@ import {
 import { SaveOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import AdminLayout from '../layout/AdminLayout';
-import api from '../../../services/api';
+import { useAppDispatch, useAppSelector } from '../../../store/hooks';
+import { fetchConfig, updateConfig } from '../../../store/config/configSlice';
 
 const { Title, Text } = Typography;
 
 const SettingsPage: React.FC = () => {
-  const [loading, setLoading] = useState(true);
+  const dispatch = useAppDispatch();
+  const { config, loading } = useAppSelector((state) => state.config);
   const [saving, setSaving] = useState(false);
   const [shopForm] = Form.useForm();
   const [bookingForm] = Form.useForm();
@@ -31,47 +33,42 @@ const SettingsPage: React.FC = () => {
   const [scheduleForm] = Form.useForm();
 
   useEffect(() => {
-    const fetchConfig = async () => {
-      try {
-        const response = await api.get('/config');
-        const data = response.data;
+    if (!config) dispatch(fetchConfig());
+  }, [dispatch, config]);
 
-        shopForm.setFieldsValue({
-          name: data.shop?.name || 'Barbearia',
-          address: data.shop?.address || '',
-          phone: data.shop?.phone || '',
-          whatsapp: data.shop?.whatsapp || '',
-        });
+  useEffect(() => {
+    if (!config) return;
+    const data = config;
 
-        bookingForm.setFieldsValue({
-          maxDaysInAdvance: data.booking?.maxBookingDaysAhead || 60,
-          minAdvanceHours: (data.booking?.minAdvanceTimeMinutes || 60) / 60,
-          slotInterval: data.booking?.defaultSlotIntervalMinutes || 30,
-          allowSameDayBooking: data.booking?.allowSameDayBooking ?? true,
-        });
+    shopForm.setFieldsValue({
+      name: data.shop?.name || 'Barbearia',
+      address: data.shop?.address || '',
+      phone: data.shop?.phone || '',
+      whatsapp: data.shop?.whatsapp || '',
+    });
 
-        loyaltyForm.setFieldsValue({
-          pointsPerReal: data.loyalty?.pointsPerReal || 1,
-          pointsForReward: data.loyalty?.pointsForReward || 500,
-          rewardDescription: data.loyalty?.rewardDescription || 'Serviço grátis',
-        });
+    bookingForm.setFieldsValue({
+      maxDaysInAdvance: data.booking?.maxBookingDaysAhead || 60,
+      minAdvanceHours: (data.booking?.minAdvanceTimeMinutes || 60) / 60,
+      slotInterval: data.booking?.defaultSlotIntervalMinutes || 30,
+      allowSameDayBooking: data.booking?.allowSameDayBooking ?? true,
+    });
 
-        const schedule = data.defaultSchedule || {};
-        scheduleForm.setFieldsValue({
-          openTime: schedule.openTime ? dayjs(schedule.openTime, 'HH:mm') : dayjs('09:00', 'HH:mm'),
-          closeTime: schedule.closeTime ? dayjs(schedule.closeTime, 'HH:mm') : dayjs('18:00', 'HH:mm'),
-          lunchStart: schedule.lunchStart ? dayjs(schedule.lunchStart, 'HH:mm') : dayjs('12:00', 'HH:mm'),
-          lunchEnd: schedule.lunchEnd ? dayjs(schedule.lunchEnd, 'HH:mm') : dayjs('13:00', 'HH:mm'),
-          workDays: schedule.workDays || [1, 2, 3, 4, 5, 6],
-        });
-      } catch (err) {
-        console.error('Failed to fetch config:', err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchConfig();
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+    loyaltyForm.setFieldsValue({
+      pointsPerReal: data.loyalty?.pointsPerReal || 1,
+      pointsForReward: data.loyalty?.pointsForReward || 500,
+      rewardDescription: data.loyalty?.rewardDescription || 'Serviço grátis',
+    });
+
+    const schedule = data.defaultSchedule || {};
+    scheduleForm.setFieldsValue({
+      openTime: schedule.openTime ? dayjs(schedule.openTime, 'HH:mm') : dayjs('09:00', 'HH:mm'),
+      closeTime: schedule.closeTime ? dayjs(schedule.closeTime, 'HH:mm') : dayjs('18:00', 'HH:mm'),
+      lunchStart: schedule.lunchStart ? dayjs(schedule.lunchStart, 'HH:mm') : dayjs('12:00', 'HH:mm'),
+      lunchEnd: schedule.lunchEnd ? dayjs(schedule.lunchEnd, 'HH:mm') : dayjs('13:00', 'HH:mm'),
+      workDays: schedule.workDays || [1, 2, 3, 4, 5, 6],
+    });
+  }, [config]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleSave = async (section: string) => {
     setSaving(true);
@@ -98,7 +95,7 @@ const SettingsPage: React.FC = () => {
       } else if (section === 'Fidelidade') {
         payload = { loyalty: loyaltyForm.getFieldsValue() };
       }
-      await api.put('/config', payload);
+      await dispatch(updateConfig(payload)).unwrap();
       message.success(`${section} salvo com sucesso`);
     } catch (err) {
       message.error('Erro ao salvar');

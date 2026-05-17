@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import {
   Card,
   Row,
@@ -28,7 +28,9 @@ import {
 } from '@ant-design/icons';
 import { useParams, useNavigate } from 'react-router-dom';
 import AdminLayout from '../layout/AdminLayout';
-import { customersApi, Customer } from '../../../services/customersApi';
+import { useAppDispatch, useAppSelector } from '../../../store/hooks';
+import { fetchCustomerById } from '../../../store/customers/customersThunks';
+import { Customer } from '../../../services/customersApi';
 
 const { Title, Text, Link } = Typography;
 
@@ -217,23 +219,12 @@ function LoyaltyTab({ customer }: { customer: Customer }) {
 const CustomerDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const [loading, setLoading] = useState(true);
-  const [customer, setCustomer] = useState<Customer | null>(null);
+  const dispatch = useAppDispatch();
+  const { selectedCustomer: customer, loading } = useAppSelector((state) => state.customers);
 
   useEffect(() => {
-    const fetchData = async () => {
-      if (!id) return;
-      try {
-        const data = await customersApi.getById(id);
-        setCustomer(data);
-      } catch (err) {
-        console.error('Failed to fetch customer:', err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchData();
-  }, [id]);
+    if (id) dispatch(fetchCustomerById(id));
+  }, [id, dispatch]);
 
   if (loading || !customer) {
     return (

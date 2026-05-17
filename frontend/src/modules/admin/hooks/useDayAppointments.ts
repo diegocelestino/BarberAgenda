@@ -1,7 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
-import { barberApi, Barber } from '../../../services/api';
+import { useAppDispatch, useAppSelector } from '../../../store/hooks';
+import { fetchBarbers } from '../../../store/barbers/barbersThunks';
+import { fetchServices } from '../../../store/services/servicesThunks';
 import { appointmentsApi, Appointment } from '../../../services/appointmentsApi';
-import { servicesApi } from '../../../services/servicesApi';
 import { AppointmentItem } from '../types';
 import { TimelineAppointment } from '../components/TimelineView';
 
@@ -11,10 +12,7 @@ function mapStatus(status: string): AppointmentItem['status'] {
   return 'cancelled';
 }
 
-function mapAppointment(a: Appointment, barberName: string, serviceNameMap: Map<string, string>): {
-  item: AppointmentItem;
-  timeline: TimelineAppointment;
-} {
+function mapAppointment(a: Appointment, barberName: string, serviceNameMap: Map<string, string>) {
   const service = serviceNameMap.get(a.service) || a.service;
   const duration = Math.round((a.endTime - a.startTime) / 60000);
   const status = mapStatus(a.status);
@@ -28,7 +26,7 @@ function mapAppointment(a: Appointment, barberName: string, serviceNameMap: Map<
       duration: `${duration} min`,
       barber: barberName,
       status,
-    },
+    } as AppointmentItem,
     timeline: {
       id: a.appointmentId,
       startTime: a.startTime,
@@ -38,44 +36,50 @@ function mapAppointment(a: Appointment, barberName: string, serviceNameMap: Map<
       service,
       barber: barberName,
       status,
-    },
+    } as TimelineAppointment,
   };
 }
 
 interface UseDayAppointmentsResult {
   loading: boolean;
-  barbers: Barber[];
+  barbers: any[];
   appointments: AppointmentItem[];
   timelineData: TimelineAppointment[];
   refetch: () => void;
 }
 
 export function useDayAppointments(date: Date): UseDayAppointmentsResult {
+  const dispatch = useAppDispatch();
+  const barbers = useAppSelector((state) => state.barbers.barbers);
+  const services = useAppSelector((state) => state.services.services);
+  const barbersLoading = useAppSelector((state) => state.barbers.loading);
+  const servicesLoading = useAppSelector((state) => state.services.loading);
+
   const [loading, setLoading] = useState(true);
-  const [barbers, setBarbers] = useState<Barber[]>([]);
   const [appointments, setAppointments] = useState<AppointmentItem[]>([]);
   const [timelineData, setTimelineData] = useState<TimelineAppointment[]>([]);
 
-  const fetchData = useCallback(async () => {
+  // Load barbers + services into store if not already loaded
+  useEffect(() => {
+    if (barbers.length === 0) dispatch(fetchBarbers());
+    if (services.length === 0) dispatch(fetchServices());
+  }, [dispatch, barbers.length, services.length]);
+
+  const fetchAppointments = useCallback(async () => {
+    if (barbers.length === 0 || services.length === 0) return;
+
     setLoading(true);
+    const serviceNameMap = new Map(services.map((s: any) => [s.serviceId, s.name]));
+    const startOfDay = new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime();
+    const endOfDay = startOfDay + 24 * 60 * 60 * 1000;
+
     try {
-      const [fetchedBarbers, servicesList] = await Promise.all([
-        barberApi.getAll(),
-        servicesApi.getAll(),
-      ]);
-      setBarbers(fetchedBarbers);
-      const serviceNameMap = new Map(servicesList.map((s: any) => [s.serviceId, s.name]));
-
-      const startOfDay = new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime();
-      const endOfDay = startOfDay + 24 * 60 * 60 * 1000;
-
       const results = await Promise.all(
-        fetchedBarbers.map((barber) =>
+        barbers.map((barber) =>
           appointmentsApi.getByBarber(barber.barberId, { startDate: startOfDay, endDate: endOfDay })
             .then((appts) => appts.map((a) => mapAppointment(a, barber.name, serviceNameMap)))
         )
       );
-
       const flat = results.flat().sort((a, b) => a.item.time.localeCompare(b.item.time));
       setAppointments(flat.map((f) => f.item));
       setTimelineData(flat.map((f) => f.timeline));
@@ -84,9 +88,15 @@ export function useDayAppointments(date: Date): UseDayAppointmentsResult {
     } finally {
       setLoading(false);
     }
-  }, [date.toDateString()]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [barbers, services, date.toDateString()]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  useEffect(() => { fetchData(); }, [fetchData]);
+  useEffect(() => { fetchAppointments(); }, [fetchAppointments]);
 
-  return { loading, barbers, appointments, timelineData, refetch: fetchData };
+  return {
+    loading: loading || barbersLoading || servicesLoading,
+    barbers,
+    appointments,
+    timelineData,
+    refetch: fetchAppointments,
+  };
 }
