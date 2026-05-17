@@ -22,6 +22,7 @@ import {
   SearchOutlined,
 } from '@ant-design/icons';
 import AdminLayout from '../layout/AdminLayout';
+import CreateCustomerModal from '../components/CreateCustomerModal';
 import { customersApi, Customer } from '../../../services/customersApi';
 import { useNavigate } from 'react-router-dom';
 
@@ -35,26 +36,28 @@ const CustomersPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [search, setSearch] = useState('');
+  const [createModalOpen, setCreateModalOpen] = useState(false);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const data = await customersApi.getAll();
-        setCustomers(data);
-      } catch (err) {
-        console.error('Failed to fetch customers:', err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchData();
-  }, []);
+  const fetchCustomers = async () => {
+    try {
+      const data = await customersApi.getAll();
+      setCustomers(data);
+    } catch (err) {
+      console.error('Failed to fetch customers:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  const filtered = customers.filter((c) => {
-    if (!search) return true;
-    const s = search.toLowerCase();
-    return c.name.toLowerCase().includes(s) || c.phone.includes(s) || (c.email || '').toLowerCase().includes(s);
-  });
+  useEffect(() => { fetchCustomers(); }, []);
+
+  const filtered = customers
+    .filter((c) => {
+      if (!search) return true;
+      const s = search.toLowerCase();
+      return c.name.toLowerCase().includes(s) || c.phone.includes(s) || (c.email || '').toLowerCase().includes(s);
+    })
+    .sort((a, b) => a.name.localeCompare(b.name));
 
   const getInitials = (name: string) =>
     name.split(' ').map((n) => n[0]).join('').toUpperCase().slice(0, 2);
@@ -120,6 +123,7 @@ const CustomersPage: React.FC = () => {
       title: 'Última visita',
       dataIndex: 'lastVisit',
       width: 130,
+      sorter: (a: Customer, b: Customer) => (a.lastVisit || '').localeCompare(b.lastVisit || ''),
       render: (date: string) => date ? new Date(date).toLocaleDateString('pt-BR') : '—',
     },
     {
@@ -156,7 +160,7 @@ const CustomersPage: React.FC = () => {
           <Col>
             <Space>
               {!isMobile && <Button icon={<DownloadOutlined />}>Exportar</Button>}
-              <Button type="primary" icon={<PlusOutlined />}>{isMobile ? 'Novo' : 'Novo cliente'}</Button>
+              <Button type="primary" icon={<PlusOutlined />} onClick={() => setCreateModalOpen(true)}>{isMobile ? 'Novo' : 'Novo cliente'}</Button>
             </Space>
           </Col>
         </Row>
@@ -208,6 +212,12 @@ const CustomersPage: React.FC = () => {
           )}
         </Card>
       </Space>
+
+      <CreateCustomerModal
+        open={createModalOpen}
+        onClose={() => setCreateModalOpen(false)}
+        onCreated={fetchCustomers}
+      />
     </AdminLayout>
   );
 };
