@@ -47,17 +47,25 @@ function generateWeekAppointments() {
 
     // 5-8 appointments per day
     const count = 5 + Math.floor(Math.random() * 4);
-    let hour = 9;
-    let minute = 0;
+    let currentTime = new Date(date);
+    currentTime.setHours(9, 0, 0, 0);
 
     for (let i = 0; i < count; i++) {
       const service = SERVICES[Math.floor(Math.random() * SERVICES.length)];
       const customer = CUSTOMERS[Math.floor(Math.random() * CUSTOMERS.length)];
       const paymentMethod = PAYMENT_METHODS[Math.floor(Math.random() * PAYMENT_METHODS.length)];
 
-      const startTime = new Date(date);
-      startTime.setHours(hour, minute, 0, 0);
+      const startTime = new Date(currentTime);
       const endTime = new Date(startTime.getTime() + service.duration * 60 * 1000);
+
+      // Skip lunch (13:00-14:00)
+      if (startTime.getHours() === 13 || (startTime.getHours() === 12 && startTime.getMinutes() + service.duration > 60)) {
+        currentTime.setHours(14, 0, 0, 0);
+        continue;
+      }
+
+      // Stop if past closing time (20:00)
+      if (endTime.getHours() >= 20) break;
 
       // Today: mix of completed and scheduled. Past days: all completed.
       const isToday = daysAgo === 0;
@@ -87,14 +95,8 @@ function generateWeekAppointments() {
         createdAt: Date.now(),
       });
 
-      // Advance time
-      minute += service.duration + 10;
-      if (minute >= 60) {
-        hour += Math.floor(minute / 60);
-        minute = minute % 60;
-      }
-      if (hour === 13) { hour = 14; minute = 0; }
-      if (hour >= 20) break;
+      // Next appointment starts after this one ends + 10 min gap
+      currentTime = new Date(endTime.getTime() + 10 * 60 * 1000);
     }
   }
 

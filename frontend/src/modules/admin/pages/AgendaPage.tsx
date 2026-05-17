@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { Card, Row, Col, Typography, Button, Space, Select, Grid, Spin } from 'antd';
-import { PlusOutlined, LeftOutlined, RightOutlined } from '@ant-design/icons';
+import { Card, Row, Col, Typography, Button, Space, Select, Grid, Spin, Segmented } from 'antd';
+import { PlusOutlined, LeftOutlined, RightOutlined, UnorderedListOutlined, CalendarOutlined } from '@ant-design/icons';
 import AdminLayout from '../layout/AdminLayout';
 import AppointmentStats from '../components/AppointmentStats';
 import AppointmentsTable from '../components/AppointmentsTable';
+import TimelineView, { TimelineAppointment } from '../components/TimelineView';
 import { AppointmentItem } from '../types';
 import { barberApi, Barber } from '../../../services/api';
 import { appointmentsApi } from '../../../services/appointmentsApi';
@@ -18,8 +19,10 @@ const AgendaPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [barbers, setBarbers] = useState<Barber[]>([]);
   const [appointments, setAppointments] = useState<AppointmentItem[]>([]);
+  const [timelineData, setTimelineData] = useState<TimelineAppointment[]>([]);
   const [selectedBarber, setSelectedBarber] = useState<string>('all');
   const [currentDate, setCurrentDate] = useState(new Date());
+  const [viewMode, setViewMode] = useState<string>('timeline');
 
   useEffect(() => {
     const fetchData = async () => {
@@ -39,18 +42,34 @@ const AgendaPage: React.FC = () => {
           fetchedBarbers.map((barber) =>
             appointmentsApi.getByBarber(barber.barberId, { startDate: startOfDay, endDate: endOfDay })
               .then((appts) => appts.map((a) => ({
-                time: new Date(a.startTime).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
-                customer: a.customerName,
-                phone: a.customerPhone || '',
-                service: serviceNameMap.get(a.service) || a.service,
-                duration: `${Math.round((a.endTime - a.startTime) / 60000)} min`,
-                barber: barber.name,
-                status: (a.status === 'scheduled' ? 'confirmed' : a.status === 'completed' ? 'in-progress' : 'cancelled') as AppointmentItem['status'],
+                raw: a,
+                barberName: barber.name,
+                item: {
+                  time: new Date(a.startTime).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
+                  customer: a.customerName,
+                  phone: a.customerPhone || '',
+                  service: serviceNameMap.get(a.service) || a.service,
+                  duration: `${Math.round((a.endTime - a.startTime) / 60000)} min`,
+                  barber: barber.name,
+                  status: (a.status === 'scheduled' ? 'confirmed' : a.status === 'completed' ? 'in-progress' : 'cancelled') as AppointmentItem['status'],
+                },
+                timeline: {
+                  id: a.appointmentId,
+                  startTime: a.startTime,
+                  endTime: a.endTime,
+                  customer: a.customerName,
+                  phone: a.customerPhone || '',
+                  service: serviceNameMap.get(a.service) || a.service,
+                  barber: barber.name,
+                  status: (a.status === 'scheduled' ? 'confirmed' : a.status === 'completed' ? 'in-progress' : 'cancelled') as TimelineAppointment['status'],
+                },
               })))
           )
         );
 
-        setAppointments(results.flat().sort((a, b) => a.time.localeCompare(b.time)));
+        const flat = results.flat().sort((a, b) => a.item.time.localeCompare(b.item.time));
+        setAppointments(flat.map((f) => f.item));
+        setTimelineData(flat.map((f) => f.timeline));
       } catch (err) {
         console.error('Failed to fetch agenda:', err);
       } finally {
@@ -63,6 +82,10 @@ const AgendaPage: React.FC = () => {
   const filteredAppointments = selectedBarber === 'all'
     ? appointments
     : appointments.filter((a) => a.barber === selectedBarber);
+
+  const filteredTimeline = selectedBarber === 'all'
+    ? timelineData
+    : timelineData.filter((a) => a.barber === selectedBarber);
 
   const formatDate = (date: Date) =>
     date.toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
@@ -114,6 +137,14 @@ const AgendaPage: React.FC = () => {
               <Button onClick={() => setCurrentDate(new Date())}>Hoje</Button>
               <Button icon={<RightOutlined />} onClick={() => navigateDay(1)} />
             </Space>
+            <Segmented
+              value={viewMode}
+              options={[
+                { label: 'Timeline', value: 'timeline', icon: <CalendarOutlined /> },
+                { label: 'Lista', value: 'list', icon: <UnorderedListOutlined /> },
+              ]}
+              onChange={(v) => setViewMode(v as string)}
+            />
             {isMobile && <Button type="primary" icon={<PlusOutlined />} block>Novo agendamento</Button>}
           </Space>
 
@@ -122,10 +153,14 @@ const AgendaPage: React.FC = () => {
             <AppointmentStats appointments={filteredAppointments} />
           </Space>
 
-          <AppointmentsTable
-            appointments={filteredAppointments}
-            emptyText="Nenhum agendamento para este dia."
-          />
+          {viewMode === 'timeline' ? (
+            <TimelineView appointments={filteredTimeline} />
+          ) : (
+            <AppointmentsTable
+              appointments={filteredAppointments}
+              emptyText="Nenhum agendamento para este dia."
+            />
+          )}
         </Card>
       </Space>
     </AdminLayout>
