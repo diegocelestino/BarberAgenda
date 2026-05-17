@@ -10,6 +10,7 @@ import {
   DollarOutlined,
   SettingOutlined,
 } from '@ant-design/icons';
+import { useNavigate } from 'react-router-dom';
 
 const { Sider, Content } = Layout;
 const { useBreakpoint } = Grid;
@@ -57,6 +58,23 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children, selectedKey = 'dash
   const [drawerOpen, setDrawerOpen] = useState(false);
   const screens = useBreakpoint();
   const isMobile = !screens.md;
+  const navigate = useNavigate();
+
+  const routeMap: Record<string, string> = {
+    dashboard: '/admin',
+    agenda: '/admin/agenda',
+    customers: '/admin/clientes',
+    barbers: '/admin/barbeiros',
+    services: '/admin/servicos',
+    financial: '/admin/financeiro',
+    settings: '/admin/configuracoes',
+  };
+
+  const handleMenuClick = (key: string) => {
+    if (isMobile) setDrawerOpen(false);
+    const route = routeMap[key];
+    if (route) navigate(route);
+  };
 
   useEffect(() => {
     if (!isMobile) setDrawerOpen(false);
@@ -71,7 +89,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children, selectedKey = 'dash
         mode="inline"
         selectedKeys={[selectedKey]}
         items={menuItems}
-        onClick={() => isMobile && setDrawerOpen(false)}
+        onClick={({ key }) => handleMenuClick(key)}
       />
     </>
   );
