@@ -83,4 +83,15 @@ const deleteCustomer = (req, res) => {
   res.json({ message: 'Customer deleted' });
 };
 
-module.exports = { listCustomers, getCustomer, getByPhone, createCustomer, updateCustomer, deleteCustomer };
+// Add loyalty points by phone (called from appointment completion)
+const addLoyaltyPoints = (phone, points) => {
+  const customer = customers.find(c => c.phone === phone);
+  if (customer) {
+    customer.loyaltyPoints += points;
+    customer.totalVisits += 1;
+    customer.totalSpent += points;
+    customer.lastVisit = new Date().toISOString();
+  }
+};
+
+module.exports = { listCustomers, getCustomer, getByPhone, createCustomer, updateCustomer, deleteCustomer, addLoyaltyPoints };

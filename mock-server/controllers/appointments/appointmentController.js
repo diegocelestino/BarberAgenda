@@ -2,6 +2,7 @@ const { v4: uuidv4 } = require('uuid');
 const fs = require('fs');
 const path = require('path');
 const { addTransaction } = require('../financial/financialController');
+const { addLoyaltyPoints } = require('../customers/customerController');
 
 // Load initial data from JSON file
 const loadAppointments = () => {
@@ -202,6 +203,9 @@ const updateAppointment = (req, res) => {
       paymentMethod: req.body.paymentMethod || 'dinheiro',
       createdAt: new Date().toISOString(),
     });
+
+    // Add loyalty points (1 point per R$ spent)
+    addLoyaltyPoints(appt.customerPhone, req.body.paidAmount);
   }
   
   res.json({ appointment: appt });

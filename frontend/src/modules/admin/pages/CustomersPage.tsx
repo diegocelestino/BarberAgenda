@@ -23,12 +23,14 @@ import {
 } from '@ant-design/icons';
 import AdminLayout from '../layout/AdminLayout';
 import { customersApi, Customer } from '../../../services/customersApi';
+import { useNavigate } from 'react-router-dom';
 
 const { Title, Text } = Typography;
 
 const CustomersPage: React.FC = () => {
   const screens = Grid.useBreakpoint();
   const isMobile = !screens.md;
+  const navigate = useNavigate();
 
   const [loading, setLoading] = useState(true);
   const [customers, setCustomers] = useState<Customer[]>([]);
@@ -65,6 +67,9 @@ const CustomersPage: React.FC = () => {
       { type: 'divider' as const },
       { key: 'delete', label: 'Excluir', danger: true },
     ],
+    onClick: ({ key }: { key: string }) => {
+      if (key === 'view') navigate(`/admin/clientes/${customer.customerId}`);
+    },
   });
 
   const columns = [
@@ -121,9 +126,11 @@ const CustomersPage: React.FC = () => {
       title: '',
       width: 50,
       render: (_: any, record: Customer) => (
-        <Dropdown menu={actionsMenu(record)} trigger={['click']}>
-          <Button type="text" icon={<MoreOutlined />} size="small" />
-        </Dropdown>
+        <span onClick={(e) => e.stopPropagation()}>
+          <Dropdown menu={actionsMenu(record)} trigger={['click']}>
+            <Button type="text" icon={<MoreOutlined />} size="small" />
+          </Dropdown>
+        </span>
       ),
     },
   ];
@@ -170,10 +177,14 @@ const CustomersPage: React.FC = () => {
               locale={{ emptyText: 'Nenhum cliente encontrado.' }}
               renderItem={(item) => (
                 <List.Item
+                  onClick={() => navigate(`/admin/clientes/${item.customerId}`)}
+                  style={{ cursor: 'pointer' }}
                   extra={
-                    <Dropdown menu={actionsMenu(item)} trigger={['click']}>
-                      <Button type="text" icon={<MoreOutlined />} size="small" />
-                    </Dropdown>
+                    <span onClick={(e) => e.stopPropagation()}>
+                      <Dropdown menu={actionsMenu(item)} trigger={['click']}>
+                        <Button type="text" icon={<MoreOutlined />} size="small" />
+                      </Dropdown>
+                    </span>
                   }
                 >
                   <List.Item.Meta
@@ -190,6 +201,7 @@ const CustomersPage: React.FC = () => {
               columns={columns}
               rowKey="customerId"
               size="middle"
+              onRow={(record) => ({ onClick: () => navigate(`/admin/clientes/${record.customerId}`), style: { cursor: 'pointer' } })}
               pagination={{ pageSize: 10, showSizeChanger: true, showTotal: (total) => `${total} clientes` }}
               locale={{ emptyText: 'Nenhum cliente encontrado.' }}
             />

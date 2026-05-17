@@ -3,7 +3,7 @@ import { Table, Tag, Space, Button, Dropdown, List, Typography, Grid } from 'ant
 import { MoreOutlined } from '@ant-design/icons';
 import { AppointmentItem, statusConfig } from '../types';
 
-const { Text, Link } = Typography;
+const { Text } = Typography;
 
 const ACTIONS_MENU = {
   items: [

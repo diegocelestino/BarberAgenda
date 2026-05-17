@@ -224,13 +224,19 @@ export class BarbershopStack extends cdk.Stack {
     const listAppointmentsFn   = makeFn('ListAppointmentsFunction',   'dist/appointments/list.handler',   apptEnv);
     const getAppointmentFn     = makeFn('GetAppointmentFunction',     'dist/appointments/get.handler',    apptEnv);
     const createAppointmentFn  = makeFn('CreateAppointmentFunction',  'dist/appointments/create.handler', apptEnv);
-    const updateAppointmentFn  = makeFn('UpdateAppointmentFunction',  'dist/appointments/update.handler', apptEnv);
+    const updateAppointmentFn  = makeFn('UpdateAppointmentFunction',  'dist/appointments/update.handler', {
+      APPOINTMENTS_TABLE: appointmentsTable.tableName,
+      TRANSACTIONS_TABLE: transactionsTable.tableName,
+      CUSTOMERS_TABLE: customersTable.tableName,
+    });
     const deleteAppointmentFn  = makeFn('DeleteAppointmentFunction',  'dist/appointments/delete.handler', apptEnv);
 
     appointmentsTable.grantReadData(listAppointmentsFn);
     appointmentsTable.grantReadData(getAppointmentFn);
     appointmentsTable.grantReadWriteData(createAppointmentFn);
     appointmentsTable.grantReadWriteData(updateAppointmentFn);
+    transactionsTable.grantReadWriteData(updateAppointmentFn);
+    customersTable.grantReadWriteData(updateAppointmentFn);
     appointmentsTable.grantReadWriteData(deleteAppointmentFn);
 
     // ========================================

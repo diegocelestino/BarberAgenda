@@ -1,75 +1,91 @@
-import { UpdateItemCommand } from '@aws-sdk/client-dynamodb';
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
-import { dynamo } from '../utils/dynamodb';
+import { UpdateCommand, PutCommand, GetCommand, QueryCommand } from '@aws-sdk/lib-dynamodb';
+import { randomUUID } from 'crypto';
+import { docClient } from '../shared/db/client';
+import { withErrorHandler } from '../shared/middleware/withErrorHandler';
 import { ok, error } from '../utils/response';
 
-const tableName = process.env.APPOINTMENTS_TABLE!;
+const appointmentsTable = process.env.APPOINTMENTS_TABLE!;
+const transactionsTable = process.env.TRANSACTIONS_TABLE!;
+const customersTable = process.env.CUSTOMERS_TABLE!;
 
-export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
-  try {
-    const barberId = event.pathParameters?.barberId;
-    const appointmentId = event.pathParameters?.appointmentId;
-    
-    if (!barberId || !appointmentId) {
-      return error(400, 'barberId and appointmentId are required');
-    }
+export const handler = withErrorHandler(async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
+  const barberId = event.pathParameters?.barberId;
+  const appointmentId = event.pathParameters?.appointmentId;
 
-    const body = JSON.parse(event.body || '{}');
-    const { customerName, customerPhone, service, startTime, endTime, notes, status } = body;
+  if (!barberId || !appointmentId) return error(400, 'barberId and appointmentId are required');
 
-    const updates: string[] = [];
-    const values: Record<string, any> = {};
-    const names: Record<string, string> = {};
+  const body = JSON.parse(event.body || '{}');
+  const { customerName, customerPhone, service, startTime, endTime, notes, status, paymentMethod, paidAmount } = body;
 
-    if (customerName) {
-      updates.push('customerName = :customerName');
-      values[':customerName'] = { S: customerName };
-    }
-    if (customerPhone) {
-      updates.push('customerPhone = :customerPhone');
-      values[':customerPhone'] = { S: customerPhone };
-    }
-    if (service) {
-      updates.push('#service = :service');
-      values[':service'] = { S: service };
-      names['#service'] = 'service';
-    }
-    if (startTime) {
-      updates.push('startTime = :startTime');
-      values[':startTime'] = { N: startTime.toString() };
-    }
-    if (endTime) {
-      updates.push('endTime = :endTime');
-      values[':endTime'] = { N: endTime.toString() };
-    }
-    if (notes !== undefined) {
-      updates.push('notes = :notes');
-      values[':notes'] = { S: notes };
-    }
-    if (status) {
-      updates.push('#status = :status');
-      values[':status'] = { S: status };
-      names['#status'] = 'status';
-    }
+  // Build update expression
+  const entries = Object.entries({ customerName, customerPhone, service, startTime, endTime, notes, status, paymentMethod, paidAmount })
+    .filter(([_, v]) => v !== undefined);
 
-    if (updates.length === 0) {
-      return error(400, 'No fields to update');
-    }
+  if (entries.length === 0) return error(400, 'No fields to update');
 
-    await dynamo.send(new UpdateItemCommand({
-      TableName: tableName,
-      Key: { 
-        barberId: { S: barberId },
-        appointmentId: { S: appointmentId }
+  const expression = entries.map(([k], i) => `#k${i} = :v${i}`).join(', ');
+  const names: Record<string, string> = {};
+  const values: Record<string, any> = {};
+  entries.forEach(([k, v], i) => { names[`#k${i}`] = k; values[`:v${i}`] = v; });
+
+  const result = await docClient.send(new UpdateCommand({
+    TableName: appointmentsTable,
+    Key: { barberId, appointmentId },
+    UpdateExpression: `SET ${expression}`,
+    ExpressionAttributeNames: names,
+    ExpressionAttributeValues: values,
+    ReturnValues: 'ALL_NEW',
+  }));
+
+  const updatedAppointment = result.Attributes;
+
+  // Side-effects on completion
+  if (status === 'completed' && paidAmount) {
+    // 1. Create revenue transaction
+    await docClient.send(new PutCommand({
+      TableName: transactionsTable,
+      Item: {
+        transactionId: randomUUID(),
+        date: new Date(updatedAppointment?.startTime || Date.now()).toISOString().split('T')[0],
+        type: 'revenue',
+        amount: paidAmount,
+        category: 'servico',
+        description: updatedAppointment?.customerName || customerName || '',
+        barberId,
+        appointmentId,
+        paymentMethod: paymentMethod || 'dinheiro',
+        createdAt: new Date().toISOString(),
       },
-      UpdateExpression: `SET ${updates.join(', ')}`,
-      ExpressionAttributeValues: values,
-      ExpressionAttributeNames: Object.keys(names).length > 0 ? names : undefined,
     }));
 
-    return ok({ appointment: { barberId, appointmentId, ...body } });
-  } catch (err) {
-    console.error('Error updating appointment:', err);
-    return error(500, 'Internal server error');
+    // 2. Add loyalty points to customer (1 pt per R$ spent)
+    const phone = updatedAppointment?.customerPhone || customerPhone;
+    if (phone) {
+      const customerResult = await docClient.send(new QueryCommand({
+        TableName: customersTable,
+        IndexName: 'PhoneIndex',
+        KeyConditionExpression: 'phone = :phone',
+        ExpressionAttributeValues: { ':phone': phone },
+        Limit: 1,
+      }));
+
+      const customer = customerResult.Items?.[0];
+      if (customer) {
+        await docClient.send(new UpdateCommand({
+          TableName: customersTable,
+          Key: { customerId: customer.customerId },
+          UpdateExpression: 'SET loyaltyPoints = loyaltyPoints + :pts, totalVisits = totalVisits + :one, totalSpent = totalSpent + :amt, lastVisit = :now',
+          ExpressionAttributeValues: {
+            ':pts': paidAmount,
+            ':one': 1,
+            ':amt': paidAmount,
+            ':now': new Date().toISOString(),
+          },
+        }));
+      }
+    }
   }
-};
+
+  return ok({ appointment: updatedAppointment });
+});

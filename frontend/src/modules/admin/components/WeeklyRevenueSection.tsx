@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Card, Button, Space, Typography, Spin } from 'antd';
 import { DownloadOutlined } from '@ant-design/icons';
 import { Column, Pie } from '@ant-design/charts';
-import { financialApi, Transaction } from '../../../services/financialApi';
+import { financialApi } from '../../../services/financialApi';
 
 const { Title, Text } = Typography;
 
