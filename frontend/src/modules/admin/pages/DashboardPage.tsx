@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Row, Col, Typography, Button, Space, Spin } from 'antd';
-import { PlusOutlined } from '@ant-design/icons';
+import { Row, Col, Typography, Space, Spin } from 'antd';
 import AdminLayout from '../layout/AdminLayout';
 import TodaysOverview from '../components/TodaysOverview';
 import WeeklyRevenueSection from '../components/WeeklyRevenueSection';
@@ -88,9 +87,6 @@ const DashboardPage: React.FC = () => {
           <Col>
             <Title level={2} style={{ margin: 0 }}>Dashboard</Title>
             <Text type="secondary">Visão geral da atividade e desempenho de hoje.</Text>
-          </Col>
-          <Col>
-            <Button type="primary" icon={<PlusOutlined />}>Novo agendamento</Button>
           </Col>
         </Row>
 

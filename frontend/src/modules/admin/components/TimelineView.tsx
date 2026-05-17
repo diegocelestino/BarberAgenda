@@ -20,6 +20,9 @@ interface TimelineViewProps {
   startHour?: number;   // default 8
   endHour?: number;     // default 21
   onAppointmentClick?: (appointment: TimelineAppointment) => void;
+  onSlotClick?: (time: string) => void;  // "HH:MM" of clicked empty slot
+  selectedSlot?: string | null;          // highlight selected slot
+  selectedDuration?: number;             // duration in minutes for selected slot highlight
 }
 
 const HOUR_HEIGHT = 60; // px per hour
@@ -29,6 +32,9 @@ const TimelineView: React.FC<TimelineViewProps> = ({
   startHour = 8,
   endHour = 21,
   onAppointmentClick,
+  onSlotClick,
+  selectedSlot,
+  selectedDuration = 30,
 }) => {
   const screens = Grid.useBreakpoint();
   const isMobile = !screens.md;
@@ -83,13 +89,135 @@ const TimelineView: React.FC<TimelineViewProps> = ({
       ref={containerRef}
       style={{
         position: 'relative',
-        height: isMobile ? '60vh' : '70vh',
+        height: '100%',
+        minHeight: 300,
+        maxHeight: isMobile ? '60vh' : '70vh',
         overflow: 'auto',
         border: '1px solid #333',
         borderRadius: 4,
       }}
     >
       <div style={{ position: 'relative', height: totalHours * HOUR_HEIGHT + HOUR_HEIGHT }}>
+        {/* Clickable background for slot selection */}
+        {onSlotClick && (
+          <div
+            style={{
+              position: 'absolute',
+              top: 0,
+              left: isMobile ? 48 : 64,
+              right: 8,
+              bottom: 0,
+              cursor: 'pointer',
+              zIndex: 2,
+            }}
+            onClick={(e) => {
+              const rect = e.currentTarget.getBoundingClientRect();
+              const y = e.clientY - rect.top;
+              const hourFloat = y / HOUR_HEIGHT + startHour;
+              const totalMinutes = Math.round(hourFloat * 60 / 5) * 5; // snap to 5 min
+              const h = Math.floor(totalMinutes / 60);
+              const m = totalMinutes % 60;
+              const time = `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`;
+
+              // Check overlap with existing appointments
+              const clickStart = h * 60 + m;
+              const clickEnd = clickStart + selectedDuration;
+              const hasOverlap = appointments.some((appt) => {
+                const apptStart = new Date(appt.startTime);
+                const apptEnd = new Date(appt.endTime);
+                const apptStartMin = apptStart.getHours() * 60 + apptStart.getMinutes();
+                const apptEndMin = apptEnd.getHours() * 60 + apptEnd.getMinutes();
+                return clickStart < apptEndMin && clickEnd > apptStartMin;
+              });
+
+              if (hasOverlap) return; // silently ignore clicks on occupied slots
+              onSlotClick(time);
+            }}
+          />
+        )}
+
+        {/* Selected slot highlight — draggable */}
+        {selectedSlot && onSlotClick && (() => {
+          const [h, m] = selectedSlot.split(':').map(Number);
+          const top = (h + m / 60 - startHour) * HOUR_HEIGHT;
+          const height = (selectedDuration / 60) * HOUR_HEIGHT;
+
+          const handleDrag = (e: React.MouseEvent | React.TouchEvent) => {
+            e.preventDefault();
+            const container = containerRef.current;
+            if (!container) return;
+
+            const startY = 'touches' in e ? e.touches[0].clientY : e.clientY;
+            const startTop = top;
+
+            const onMove = (ev: MouseEvent | TouchEvent) => {
+              const clientY = 'touches' in ev ? ev.touches[0].clientY : ev.clientY;
+              const delta = clientY - startY;
+              const newTop = startTop + delta;
+              const hourFloat = newTop / HOUR_HEIGHT + startHour;
+              const totalMinutes = Math.round(hourFloat * 60 / 5) * 5;
+              const newH = Math.floor(totalMinutes / 60);
+              const newM = totalMinutes % 60;
+
+              if (newH < startHour || newH >= endHour) return;
+
+              // Check overlap
+              const clickStart = newH * 60 + newM;
+              const clickEnd = clickStart + selectedDuration;
+              const hasOverlap = appointments.some((appt) => {
+                const apptStart = new Date(appt.startTime);
+                const apptEnd = new Date(appt.endTime);
+                const apptStartMin = apptStart.getHours() * 60 + apptStart.getMinutes();
+                const apptEndMin = apptEnd.getHours() * 60 + apptEnd.getMinutes();
+                return clickStart < apptEndMin && clickEnd > apptStartMin;
+              });
+
+              if (!hasOverlap) {
+                const time = `${newH.toString().padStart(2, '0')}:${newM.toString().padStart(2, '0')}`;
+                onSlotClick(time);
+              }
+            };
+
+            const onUp = () => {
+              document.removeEventListener('mousemove', onMove);
+              document.removeEventListener('mouseup', onUp);
+              document.removeEventListener('touchmove', onMove);
+              document.removeEventListener('touchend', onUp);
+            };
+
+            document.addEventListener('mousemove', onMove);
+            document.addEventListener('mouseup', onUp);
+            document.addEventListener('touchmove', onMove);
+            document.addEventListener('touchend', onUp);
+          };
+
+          return (
+            <div
+              onMouseDown={handleDrag}
+              onTouchStart={handleDrag}
+              style={{
+                position: 'absolute',
+                top,
+                left: isMobile ? 48 : 64,
+                right: 8,
+                height,
+                backgroundColor: 'rgba(200, 160, 92, 0.2)',
+                border: '2px dashed #c8a05c',
+                borderRadius: 4,
+                zIndex: 6,
+                cursor: 'grab',
+                display: 'flex',
+                alignItems: 'center',
+                paddingLeft: 8,
+                userSelect: 'none',
+              }}
+            >
+              <Text style={{ color: '#c8a05c', fontSize: 12, pointerEvents: 'none' }}>
+                Novo: {selectedSlot} ({selectedDuration} min)
+              </Text>
+            </div>
+          );
+        })()}
         {/* Time grid lines + labels */}
         {timeSlots.map((label, i) => (
           <div
