@@ -102,6 +102,15 @@ function generateWeekAppointments() {
 }
 
 function generateWeekTransactions(appointments) {
+  const SERVICE_NAMES = {
+    '5d0791eb-06e6-4dab-8918-7aef0dacfb4b': 'Corte',
+    'da18da28-4af3-4571-9c82-11c953e6d0c4': 'Barba',
+    '6ff97218-4ef0-4ff6-92d0-e19c3a4789b8': 'Corte + Barba',
+    '0d969102-ddf1-4256-b890-68536c0b581a': 'Progressiva',
+    'ec53b00a-4fbe-4c62-94e7-99deb5377801': 'Corte + Barba + Sobrancelha',
+    '0f7fa71e-cf1f-48ca-95f0-a3e4c09c9c2b': 'Sobrancelha',
+  };
+
   return appointments
     .filter(a => a.status === 'completed' && a.paidAmount)
     .map(a => ({
@@ -111,6 +120,8 @@ function generateWeekTransactions(appointments) {
       amount: a.paidAmount,
       category: 'servico',
       description: a.customerName,
+      serviceName: SERVICE_NAMES[a.service] || 'Serviço',
+      barberName: 'Miguel Castilho',
       barberId: a.barberId,
       appointmentId: a.appointmentId,
       paymentMethod: a.paymentMethod || 'dinheiro',

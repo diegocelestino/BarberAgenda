@@ -191,15 +191,24 @@ const updateAppointment = (req, res) => {
   // Auto-create revenue transaction when appointment is completed
   const appt = appointments[appointmentIndex];
   if (status === 'completed' && req.body.paidAmount) {
+    // Resolve service name
+    const servicesData = loadServices();
+    const svc = servicesData.find(s => s.serviceId === appt.service);
+    const serviceName = svc ? svc.name : '';
+
     addTransaction({
       transactionId: uuidv4(),
       date: new Date(appt.startTime).toISOString().split('T')[0],
       type: 'revenue',
       amount: req.body.paidAmount,
       category: 'servico',
-      description: `${appt.customerName}`,
+      description: `${serviceName} - ${appt.customerName}`,
       barberId: appt.barberId,
       appointmentId: appt.appointmentId,
+      serviceId: appt.service,
+      customerName: appt.customerName,
+      serviceName,
+      barberName: 'Miguel Castilho',
       paymentMethod: req.body.paymentMethod || 'dinheiro',
       createdAt: new Date().toISOString(),
     });

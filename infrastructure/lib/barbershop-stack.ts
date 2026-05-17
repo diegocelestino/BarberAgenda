@@ -228,6 +228,8 @@ export class BarbershopStack extends cdk.Stack {
       APPOINTMENTS_TABLE: appointmentsTable.tableName,
       TRANSACTIONS_TABLE: transactionsTable.tableName,
       CUSTOMERS_TABLE: customersTable.tableName,
+      SERVICES_TABLE: servicesTable.tableName,
+      BARBERS_TABLE: barbersTable.tableName,
     });
     const deleteAppointmentFn  = makeFn('DeleteAppointmentFunction',  'dist/appointments/delete.handler', apptEnv);
 
@@ -237,6 +239,8 @@ export class BarbershopStack extends cdk.Stack {
     appointmentsTable.grantReadWriteData(updateAppointmentFn);
     transactionsTable.grantReadWriteData(updateAppointmentFn);
     customersTable.grantReadWriteData(updateAppointmentFn);
+    servicesTable.grantReadData(updateAppointmentFn);
+    barbersTable.grantReadData(updateAppointmentFn);
     appointmentsTable.grantReadWriteData(deleteAppointmentFn);
 
     // ========================================

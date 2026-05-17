@@ -9,6 +9,11 @@ export interface Transaction {
   description: string;
   barberId?: string;
   appointmentId?: string;
+  customerId?: string;
+  serviceId?: string;
+  customerName?: string;
+  serviceName?: string;
+  barberName?: string;
   paymentMethod?: string;
   createdAt: string;
 }

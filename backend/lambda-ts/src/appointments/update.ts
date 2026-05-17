@@ -42,6 +42,25 @@ export const handler = withErrorHandler(async (event: APIGatewayProxyEvent): Pro
 
   // Side-effects on completion
   if (status === 'completed' && paidAmount) {
+    // Resolve service name
+    let serviceName = '';
+    const serviceId = updatedAppointment?.service;
+    if (serviceId) {
+      try {
+        const svcResult = await docClient.send(new GetCommand({ TableName: process.env.SERVICES_TABLE!, Key: { serviceId } }));
+        serviceName = svcResult.Item?.name || '';
+      } catch { /* ignore */ }
+    }
+
+    // Resolve barber name
+    let barberName = '';
+    try {
+      const barberResult = await docClient.send(new GetCommand({ TableName: process.env.BARBERS_TABLE!, Key: { barberId } }));
+      barberName = barberResult.Item?.name || '';
+    } catch { /* ignore */ }
+
+    const custName = updatedAppointment?.customerName || customerName || '';
+
     // 1. Create revenue transaction
     await docClient.send(new PutCommand({
       TableName: transactionsTable,
@@ -51,9 +70,13 @@ export const handler = withErrorHandler(async (event: APIGatewayProxyEvent): Pro
         type: 'revenue',
         amount: paidAmount,
         category: 'servico',
-        description: updatedAppointment?.customerName || customerName || '',
+        description: `${serviceName} - ${custName}`,
         barberId,
         appointmentId,
+        serviceId: serviceId || undefined,
+        customerName: custName,
+        serviceName,
+        barberName,
         paymentMethod: paymentMethod || 'dinheiro',
         createdAt: new Date().toISOString(),
       },
