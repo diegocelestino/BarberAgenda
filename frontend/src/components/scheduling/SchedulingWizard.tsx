@@ -3,8 +3,7 @@ import { Card, theme } from 'antd';
 import PhoneNumberStep from './PhoneNumberStep';
 import BarberSelectionStep from './BarberSelectionStep';
 import ServiceSelectionStep from './ServiceSelectionStep';
-import DateSelectionStep from './DateSelectionStep';
-import TimeSelectionStep from './TimeSelectionStep';
+import DateTimeStep from './DateTimeStep';
 import NameStep from './NameStep';
 import ConfirmationStep from './ConfirmationStep';
 import SuccessStep from './SuccessStep';
@@ -12,7 +11,7 @@ import { useAppDispatch, useAppSelector } from '../../store/hooks';
 import { createAppointment } from '../../store/appointments/appointmentsThunks';
 import { useIsMobile } from '../../hooks/useIsMobile';
 
-const steps = ['Telefone', 'Barbeiro', 'Serviço', 'Data', 'Horário', 'Nome', 'Confirmar'];
+const steps = ['Telefone', 'Barbeiro', 'Serviço', 'Horário', 'Nome', 'Confirmar'];
 
 interface AppointmentData {
   phoneNumber: string; barberId: string; serviceId: string;
@@ -59,11 +58,10 @@ const SchedulingWizard: React.FC<Props> = ({ onClose }) => {
       case 0: return <PhoneNumberStep onNext={(phoneNumber) => update({ phoneNumber })} onBack={handleBack} initialValue={data.phoneNumber} />;
       case 1: return <BarberSelectionStep onNext={(barberId) => update({ barberId })} onBack={handleBack} selectedBarberId={data.barberId} />;
       case 2: return <ServiceSelectionStep onNext={(serviceId, service) => update({ serviceId, selectedService: service })} onBack={handleBack} selectedServiceId={data.serviceId} barberId={data.barberId} />;
-      case 3: return <DateSelectionStep onNext={(date) => update({ date })} onBack={handleBack} selectedDate={data.date || undefined} barberId={data.barberId} />;
-      case 4: return data.date ? <TimeSelectionStep onNext={(time) => update({ time })} onBack={handleBack} selectedDate={data.date} barberId={data.barberId} serviceId={data.serviceId} selectedTime={data.time} /> : null;
-      case 5: return <NameStep onNext={(name) => update({ name })} onBack={handleBack} initialValue={data.name} />;
-      case 6: return data.date ? <ConfirmationStep onConfirm={handleConfirm} onBack={handleBack} phoneNumber={data.phoneNumber} barberId={data.barberId} serviceId={data.serviceId} date={data.date} time={data.time} name={data.name} service={data.selectedService} /> : null;
-      case 7: return data.date ? <SuccessStep onClose={handleComplete} date={data.date} time={data.time} name={data.name} barberName={selectedBarber?.name} serviceName={selectedService?.name} phoneNumber={data.phoneNumber} /> : null;
+      case 3: return <DateTimeStep onNext={(date, time) => { setData(prev => ({ ...prev, date, time })); goTo(4); }} onBack={handleBack} barberId={data.barberId} serviceId={data.serviceId} selectedDate={data.date || undefined} selectedTime={data.time} />;
+      case 4: return <NameStep onNext={(name) => update({ name })} onBack={handleBack} initialValue={data.name} />;
+      case 5: return data.date ? <ConfirmationStep onConfirm={handleConfirm} onBack={handleBack} phoneNumber={data.phoneNumber} barberId={data.barberId} serviceId={data.serviceId} date={data.date} time={data.time} name={data.name} service={data.selectedService} /> : null;
+      case 6: return data.date ? <SuccessStep onClose={handleComplete} date={data.date} time={data.time} name={data.name} barberName={selectedBarber?.name} serviceName={selectedService?.name} phoneNumber={data.phoneNumber} /> : null;
       default: return null;
     }
   };

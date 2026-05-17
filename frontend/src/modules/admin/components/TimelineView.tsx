@@ -23,6 +23,7 @@ interface TimelineViewProps {
   onSlotClick?: (time: string) => void;  // "HH:MM" of clicked empty slot
   selectedSlot?: string | null;          // highlight selected slot
   selectedDuration?: number;             // duration in minutes for selected slot highlight
+  hideDetails?: boolean;                 // hide customer/service info, show as blocked (public mode)
 }
 
 const HOUR_HEIGHT = 60; // px per hour
@@ -35,6 +36,7 @@ const TimelineView: React.FC<TimelineViewProps> = ({
   onSlotClick,
   selectedSlot,
   selectedDuration = 30,
+  hideDetails = false,
 }) => {
   const screens = Grid.useBreakpoint();
   const isMobile = !screens.md;
@@ -148,11 +150,14 @@ const TimelineView: React.FC<TimelineViewProps> = ({
             if (!container) return;
 
             const startY = 'touches' in e ? e.touches[0].clientY : e.clientY;
+            const startScrollTop = container.scrollTop;
             const startTop = top;
 
             const onMove = (ev: MouseEvent | TouchEvent) => {
+              ev.preventDefault();
               const clientY = 'touches' in ev ? ev.touches[0].clientY : ev.clientY;
-              const delta = clientY - startY;
+              const scrollDelta = container.scrollTop - startScrollTop;
+              const delta = clientY - startY + scrollDelta;
               const newTop = startTop + delta;
               const hourFloat = newTop / HOUR_HEIGHT + startHour;
               const totalMinutes = Math.round(hourFloat * 60 / 5) * 5;
@@ -160,6 +165,14 @@ const TimelineView: React.FC<TimelineViewProps> = ({
               const newM = totalMinutes % 60;
 
               if (newH < startHour || newH >= endHour) return;
+
+              // Auto-scroll when dragging near edges
+              const containerRect = container.getBoundingClientRect();
+              if (clientY < containerRect.top + 40) {
+                container.scrollTop -= 10;
+              } else if (clientY > containerRect.bottom - 40) {
+                container.scrollTop += 10;
+              }
 
               // Check overlap
               const clickStart = newH * 60 + newM;
@@ -187,7 +200,7 @@ const TimelineView: React.FC<TimelineViewProps> = ({
 
             document.addEventListener('mousemove', onMove);
             document.addEventListener('mouseup', onUp);
-            document.addEventListener('touchmove', onMove);
+            document.addEventListener('touchmove', onMove, { passive: false });
             document.addEventListener('touchend', onUp);
           };
 
@@ -210,6 +223,7 @@ const TimelineView: React.FC<TimelineViewProps> = ({
                 alignItems: 'center',
                 paddingLeft: 8,
                 userSelect: 'none',
+                touchAction: 'none',
               }}
             >
               <Text style={{ color: '#c8a05c', fontSize: 12, pointerEvents: 'none' }}>
@@ -310,7 +324,7 @@ const TimelineView: React.FC<TimelineViewProps> = ({
 
           return sorted.map((appt) => {
             const { top, height } = getAppointmentStyle(appt);
-            const color = getStatusColor(appt.status);
+            const color = hideDetails ? '#ff4d4f' : getStatusColor(appt.status);
             const layout = layoutMap.get(appt.id) || { colIndex: 0, totalCols: 1 };
             const colWidth = `calc((100% - ${leftOffset + rightPad}px) / ${layout.totalCols})`;
             const colLeft = `calc(${leftOffset}px + (100% - ${leftOffset + rightPad}px) * ${layout.colIndex} / ${layout.totalCols})`;
@@ -339,12 +353,18 @@ const TimelineView: React.FC<TimelineViewProps> = ({
                 onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = `${color}20`; }}
               >
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', height: '100%' }}>
-                  <Text style={{ fontSize: 12 }} ellipsis>
-                    <Text strong style={{ fontSize: 12 }}>{appt.service}</Text> — {appt.customer}
-                  </Text>
-                  <Tag color={statusConfig[appt.status]?.color} style={{ fontSize: 9, margin: 0, marginLeft: 4, lineHeight: '14px', padding: '0 4px', flexShrink: 0 }}>
-                    {statusConfig[appt.status]?.label}
-                  </Tag>
+                  {hideDetails ? (
+                    <Text style={{ fontSize: 12, color: '#ff4d4f' }}>Ocupado</Text>
+                  ) : (
+                    <>
+                      <Text style={{ fontSize: 12 }} ellipsis>
+                        <Text strong style={{ fontSize: 12 }}>{appt.service}</Text> — {appt.customer}
+                      </Text>
+                      <Tag color={statusConfig[appt.status]?.color} style={{ fontSize: 9, margin: 0, marginLeft: 4, lineHeight: '14px', padding: '0 4px', flexShrink: 0 }}>
+                        {statusConfig[appt.status]?.label}
+                      </Tag>
+                    </>
+                  )}
                 </div>
               </div>
             );
