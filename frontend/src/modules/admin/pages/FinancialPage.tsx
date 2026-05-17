@@ -181,7 +181,7 @@ function RecentTransactions({ transactions }: { transactions: Transaction[] }) {
 
   if (isMobile) {
     return (
-      <Card title="Transações recentes" extra={<Button icon={<PlusOutlined />} size="small">Nova</Button>}>
+      <Card title="Transações recentes" extra={<Button icon={<DownloadOutlined />}>Exportar</Button>}>
         <List
           dataSource={transactions.slice(0, 10)}
           renderItem={(item) => (
@@ -204,10 +204,7 @@ function RecentTransactions({ transactions }: { transactions: Transaction[] }) {
     <Card
       title="Transações recentes"
       extra={
-        <Space>
-          <Button icon={<DownloadOutlined />}>Exportar</Button>
-          <Button type="primary" icon={<PlusOutlined />}>Nova transação</Button>
-        </Space>
+        <Button icon={<DownloadOutlined />}>Exportar</Button>
       }
     >
       <Table

@@ -1,6 +1,7 @@
 import React from 'react';
 import { Card, Table, Tag, Space, Button, Dropdown, List, Typography, Grid } from 'antd';
 import { PlusOutlined, MoreOutlined } from '@ant-design/icons';
+import { useNavigate } from 'react-router-dom';
 import { AppointmentItem, statusConfig } from '../types';
 
 const { Text, Link } = Typography;
@@ -84,6 +85,7 @@ const columns = [
 const TodaysAgenda: React.FC<TodaysAgendaProps> = ({ appointments }) => {
   const screens = Grid.useBreakpoint();
   const isMobile = !screens.md;
+  const navigate = useNavigate();
 
   return (
     <Card
@@ -136,7 +138,7 @@ const TodaysAgenda: React.FC<TodaysAgendaProps> = ({ appointments }) => {
         />
       )}
       <div style={{ textAlign: 'center', marginTop: 12 }}>
-        <Link>Ver todos os agendamentos</Link>
+        <Link onClick={() => navigate('/admin/agenda')}>Ver todos os agendamentos</Link>
       </div>
     </Card>
   );
