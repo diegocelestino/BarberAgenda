@@ -11,6 +11,7 @@ const PublicHomePage = lazy(() => import('./pages/PublicHomePage'));
 const LoginPage = lazy(() => import('./pages/LoginPage'));
 const DashboardPage = lazy(() => import('./modules/admin/pages/DashboardPage'));
 const AgendaPage = lazy(() => import('./modules/admin/pages/AgendaPage'));
+const CustomersPage = lazy(() => import('./modules/admin/pages/CustomersPage'));
 
 const PageLoader = () => (
   <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh' }}>
@@ -33,6 +34,7 @@ function App() {
                 {/* Admin routes — full-page layout, no old Header */}
                 <Route path="/admin" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
                 <Route path="/admin/agenda" element={<ProtectedRoute><AgendaPage /></ProtectedRoute>} />
+                <Route path="/admin/clientes" element={<ProtectedRoute><CustomersPage /></ProtectedRoute>} />
 
                 <Route path="*" element={<Navigate to="/" replace />} />
               </Routes>

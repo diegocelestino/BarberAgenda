@@ -1,4 +1,25 @@
-let customers = [];
+const { v4: uuidv4 } = require('uuid');
+
+const SEED_CUSTOMERS = [
+  { name: 'Lucas Ferreira', phone: '+5511987651234', email: 'lucas.f@email.com', totalVisits: 12, totalSpent: 540, loyaltyPoints: 54 },
+  { name: 'Pedro Oliveira', phone: '+5511976543210', email: 'pedro.o@email.com', totalVisits: 8, totalSpent: 380, loyaltyPoints: 38 },
+  { name: 'Rafael Costa', phone: '+5511965432109', email: 'rafael.c@email.com', totalVisits: 24, totalSpent: 1200, loyaltyPoints: 120 },
+  { name: 'Bruno Lima', phone: '+5511954321098', email: '', totalVisits: 5, totalSpent: 200, loyaltyPoints: 20 },
+  { name: 'Thiago Martins', phone: '+5511943210987', email: 'thiago.m@email.com', totalVisits: 15, totalSpent: 675, loyaltyPoints: 67 },
+  { name: 'Gabriel Rocha', phone: '+5511932109876', email: '', totalVisits: 3, totalSpent: 120, loyaltyPoints: 12 },
+  { name: 'Felipe Cardoso', phone: '+5511921098765', email: 'felipe.c@email.com', totalVisits: 31, totalSpent: 1550, loyaltyPoints: 155 },
+  { name: 'Mateus Ribeiro', phone: '+5511910987654', email: 'mateus.r@email.com', totalVisits: 18, totalSpent: 810, loyaltyPoints: 81 },
+  { name: 'André Souza', phone: '+5511998765432', email: '', totalVisits: 2, totalSpent: 80, loyaltyPoints: 8 },
+  { name: 'Carlos Mendes', phone: '+5511987654321', email: 'carlos.m@email.com', totalVisits: 42, totalSpent: 2100, loyaltyPoints: 210 },
+];
+
+let customers = SEED_CUSTOMERS.map((c) => ({
+  customerId: uuidv4(),
+  ...c,
+  notes: '',
+  lastVisit: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000).toISOString(),
+  createdAt: new Date().toISOString(),
+}));
 
 const listCustomers = (req, res) => {
   const search = req.query.search?.toLowerCase();
@@ -27,7 +48,7 @@ const createCustomer = (req, res) => {
   if (!name || !phone) return res.status(400).json({ message: 'name, phone: Required' });
 
   const customer = {
-    customerId: `cust-${Date.now()}`,
+    customerId: uuidv4(),
     name,
     phone,
     email: email || undefined,
