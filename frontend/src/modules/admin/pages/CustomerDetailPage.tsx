@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Card,
   Row,
@@ -12,11 +12,12 @@ import {
   Avatar,
   Descriptions,
   Progress,
-  Collapse,
   Dropdown,
   Grid,
   List,
   Spin,
+  Input,
+  message,
 } from 'antd';
 import {
   PlusOutlined,
@@ -28,8 +29,9 @@ import {
 } from '@ant-design/icons';
 import { useParams, useNavigate } from 'react-router-dom';
 import AdminLayout from '../layout/AdminLayout';
+import EditCustomerModal from '../components/EditCustomerModal';
 import { useAppDispatch, useAppSelector } from '../../../store/hooks';
-import { fetchCustomerById } from '../../../store/customers/customersThunks';
+import { fetchCustomerById, updateCustomer } from '../../../store/customers/customersThunks';
 import { Customer } from '../../../services/customersApi';
 
 const { Title, Text, Link } = Typography;
@@ -136,26 +138,64 @@ function AppointmentHistoryTab() {
 // ─── Notes Tab ───────────────────────────────────────────────────────────────
 
 function NotesTab({ customer }: { customer: Customer }) {
-  const notes = [
-    { id: '1', title: 'Preferências', author: 'Miguel Castilho', date: '18/06/2025', content: 'Cliente prefere corte degradê com 2 nas laterais e mais comprido em cima. Barba aparada em 5mm. Sempre chega 5 min antes.' },
-    { id: '2', title: 'Alerta de alergia', author: 'Admin', date: '14/03/2025', content: 'Cliente tem sensibilidade a produtos com PPD. Sempre verificar ingredientes antes de aplicar coloração.' },
-  ];
+  const [adding, setAdding] = useState(false);
+  const [title, setTitle] = useState('');
+  const [content, setContent] = useState('');
+  const dispatch = useAppDispatch();
+
+  const notes = customer.customerNotes || [];
+
+  const handleAdd = async () => {
+    if (!title.trim() || !content.trim()) { message.warning('Preencha título e conteúdo'); return; }
+    const newNote = { id: Date.now().toString(), title, content, createdAt: new Date().toISOString() };
+    const updatedNotes = [...notes, newNote];
+    await dispatch(updateCustomer({ customerId: customer.customerId, data: { customerNotes: updatedNotes } as any })).unwrap();
+    message.success('Nota adicionada');
+    setAdding(false);
+    setTitle('');
+    setContent('');
+  };
+
+  const handleDelete = async (noteId: string) => {
+    const updatedNotes = notes.filter((n) => n.id !== noteId);
+    await dispatch(updateCustomer({ customerId: customer.customerId, data: { customerNotes: updatedNotes } as any })).unwrap();
+    message.success('Nota removida');
+  };
 
   return (
     <Space direction="vertical" size="middle" style={{ width: '100%' }}>
       <Row justify="space-between" align="middle">
         <Col><Text type="secondary">Notas internas visíveis apenas para a equipe.</Text></Col>
-        <Col><Button icon={<PlusOutlined />}>Nova nota</Button></Col>
+        <Col><Button onClick={() => setAdding(true)} disabled={adding}>Adicionar nota</Button></Col>
       </Row>
-      <Collapse
-        defaultActiveKey={['1']}
-        items={notes.map((note) => ({
-          key: note.id,
-          label: <Text strong>{note.title}</Text>,
-          extra: <Text type="secondary" style={{ fontSize: 12 }}>{note.author} · {note.date}</Text>,
-          children: <Text>{note.content}</Text>,
-        }))}
-      />
+
+      {adding && (
+        <Card size="small">
+          <Space direction="vertical" size="small" style={{ width: '100%' }}>
+            <Input placeholder="Título" value={title} onChange={(e) => setTitle(e.target.value)} />
+            <Input.TextArea rows={3} placeholder="Conteúdo da nota..." value={content} onChange={(e) => setContent(e.target.value)} />
+            <Space>
+              <Button type="primary" onClick={handleAdd}>Salvar</Button>
+              <Button onClick={() => { setAdding(false); setTitle(''); setContent(''); }}>Cancelar</Button>
+            </Space>
+          </Space>
+        </Card>
+      )}
+
+      {notes.length === 0 && !adding && (
+        <Card size="small"><Text type="secondary">Nenhuma nota adicionada.</Text></Card>
+      )}
+
+      {notes.map((note) => (
+        <Card key={note.id} size="small" title={note.title} extra={
+          <Space>
+            <Text type="secondary" style={{ fontSize: 12 }}>{new Date(note.createdAt).toLocaleDateString('pt-BR')}</Text>
+            <Button type="text" size="small" danger onClick={() => handleDelete(note.id)}>Excluir</Button>
+          </Space>
+        }>
+          <Text>{note.content}</Text>
+        </Card>
+      ))}
     </Space>
   );
 }
@@ -221,6 +261,7 @@ const CustomerDetailPage: React.FC = () => {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const { selectedCustomer: customer, loading } = useAppSelector((state) => state.customers);
+  const [editModalOpen, setEditModalOpen] = useState(false);
 
   useEffect(() => {
     if (id) dispatch(fetchCustomerById(id));
@@ -251,7 +292,7 @@ const CustomerDetailPage: React.FC = () => {
           </Col>
           <Col>
             <Space>
-              <Button icon={<EditOutlined />}>Editar</Button>
+              <Button icon={<EditOutlined />} onClick={() => setEditModalOpen(true)}>Editar</Button>
               <Button type="primary" icon={<PlusOutlined />}>Novo agendamento</Button>
               <Dropdown menu={{ items: [
                 { key: 'message', label: 'Enviar mensagem' },
@@ -278,6 +319,14 @@ const CustomerDetailPage: React.FC = () => {
           />
         </Card>
       </Space>
+
+      {customer && (
+        <EditCustomerModal
+          open={editModalOpen}
+          customer={customer}
+          onClose={() => { setEditModalOpen(false); if (id) dispatch(fetchCustomerById(id)); }}
+        />
+      )}
     </AdminLayout>
   );
 };

@@ -14,6 +14,7 @@ const AgendaPage = lazy(() => import('./modules/admin/pages/AgendaPage'));
 const CustomersPage = lazy(() => import('./modules/admin/pages/CustomersPage'));
 const CustomerDetailPage = lazy(() => import('./modules/admin/pages/CustomerDetailPage'));
 const BarbersPage = lazy(() => import('./modules/admin/pages/BarbersPage'));
+const BarberDetailPage = lazy(() => import('./modules/admin/pages/BarberDetailPage'));
 const ServicesPage = lazy(() => import('./modules/admin/pages/ServicesPage'));
 const FinancialPage = lazy(() => import('./modules/admin/pages/FinancialPage'));
 const SettingsPage = lazy(() => import('./modules/admin/pages/SettingsPage'));
@@ -42,6 +43,7 @@ function App() {
                 <Route path="/admin/clientes" element={<ProtectedRoute><CustomersPage /></ProtectedRoute>} />
                 <Route path="/admin/clientes/:id" element={<ProtectedRoute><CustomerDetailPage /></ProtectedRoute>} />
                 <Route path="/admin/barbeiros" element={<ProtectedRoute><BarbersPage /></ProtectedRoute>} />
+                <Route path="/admin/barbeiros/:id" element={<ProtectedRoute><BarberDetailPage /></ProtectedRoute>} />
                 <Route path="/admin/servicos" element={<ProtectedRoute><ServicesPage /></ProtectedRoute>} />
                 <Route path="/admin/financeiro" element={<ProtectedRoute><FinancialPage /></ProtectedRoute>} />
                 <Route path="/admin/configuracoes" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />

@@ -13,4 +13,10 @@ export const updateCustomerSchema = z.object({
   email: z.string().email().optional(),
   notes: z.string().optional(),
   loyaltyPoints: z.number().int().min(0).optional(),
+  customerNotes: z.array(z.object({
+    id: z.string(),
+    title: z.string(),
+    content: z.string(),
+    createdAt: z.string(),
+  })).optional(),
 });

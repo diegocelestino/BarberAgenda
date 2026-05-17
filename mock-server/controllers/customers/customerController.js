@@ -72,6 +72,7 @@ const updateCustomer = (req, res) => {
   if (email !== undefined) customers[idx].email = email;
   if (notes !== undefined) customers[idx].notes = notes;
   if (loyaltyPoints !== undefined) customers[idx].loyaltyPoints = loyaltyPoints;
+  if (req.body.customerNotes !== undefined) customers[idx].customerNotes = req.body.customerNotes;
 
   res.json({ customer: customers[idx] });
 };

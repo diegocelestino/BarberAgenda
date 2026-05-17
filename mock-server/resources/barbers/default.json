@@ -6,16 +6,12 @@
     "rating": 5,
     "createdAt": 1770609009419,
     "serviceIds": [
-      "service-7b5dbfca-689d-4821-9a19-92ad136953e4",
-      "service-9cb47132-aaf9-4fc6-b4ce-1a4122402660",
       "0d969102-ddf1-4256-b890-68536c0b581a",
-      "ca139d12-a694-497b-be45-6b4ccdc4cd0a",
       "5d0791eb-06e6-4dab-8918-7aef0dacfb4b",
       "6ff97218-4ef0-4ff6-92d0-e19c3a4789b8",
       "0f7fa71e-cf1f-48ca-95f0-a3e4c09c9c2b",
       "da18da28-4af3-4571-9c82-11c953e6d0c4",
       "35c05858-8adc-4070-a348-feaf4f7d79bc",
-      "204e1e6c-465c-4df9-8bbb-482ab222d6c2",
       "a24bbd2f-2cc8-4fc7-84d6-d8e18380e6a2",
       "ec53b00a-4fbe-4c62-94e7-99deb5377801"
     ],
@@ -25,7 +21,7 @@
       "lunchStart": "13:00",
       "lunchEnd": "14:00",
       "workDays": [1, 2, 3, 4, 5, 6],
-      "slotInterval": null
+      "slotInterval": 30
     }
   }
 ]

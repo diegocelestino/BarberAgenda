@@ -8,27 +8,26 @@ import {
   Tag,
   Space,
   Input,
-  Dropdown,
   Grid,
   Avatar,
   Spin,
 } from 'antd';
 import {
   PlusOutlined,
-  MoreOutlined,
   SearchOutlined,
-  CalendarOutlined,
   StarFilled,
 } from '@ant-design/icons';
 import AdminLayout from '../layout/AdminLayout';
 import { barberApi, Barber } from '../../../services/api';
 import { servicesApi } from '../../../services/servicesApi';
+import { useNavigate } from 'react-router-dom';
 
 const { Title, Text } = Typography;
 
 const BarbersPage: React.FC = () => {
   const screens = Grid.useBreakpoint();
   const isMobile = !screens.md;
+  const navigate = useNavigate();
 
   const [loading, setLoading] = useState(true);
   const [barbers, setBarbers] = useState<Barber[]>([]);
@@ -60,16 +59,6 @@ const BarbersPage: React.FC = () => {
 
   const getInitials = (name: string) =>
     name.split(' ').map((n) => n[0]).join('').toUpperCase().slice(0, 2);
-
-  const actionsMenu = (barber: Barber) => ({
-    items: [
-      { key: 'edit', label: 'Editar perfil' },
-      { key: 'services', label: 'Gerenciar serviços' },
-      { key: 'commission', label: 'Ver comissões' },
-      { type: 'divider' as const },
-      { key: 'deactivate', label: 'Desativar', danger: true },
-    ],
-  });
 
   if (loading) {
     return (
@@ -105,15 +94,10 @@ const BarbersPage: React.FC = () => {
 
         <Row gutter={[16, 16]}>
           {filtered.map((barber) => (
-            <Col xs={24} sm={12} lg={8} xl={6} key={barber.barberId}>
+            <Col xs={24} sm={12} lg={8} key={barber.barberId}>
               <Card
                 hoverable
-                actions={[
-                  <Button type="text" icon={<CalendarOutlined />} key="schedule">Agenda</Button>,
-                  <Dropdown menu={actionsMenu(barber)} trigger={['click']} key="more">
-                    <Button type="text" icon={<MoreOutlined />} />
-                  </Dropdown>,
-                ]}
+                onClick={() => navigate(`/admin/barbeiros/${barber.barberId}`)}
               >
                 <Card.Meta
                   avatar={<Avatar size={48} style={{ backgroundColor: '#c8a05c' }}>{getInitials(barber.name)}</Avatar>}
@@ -125,11 +109,11 @@ const BarbersPage: React.FC = () => {
                         <Text strong>{barber.rating}</Text>
                       </Space>
                       <Space wrap size={[4, 4]}>
-                        {(barber.serviceIds || []).slice(0, 3).map((sid) => (
-                          <Tag key={sid} style={{ fontSize: 11 }}>{services.get(sid) || sid}</Tag>
+                        {(barber.serviceIds || []).filter((sid) => services.get(sid)).slice(0, 3).map((sid) => (
+                          <Tag key={sid} style={{ fontSize: 11 }}>{services.get(sid)}</Tag>
                         ))}
-                        {(barber.serviceIds || []).length > 3 && (
-                          <Tag style={{ fontSize: 11 }}>+{barber.serviceIds.length - 3}</Tag>
+                        {(barber.serviceIds || []).filter((sid) => services.get(sid)).length > 3 && (
+                          <Tag style={{ fontSize: 11 }}>+{(barber.serviceIds || []).filter((sid) => services.get(sid)).length - 3}</Tag>
                         )}
                       </Space>
                     </Space>
