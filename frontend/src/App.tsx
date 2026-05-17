@@ -9,10 +9,10 @@ import ErrorBoundary from './components/common/ErrorBoundary';
 
 const PublicHomePage = lazy(() => import('./pages/PublicHomePage'));
 const LoginPage = lazy(() => import('./pages/LoginPage'));
-const AdminPage = lazy(() => import('./pages/AdminPage'));
+const DashboardPage = lazy(() => import('./modules/admin/pages/DashboardPage'));
 
 const PageLoader = () => (
-  <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '60vh' }}>
+  <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh' }}>
     <Spin size="large" />
   </div>
 );
@@ -23,21 +23,18 @@ function App() {
       <ConfigProvider theme={antdTheme}>
         <AuthProvider>
           <BrowserRouter>
-            <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', overflow: 'hidden' }}>
-              <Header />
-              <Suspense fallback={<PageLoader />}>
-                <Routes>
-                  <Route path="/" element={<PublicHomePage />} />
-                  <Route path="/login" element={<LoginPage />} />
-                  <Route path="/admin" element={<ProtectedRoute><AdminPage /></ProtectedRoute>} />
+            <Suspense fallback={<PageLoader />}>
+              <Routes>
+                {/* Public routes with Header */}
+                <Route path="/" element={<><Header /><PublicHomePage /></>} />
+                <Route path="/login" element={<><Header /><LoginPage /></>} />
 
-                  {/* Redirect old routes */}
-                  <Route path="/admin/*" element={<Navigate to="/admin" replace />} />
-                  <Route path="/barbers" element={<Navigate to="/admin" replace />} />
-                  <Route path="/services" element={<Navigate to="/admin" replace />} />
-                </Routes>
-              </Suspense>
-            </div>
+                {/* Admin routes — full-page layout, no old Header */}
+                <Route path="/admin" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
+
+                <Route path="*" element={<Navigate to="/" replace />} />
+              </Routes>
+            </Suspense>
           </BrowserRouter>
         </AuthProvider>
       </ConfigProvider>

@@ -1,6 +1,7 @@
 const { v4: uuidv4 } = require('uuid');
 const fs = require('fs');
 const path = require('path');
+const { addTransaction } = require('../financial/financialController');
 
 // Load initial data from JSON file
 const loadAppointments = () => {
@@ -28,6 +29,10 @@ const loadServices = () => {
 
 // In-memory database
 let appointments = loadAppointments();
+
+// Seed today's appointments
+const { generateTodayAppointments } = require('../../config/seedToday');
+appointments = [...appointments, ...generateTodayAppointments()];
 
 // Get appointments for a barber
 const getAppointmentsByBarber = (req, res) => {
@@ -178,9 +183,28 @@ const updateAppointment = (req, res) => {
     ...(service && { service }), // Store service ID directly
     ...(notes !== undefined && { notes }),
     ...(status && { status }),
+    ...(req.body.paymentMethod && { paymentMethod: req.body.paymentMethod }),
+    ...(req.body.paidAmount && { paidAmount: req.body.paidAmount }),
   };
+
+  // Auto-create revenue transaction when appointment is completed
+  const appt = appointments[appointmentIndex];
+  if (status === 'completed' && req.body.paidAmount) {
+    addTransaction({
+      transactionId: uuidv4(),
+      date: new Date(appt.startTime).toISOString().split('T')[0],
+      type: 'revenue',
+      amount: req.body.paidAmount,
+      category: 'servico',
+      description: `${appt.customerName}`,
+      barberId: appt.barberId,
+      appointmentId: appt.appointmentId,
+      paymentMethod: req.body.paymentMethod || 'dinheiro',
+      createdAt: new Date().toISOString(),
+    });
+  }
   
-  res.json({ appointment: appointments[appointmentIndex] });
+  res.json({ appointment: appt });
 };
 
 // Delete appointment

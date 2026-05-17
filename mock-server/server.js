@@ -5,6 +5,8 @@ const appointmentRoutes = require('./controllers/appointments/appointmentRoutes'
 const serviceRoutes = require('./controllers/services/serviceRoutes');
 const authRoutes = require('./controllers/auth/authRoutes');
 const configRoutes = require('./controllers/config/configRoutes');
+const customerRoutes = require('./controllers/customers/customerRoutes');
+const financialRoutes = require('./controllers/financial/financialRoutes');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -19,6 +21,8 @@ app.use('/', appointmentRoutes);
 app.use('/', serviceRoutes);
 app.use('/', authRoutes);
 app.use('/', configRoutes);
+app.use('/', customerRoutes);
+app.use('/', financialRoutes);
 
 app.listen(PORT, () => {
   console.log(`🚀 Mock server running on http://localhost:${PORT}`);

@@ -98,6 +98,38 @@ export class BarbershopStack extends cdk.Stack {
     });
 
     // ========================================
+    // NEW: Customers Table
+    // ========================================
+
+    const customersTable = new dynamodb.Table(this, 'CustomersTable', {
+      partitionKey: { name: 'customerId', type: dynamodb.AttributeType.STRING },
+      billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
+      removalPolicy: cdk.RemovalPolicy.DESTROY,
+    });
+
+    customersTable.addGlobalSecondaryIndex({
+      indexName: 'PhoneIndex',
+      partitionKey: { name: 'phone', type: dynamodb.AttributeType.STRING },
+    });
+
+    // ========================================
+    // NEW: Transactions Table
+    // ========================================
+
+    const transactionsTable = new dynamodb.Table(this, 'TransactionsTable', {
+      partitionKey: { name: 'date', type: dynamodb.AttributeType.STRING },
+      sortKey: { name: 'transactionId', type: dynamodb.AttributeType.STRING },
+      billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
+      removalPolicy: cdk.RemovalPolicy.DESTROY,
+    });
+
+    transactionsTable.addGlobalSecondaryIndex({
+      indexName: 'BarberIndex',
+      partitionKey: { name: 'barberId', type: dynamodb.AttributeType.STRING },
+      sortKey: { name: 'date', type: dynamodb.AttributeType.STRING },
+    });
+
+    // ========================================
     // Lambda helper
     // ========================================
 
@@ -223,6 +255,49 @@ export class BarbershopStack extends cdk.Stack {
     }));
 
     // ========================================
+    // Customer functions
+    // ========================================
+
+    const customerEnv = { CUSTOMERS_TABLE: customersTable.tableName };
+
+    const listCustomersFn     = makeFn('ListCustomersFunction',     'dist/customers/list.handler',       customerEnv);
+    const getCustomerFn       = makeFn('GetCustomerFunction',       'dist/customers/get.handler',        customerEnv);
+    const getCustomerByPhoneFn = makeFn('GetCustomerByPhoneFunction', 'dist/customers/getByPhone.handler', customerEnv);
+    const createCustomerFn    = makeFn('CreateCustomerFunction',    'dist/customers/create.handler',     customerEnv);
+    const updateCustomerFn    = makeFn('UpdateCustomerFunction',    'dist/customers/update.handler',     customerEnv);
+    const deleteCustomerFn    = makeFn('DeleteCustomerFunction',    'dist/customers/delete.handler',     customerEnv);
+
+    customersTable.grantReadData(listCustomersFn);
+    customersTable.grantReadData(getCustomerFn);
+    customersTable.grantReadData(getCustomerByPhoneFn);
+    customersTable.grantReadWriteData(createCustomerFn);
+    customersTable.grantReadWriteData(updateCustomerFn);
+    customersTable.grantReadWriteData(deleteCustomerFn);
+
+    // ========================================
+    // Financial functions
+    // ========================================
+
+    const financialEnv = { TRANSACTIONS_TABLE: transactionsTable.tableName };
+
+    const createTransactionFn  = makeFn('CreateTransactionFunction',  'dist/financial/createTransaction.handler', financialEnv);
+    const listTransactionsFn   = makeFn('ListTransactionsFunction',   'dist/financial/listTransactions.handler',  financialEnv);
+    const getSummaryFn         = makeFn('GetSummaryFunction',         'dist/financial/getSummary.handler',         financialEnv);
+    const payCommissionFn      = makeFn('PayCommissionFunction',      'dist/financial/payCommission.handler',      financialEnv);
+
+    const getCommissionsFn = makeFn('GetCommissionsFunction', 'dist/financial/getCommissions.handler', {
+      TRANSACTIONS_TABLE: transactionsTable.tableName,
+      BARBERS_TABLE: barbersTable.tableName,
+    });
+
+    transactionsTable.grantReadWriteData(createTransactionFn);
+    transactionsTable.grantReadData(listTransactionsFn);
+    transactionsTable.grantReadData(getSummaryFn);
+    transactionsTable.grantReadData(getCommissionsFn);
+    barbersTable.grantReadData(getCommissionsFn);
+    transactionsTable.grantReadWriteData(payCommissionFn);
+
+    // ========================================
     // API Gateway
     // ========================================
 
@@ -321,6 +396,66 @@ export class BarbershopStack extends cdk.Stack {
       authorizationType: apigateway.AuthorizationType.COGNITO,
     });
 
+    // /customers
+    const customers = api.root.addResource('customers');
+    customers.addMethod('GET', int(listCustomersFn), {
+      authorizer,
+      authorizationType: apigateway.AuthorizationType.COGNITO,
+    });
+    customers.addMethod('POST', int(createCustomerFn)); // Public - auto-created from booking
+
+    // /customers/phone/{phone}
+    const customerByPhone = customers.addResource('phone').addResource('{phone}');
+    customerByPhone.addMethod('GET', int(getCustomerByPhoneFn)); // Public - booking lookup
+
+    // /customers/{customerId}
+    const customer = customers.addResource('{customerId}');
+    customer.addMethod('GET', int(getCustomerFn), {
+      authorizer,
+      authorizationType: apigateway.AuthorizationType.COGNITO,
+    });
+    customer.addMethod('PUT', int(updateCustomerFn), {
+      authorizer,
+      authorizationType: apigateway.AuthorizationType.COGNITO,
+    });
+    customer.addMethod('DELETE', int(deleteCustomerFn), {
+      authorizer,
+      authorizationType: apigateway.AuthorizationType.COGNITO,
+    });
+
+    // /financial
+    const financial = api.root.addResource('financial');
+
+    // /financial/summary
+    financial.addResource('summary').addMethod('GET', int(getSummaryFn), {
+      authorizer,
+      authorizationType: apigateway.AuthorizationType.COGNITO,
+    });
+
+    // /financial/transactions
+    const transactions = financial.addResource('transactions');
+    transactions.addMethod('GET', int(listTransactionsFn), {
+      authorizer,
+      authorizationType: apigateway.AuthorizationType.COGNITO,
+    });
+    transactions.addMethod('POST', int(createTransactionFn), {
+      authorizer,
+      authorizationType: apigateway.AuthorizationType.COGNITO,
+    });
+
+    // /financial/commissions
+    const commissions = financial.addResource('commissions');
+    commissions.addMethod('GET', int(getCommissionsFn), {
+      authorizer,
+      authorizationType: apigateway.AuthorizationType.COGNITO,
+    });
+
+    // /financial/commissions/pay
+    commissions.addResource('pay').addMethod('POST', int(payCommissionFn), {
+      authorizer,
+      authorizationType: apigateway.AuthorizationType.COGNITO,
+    });
+
     // ========================================
     // Frontend - S3 + CloudFront
     // ========================================
@@ -376,6 +511,8 @@ export class BarbershopStack extends cdk.Stack {
     new cdk.CfnOutput(this, 'AppointmentsTableName', { value: appointmentsTable.tableName });
     new cdk.CfnOutput(this, 'ServicesTableName', { value: servicesTable.tableName });
     new cdk.CfnOutput(this, 'UsersTableName', { value: usersTable.tableName });
+    new cdk.CfnOutput(this, 'CustomersTableName', { value: customersTable.tableName });
+    new cdk.CfnOutput(this, 'TransactionsTableName', { value: transactionsTable.tableName });
     new cdk.CfnOutput(this, 'BucketName', { value: websiteBucket.bucketName });
     new cdk.CfnOutput(this, 'BucketWebsiteURL', { value: websiteBucket.bucketWebsiteUrl });
     new cdk.CfnOutput(this, 'DistributionId', { value: distribution.distributionId });

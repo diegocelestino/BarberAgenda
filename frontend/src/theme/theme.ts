@@ -2,6 +2,12 @@ import { theme, ThemeConfig } from 'antd';
 
 export const antdTheme: ThemeConfig = {
   algorithm: theme.darkAlgorithm,
+  components: {
+    Layout: {
+      siderBg: '#1a1a1a',
+      triggerBg: '#222222',
+    },
+  },
   token: {
     colorPrimary: '#c8a05c',
     colorSuccess: '#50c878',
