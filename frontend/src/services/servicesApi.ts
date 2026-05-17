@@ -8,6 +8,7 @@ export interface Service {
   price: number;
   duration: number;
   durationMinutes: number;
+  active?: boolean;
 }
 
 export interface CreateServiceData {

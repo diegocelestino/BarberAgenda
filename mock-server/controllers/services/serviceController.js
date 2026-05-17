@@ -83,6 +83,10 @@ const updateService = (req, res) => {
   if (durationMinutes !== undefined) {
     services[serviceIndex].durationMinutes = parseInt(durationMinutes);
   }
+
+  if (req.body.active !== undefined) {
+    services[serviceIndex].active = req.body.active;
+  }
   
   // Save to file
   fs.writeFileSync(servicesPath, JSON.stringify(services, null, 2));

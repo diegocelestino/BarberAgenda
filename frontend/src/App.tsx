@@ -13,6 +13,8 @@ const DashboardPage = lazy(() => import('./modules/admin/pages/DashboardPage'));
 const AgendaPage = lazy(() => import('./modules/admin/pages/AgendaPage'));
 const CustomersPage = lazy(() => import('./modules/admin/pages/CustomersPage'));
 const CustomerDetailPage = lazy(() => import('./modules/admin/pages/CustomerDetailPage'));
+const BarbersPage = lazy(() => import('./modules/admin/pages/BarbersPage'));
+const ServicesPage = lazy(() => import('./modules/admin/pages/ServicesPage'));
 
 const PageLoader = () => (
   <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh' }}>
@@ -37,6 +39,8 @@ function App() {
                 <Route path="/admin/agenda" element={<ProtectedRoute><AgendaPage /></ProtectedRoute>} />
                 <Route path="/admin/clientes" element={<ProtectedRoute><CustomersPage /></ProtectedRoute>} />
                 <Route path="/admin/clientes/:id" element={<ProtectedRoute><CustomerDetailPage /></ProtectedRoute>} />
+                <Route path="/admin/barbeiros" element={<ProtectedRoute><BarbersPage /></ProtectedRoute>} />
+                <Route path="/admin/servicos" element={<ProtectedRoute><ServicesPage /></ProtectedRoute>} />
 
                 <Route path="*" element={<Navigate to="/" replace />} />
               </Routes>

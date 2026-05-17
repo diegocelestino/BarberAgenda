@@ -7,7 +7,8 @@
     "description": "",
     "duration": 30,
     "name": "Progressiva ",
-    "title": "Progressiva "
+    "title": "Progressiva ",
+    "active": true
   },
   {
     "durationMinutes": 30,
@@ -78,14 +79,5 @@
     "duration": 10,
     "name": "Relaxamento ",
     "title": "Relaxamento "
-  },
-  {
-    "serviceId": "service-1776984893971",
-    "title": "TESTE",
-    "name": "Teste",
-    "description": "",
-    "price": 60,
-    "duration": 30,
-    "durationMinutes": 30
   }
 ]
